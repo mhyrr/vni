@@ -1,0 +1,90 @@
+defmodule VNI.Atlas do
+  @moduledoc """
+  Districts, geometries, and map versions.
+
+  The core invariant: districts are always addressed through a map version.
+  The "current" map for a state/level is the version with `effective_until`
+  nil. Public lookups (by slug) resolve against current maps only; history
+  stays queryable by map version id.
+  """
+
+  import Ecto.Query
+
+  alias VNI.Repo
+  alias VNI.Atlas.{District, MapVersion}
+
+  ## Map versions
+
+  def create_map_version(attrs) do
+    %MapVersion{}
+    |> MapVersion.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def get_map_version!(id), do: Repo.get!(MapVersion, id)
+
+  @doc "The map currently in effect for a state at a level, or nil."
+  def current_map_version(state, level) do
+    from(mv in MapVersion,
+      where: mv.state == ^state and mv.level == ^level and is_nil(mv.effective_until)
+    )
+    |> Repo.one()
+  end
+
+  def list_current_map_versions(level) do
+    from(mv in MapVersion, where: mv.level == ^level and is_nil(mv.effective_until))
+    |> Repo.all()
+  end
+
+  @doc """
+  Close out a map version (a redraw happened). Sets `effective_until`;
+  the successor version is created separately with its own districts.
+  """
+  def supersede_map_version(%MapVersion{} = map_version, %Date{} = effective_until) do
+    map_version
+    |> Ecto.Changeset.change(effective_until: effective_until)
+    |> Repo.update()
+  end
+
+  ## Districts
+
+  @doc """
+  Idempotent upsert keyed on (map_version_id, slug) — ingest tasks are
+  rerunnable by design.
+  """
+  def upsert_district(%MapVersion{} = map_version, attrs) do
+    %District{map_version_id: map_version.id, state: map_version.state}
+    |> District.changeset(attrs)
+    |> Repo.insert(
+      on_conflict: {:replace_all_except, [:id, :map_version_id, :inserted_at]},
+      conflict_target: [:map_version_id, :slug],
+      returning: true
+    )
+  end
+
+  def list_districts(%MapVersion{} = map_version) do
+    from(d in District, where: d.map_version_id == ^map_version.id, order_by: [d.state, d.number])
+    |> Repo.all()
+  end
+
+  @doc "Resolve a slug against current maps at a level. Returns nil if unknown."
+  def get_district_by_slug(slug, level \\ :congressional) do
+    from(d in District,
+      join: mv in assoc(d, :map_version),
+      where: d.slug == ^slug and mv.level == ^level and is_nil(mv.effective_until),
+      preload: [:score, :profile, map_version: mv]
+    )
+    |> Repo.one()
+  end
+
+  @doc "All districts under current maps at a level, with scores and profiles."
+  def list_current_districts(level \\ :congressional) do
+    from(d in District,
+      join: mv in assoc(d, :map_version),
+      where: mv.level == ^level and is_nil(mv.effective_until),
+      order_by: [d.state, d.number],
+      preload: [:score, :profile, map_version: mv]
+    )
+    |> Repo.all()
+  end
+end
