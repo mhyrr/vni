@@ -148,7 +148,7 @@ a:focus-visible, button:focus-visible {
 }
 
 .section-pad {
-  padding: clamp(4rem, 8vw, 9rem) clamp(1.25rem, 5vw, 5.5rem);
+  padding: clamp(3.25rem, 6.4vw, 7.2rem) clamp(1.25rem, 5vw, 5.5rem);
 }
 
 .display-xl,
@@ -161,17 +161,17 @@ a:focus-visible, button:focus-visible {
 }
 
 .display-xl {
-  font-size: clamp(3.7rem, 9.3vw, 10rem);
+  font-size: clamp(3.25rem, 7.45vw, 8rem);
   line-height: 0.81;
 }
 
 .display-lg {
-  font-size: clamp(3rem, 7vw, 7.6rem);
+  font-size: clamp(2.6rem, 5.6vw, 6.1rem);
   line-height: 0.84;
 }
 
 .display-md {
-  font-size: clamp(2rem, 4.25vw, 4.8rem);
+  font-size: clamp(1.85rem, 3.5vw, 3.9rem);
   line-height: 0.9;
 }
 
@@ -254,7 +254,7 @@ a:focus-visible, button:focus-visible {
   position: relative;
   z-index: 2;
   min-width: 0;
-  padding: clamp(3rem, 6vw, 7rem) clamp(1.25rem, 5vw, 5.5rem);
+  padding: clamp(2.5rem, 4.4vw, 5rem) clamp(1.25rem, 5vw, 5.5rem);
   background: var(--paper);
 }
 
@@ -278,14 +278,14 @@ a:focus-visible, button:focus-visible {
   position: absolute;
   z-index: 2;
   top: 17%;
-  left: -8%;
-  width: 116%;
-  padding: 1.2rem;
+  left: -4%;
+  width: 108%;
+  padding: 1rem;
   color: var(--ink);
   border: 3px solid var(--ink);
   background: var(--yellow);
   font-family: "Arial Black", Arial, sans-serif;
-  font-size: clamp(2.2rem, 5vw, 5.4rem);
+  font-size: clamp(2rem, 4.25vw, 4.6rem);
   font-weight: 950;
   letter-spacing: -0.07em;
   line-height: 0.85;
@@ -328,10 +328,10 @@ a:focus-visible, button:focus-visible {
 }
 
 .ticker-track span {
-  padding: 0.8rem 1.35rem;
+  padding: 0.62rem 1.15rem;
   border-right: 1px solid #4b4b44;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.72rem;
+  font-size: 0.66rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -346,7 +346,7 @@ a:focus-visible, button:focus-visible {
 
 .argument-number {
   font-family: "Arial Black", Arial, sans-serif;
-  font-size: clamp(7rem, 17vw, 18rem);
+  font-size: clamp(5.75rem, 13.6vw, 14.5rem);
   font-weight: 950;
   letter-spacing: -0.1em;
   line-height: 0.7;
@@ -354,7 +354,7 @@ a:focus-visible, button:focus-visible {
 
 .slash-card {
   position: relative;
-  padding: clamp(2rem, 4vw, 4rem);
+  padding: clamp(1.75rem, 3.2vw, 3.2rem);
   border: 3px solid var(--ink);
   background: var(--paper-bright);
   box-shadow: 14px 14px 0 var(--ink);

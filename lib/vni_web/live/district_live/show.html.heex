@@ -4,7 +4,7 @@
   <article id={"district-profile-#{@district.slug}"} class="editorial-shell bg-[var(--paper)]">
     <header class="grid border-b-2 border-[var(--ink)] lg:grid-cols-[0.9fr_1.1fr]">
       <div class={[
-        "relative min-h-[520px] overflow-hidden border-b-2 border-[var(--ink)] p-8 lg:border-r-2 lg:border-b-0",
+        "relative min-h-[420px] overflow-hidden border-b-2 border-[var(--ink)] p-8 lg:border-r-2 lg:border-b-0",
         party_bg(@district.party)
       ]}>
         <div class="flex items-center justify-between gap-5">
@@ -17,7 +17,7 @@
           class="absolute -right-[5%] bottom-[-12%] w-[105%] text-[var(--ink)]"
         />
       </div>
-      <div class="section-pad !py-12 lg:!py-20">
+      <div class="section-pad !py-10 lg:!py-14">
         <p class="eyebrow">District file · {@district.authority}</p>
         <h1 class="display-xl mt-7">{@district.label}</h1>
         <p class="mt-8 max-w-2xl font-serif text-3xl leading-tight">
