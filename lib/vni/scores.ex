@@ -45,15 +45,18 @@ defmodule VNI.Scores do
 
     Repo.query!(
       """
+      -- Each ratio is mathematically <= 1 (isoperimetric inequality; a shape
+      -- never exceeds its hull or bounding circle), so LEAST(1.0, ...) only
+      -- absorbs float noise from GEOS, which varies by PostGIS version.
       UPDATE district_scores ds SET
-        polsby_popper = 4 * pi() * ST_Area(d.geom::geography)
-          / NULLIF(power(ST_Perimeter(d.geom::geography), 2), 0),
-        schwartzberg = 2 * pi() * sqrt(ST_Area(d.geom::geography) / pi())
-          / NULLIF(ST_Perimeter(d.geom::geography), 0),
-        reock = ST_Area(ST_Transform(d.geom, 5070))
-          / NULLIF(ST_Area(ST_MinimumBoundingCircle(ST_Transform(d.geom, 5070))), 0),
-        convex_hull = ST_Area(ST_Transform(d.geom, 5070))
-          / NULLIF(ST_Area(ST_ConvexHull(ST_Transform(d.geom, 5070))), 0),
+        polsby_popper = LEAST(1.0, 4 * pi() * ST_Area(d.geom::geography)
+          / NULLIF(power(ST_Perimeter(d.geom::geography), 2), 0)),
+        schwartzberg = LEAST(1.0, 2 * pi() * sqrt(ST_Area(d.geom::geography) / pi())
+          / NULLIF(ST_Perimeter(d.geom::geography), 0)),
+        reock = LEAST(1.0, ST_Area(ST_Transform(d.geom, 5070))
+          / NULLIF(ST_Area(ST_MinimumBoundingCircle(ST_Transform(d.geom, 5070))), 0)),
+        convex_hull = LEAST(1.0, ST_Area(ST_Transform(d.geom, 5070))
+          / NULLIF(ST_Area(ST_ConvexHull(ST_Transform(d.geom, 5070))), 0)),
         updated_at = now()
       FROM districts d
       WHERE d.id = ds.district_id

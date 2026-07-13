@@ -15,7 +15,7 @@ Phoenix 1.8 / LiveView, PostgreSQL + PostGIS, Oban, Swoosh. Single app, single d
 
 ## Setup
 
-Requires Elixir 1.15+, PostgreSQL with PostGIS (`brew install postgresql@17 postgis`), and GDAL for shapefile ingestion (`ogr2ogr` ships with the PostGIS formula).
+Requires Elixir 1.15+, PostgreSQL 17 with PostGIS, and GDAL for shapefile ingestion (`brew install postgis` provides `ogr2ogr`). Local Postgres runs in Docker — the shared dev server lives in `~/work/infra/docker-compose.yml` (`imresamu/postgis:17-3.5` on localhost:5432, user/password `postgres`).
 
     mix setup            # deps, database, migrations, assets
     mix test

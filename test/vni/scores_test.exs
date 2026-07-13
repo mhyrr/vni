@@ -4,9 +4,10 @@ defmodule VNI.ScoresTest do
   alias VNI.Atlas
   alias VNI.Scores
 
-  # A compact square and a long thin ribbon near the equator.
-  # Polsby-Popper for a square is π/4 ≈ 0.785; the ribbon should score
-  # far below it on every metric.
+  # A compact square and a thin C-shaped hook near the equator.
+  # Polsby-Popper for a square is π/4 ≈ 0.785. The hook must be
+  # non-convex — a thin rectangle would tie the square on convex hull
+  # (a rectangle is its own hull) — so it loses on every metric.
   setup do
     {:ok, mv} =
       Atlas.create_map_version(%{
@@ -17,9 +18,9 @@ defmodule VNI.ScoresTest do
       })
 
     {:ok, square} = Atlas.upsert_district(mv, %{state: "TX", number: 1, geom: square_geom()})
-    {:ok, ribbon} = Atlas.upsert_district(mv, %{state: "TX", number: 2, geom: ribbon_geom()})
+    {:ok, hook} = Atlas.upsert_district(mv, %{state: "TX", number: 2, geom: hook_geom()})
 
-    %{map_version: mv, square: square, ribbon: ribbon}
+    %{map_version: mv, square: square, hook: hook}
   end
 
   defp square_geom do
@@ -29,9 +30,23 @@ defmodule VNI.ScoresTest do
     }
   end
 
-  defp ribbon_geom do
+  defp hook_geom do
     %Geo.MultiPolygon{
-      coordinates: [[[{1.0, 0.0}, {2.6, 0.0}, {2.6, 0.025}, {1.0, 0.025}, {1.0, 0.0}]]],
+      coordinates: [
+        [
+          [
+            {1.0, 0.0},
+            {2.0, 0.0},
+            {2.0, 0.05},
+            {1.05, 0.05},
+            {1.05, 0.95},
+            {2.0, 0.95},
+            {2.0, 1.0},
+            {1.0, 1.0},
+            {1.0, 0.0}
+          ]
+        ]
+      ],
       srid: 4326
     }
   end
@@ -40,17 +55,17 @@ defmodule VNI.ScoresTest do
     :ok = Scores.compute_metrics!(ctx.map_version.id)
 
     square = Scores.get_score(ctx.square.id)
-    ribbon = Scores.get_score(ctx.ribbon.id)
+    hook = Scores.get_score(ctx.hook.id)
 
     assert_in_delta square.polsby_popper, :math.pi() / 4, 0.02
 
     for metric <- [:polsby_popper, :reock, :convex_hull, :schwartzberg] do
       s = Map.fetch!(square, metric)
-      r = Map.fetch!(ribbon, metric)
+      r = Map.fetch!(hook, metric)
 
       assert s > 0.0 and s <= 1.0, "square #{metric} out of range: #{s}"
-      assert r > 0.0 and r <= 1.0, "ribbon #{metric} out of range: #{r}"
-      assert s > r, "expected square to beat ribbon on #{metric}"
+      assert r > 0.0 and r <= 1.0, "hook #{metric} out of range: #{r}"
+      assert s > r, "expected square to beat hook on #{metric}"
     end
 
     assert square.methodology_version == Scores.methodology_version()
@@ -63,7 +78,7 @@ defmodule VNI.ScoresTest do
 
     assert first.id == ctx.square.id
     assert first.score.national_rank == 1
-    assert second.id == ctx.ribbon.id
+    assert second.id == ctx.hook.id
     assert second.score.national_rank == 2
     assert first.score.composite > second.score.composite
   end

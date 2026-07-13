@@ -18,4 +18,4 @@ Exclusively anti-entrenchment: incumbency, gerrymandering, term limits. No posit
 - Compactness scoring is Elixir orchestrating SQL — keep the math in PostGIS, the orchestration thin.
 - Hand-curated data (map authorship, ~50 rows) lives in seeds with a source URL per row.
 - `mix precommit` before claiming done (compile --warnings-as-errors, format, test).
-- Local Postgres: `brew services start postgresql@17` (PostGIS lives in the @17 tree).
+- Local Postgres runs in Docker: `docker compose up -d` in `~/work/infra/` (imresamu/postgis:17-3.5, pinned to major 17 to match Fly prod and the data volume). The volume `arete_postgres-data` holds every project's dev DBs — never remove it. Brew postgresql@14/16/17 are installed but stopped; don't start them (port 5432 collision on the loopback).
