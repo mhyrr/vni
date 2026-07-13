@@ -1,0 +1,88 @@
+<Layouts.app flash={@flash} active={:atlas}>
+  <.preview_notice />
+
+  <section
+    id="atlas-hero"
+    class="section-pad editorial-shell grid gap-12 bg-[var(--ink)] text-white lg:grid-cols-[1.25fr_0.75fr] lg:items-end"
+  >
+    <div>
+      <p class="eyebrow text-[var(--yellow)]">The national field · 435 congressional districts</p>
+      <h1 class="display-xl mt-7">Every line has an author.</h1>
+    </div>
+    <div class="border-l-2 border-[var(--green)] pl-8">
+      <p class="font-serif text-3xl leading-tight">
+        The Atlas is the geographic view: where the shapes break, where maps tilt, and who held the pen.
+      </p>
+      <.link navigate={~p"/districts"} id="atlas-open-directory" class="paper-button mt-9">
+        Rank the districts <span aria-hidden="true">→</span>
+      </.link>
+    </div>
+  </section>
+
+  <section class="editorial-shell bg-[var(--paper)]">
+    <div class="flex items-end justify-between gap-6 px-5 py-4 md:px-10">
+      <div>
+        <p class="data-label">National map field</p>
+        <p class="mt-1 font-serif text-lg">Select a district to inspect its profile.</p>
+      </div>
+      <span class="data-label hidden md:block">Color = current incumbent party</span>
+    </div>
+    <div id="atlas-field" class="atlas-field" phx-update="stream">
+      <.link
+        :for={{id, district} <- @streams.districts}
+        id={id}
+        navigate={~p"/districts/#{district.slug}"}
+        class="atlas-cell"
+      >
+        <span class="data-label">{district.label}</span>
+        <span class={["absolute top-4 right-4 px-2 py-1 data-label", party_bg(district.party)]}>
+          {district.lean}
+        </span>
+        <.district_shape variant={district.shape} party={district.party} />
+      </.link>
+    </div>
+  </section>
+
+  <section id="atlas-charts" class="section-pad editorial-shell bg-[var(--paper-bright)]">
+    <div class="grid gap-14 lg:grid-cols-[0.7fr_1.3fr]">
+      <div>
+        <p class="eyebrow">Read the whole map</p>
+        <h2 class="display-md mt-6">Shape is one signal. Power leaves others.</h2>
+        <p class="mt-8 max-w-xl text-sm leading-6">
+          Compactness belongs to a district. Partisan distortion belongs to a statewide map. Authorship belongs to an institution. The Atlas holds them together without pretending they are the same measurement.
+        </p>
+      </div>
+      <div class="grid gap-8 border-l-2 border-[var(--ink)] pl-8 md:grid-cols-2 lg:pl-14">
+        <div>
+          <p class="data-label">Illustrative national distribution</p>
+          <.metric_bar
+            label="Least compact quartile"
+            value={25}
+            display="109 districts"
+            tone={:yellow}
+          />
+          <.metric_bar label="Legislature-drawn" value={62} display="62%" tone={:red} />
+          <.metric_bar label="Commission-drawn" value={28} display="28%" tone={:green} />
+          <.metric_bar label="Court / other" value={10} display="10%" tone={:blue} />
+        </div>
+        <div class="comparison-field border-2 border-[var(--ink)] p-5">
+          <p class="data-label">The comparison model</p>
+          <div class="mt-10 space-y-7">
+            <div>
+              <strong class="text-5xl font-black tracking-[-0.08em]">US</strong>
+              <p class="mt-2 text-sm">National percentile</p>
+            </div>
+            <div class="border-t border-[var(--ink)] pt-6">
+              <strong class="text-5xl font-black tracking-[-0.08em]">±</strong>
+              <p class="mt-2 text-sm">Difference from surrounding districts</p>
+            </div>
+            <div class="border-t border-[var(--ink)] pt-6">
+              <strong class="text-5xl font-black tracking-[-0.08em]">↺</strong>
+              <p class="mt-2 text-sm">Change across map versions</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layouts.app>

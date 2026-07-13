@@ -1,0 +1,96 @@
+<Layouts.app flash={@flash} active={:districts}>
+  <.preview_notice />
+
+  <section id="district-index" class="editorial-shell bg-[var(--paper)]">
+    <div class="section-pad grid gap-12 lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
+      <div>
+        <p class="eyebrow">The district file · 435 records</p>
+        <h1 class="display-xl mt-7">Rank power from four angles.</h1>
+      </div>
+      <div>
+        <p class="font-serif text-3xl leading-tight">
+          No magic score. Sort the districts by the attribute you care about, then compare each with its neighbors and the nation.
+        </p>
+        <p class="mt-7 text-sm leading-6">
+          “Map bias” is a placeholder for a sourced statewide gerrymandering measure. Compactness remains geometry, not a verdict.
+        </p>
+      </div>
+    </div>
+
+    <nav id="district-sort" class="sort-rail" aria-label="Sort districts">
+      <.link
+        patch={~p"/districts?sort=compactness"}
+        id="sort-compactness"
+        class={["sort-link", @sort == :compactness && "is-active"]}
+      >
+        01 · Least compact
+      </.link>
+      <.link
+        patch={~p"/districts?sort=map_bias"}
+        id="sort-map-bias"
+        class={["sort-link", @sort == :map_bias && "is-active"]}
+      >
+        02 · Highest map bias
+      </.link>
+      <.link
+        patch={~p"/districts?sort=turnover"}
+        id="sort-turnover"
+        class={["sort-link", @sort == :turnover && "is-active"]}
+      >
+        03 · Most party switches
+      </.link>
+      <.link
+        patch={~p"/districts?sort=tenure"}
+        id="sort-tenure"
+        class={["sort-link", @sort == :tenure && "is-active"]}
+      >
+        04 · Longest tenure
+      </.link>
+    </nav>
+
+    <div id="districts" class="district-grid" phx-update="stream">
+      <.link
+        :for={{id, district} <- @streams.districts}
+        id={id}
+        data-slug={district.slug}
+        navigate={~p"/districts/#{district.slug}"}
+        class="district-card"
+      >
+        <div class="district-identity">
+          <.district_shape variant={district.shape} party={district.party} />
+          <div>
+            <span class={["inline-block px-2 py-1 data-label", party_bg(district.party)]}>
+              {district.lean}
+            </span>
+            <h2 class="mt-3 text-4xl font-black tracking-[-0.08em]">{district.label}</h2>
+            <p class="mt-1 font-serif text-lg">{district.state}</p>
+            <p class="mt-3 text-xs text-[var(--muted)]">{district.authority}</p>
+          </div>
+        </div>
+        <div class="district-metrics">
+          <div class="district-metric">
+            <span class="data-label">Compactness</span>
+            <strong>{district.compactness}</strong>
+            <span class="text-xs">Rank {district.compactness_rank} / 435</span>
+          </div>
+          <div class="district-metric">
+            <span class="data-label">Map bias</span>
+            <strong>{district.map_bias}</strong>
+            <span class="text-xs">Statewide signal</span>
+          </div>
+          <div class="district-metric">
+            <span class="data-label">Party switches</span>
+            <strong>{district.turnover}</strong>
+            <span class="text-xs">Recent history</span>
+          </div>
+          <div class="district-metric">
+            <span class="data-label">Tenure</span>
+            <strong>{district.tenure}</strong>
+            <span class="text-xs">Years in office</span>
+          </div>
+        </div>
+        <span class="district-arrow" aria-hidden="true">→</span>
+      </.link>
+    </div>
+  </section>
+</Layouts.app>

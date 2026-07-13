@@ -17,7 +17,14 @@ defmodule VNIWeb.Router do
   scope "/", VNIWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live_session :public do
+      live "/", HomeLive, :index
+      live "/atlas", AtlasLive, :index
+      live "/districts", DistrictLive.Index, :index
+      live "/districts/:slug", DistrictLive.Show, :show
+      live "/methodology", MethodologyLive, :index
+      live "/act", ActionLive, :index
+    end
   end
 
   # Other scopes may use custom stacks.

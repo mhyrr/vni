@@ -1,0 +1,135 @@
+<Layouts.app flash={@flash} active={:districts}>
+  <.preview_notice />
+
+  <article id={"district-profile-#{@district.slug}"} class="editorial-shell bg-[var(--paper)]">
+    <header class="grid border-b-2 border-[var(--ink)] lg:grid-cols-[0.9fr_1.1fr]">
+      <div class={[
+        "relative min-h-[520px] overflow-hidden border-b-2 border-[var(--ink)] p-8 lg:border-r-2 lg:border-b-0",
+        party_bg(@district.party)
+      ]}>
+        <div class="flex items-center justify-between gap-5">
+          <span class="data-label">{@district.state} · Congressional district</span>
+          <span class="data-label">{@district.lean}</span>
+        </div>
+        <.district_shape
+          variant={@district.shape}
+          party={:neutral}
+          class="absolute -right-[5%] bottom-[-12%] w-[105%] text-[var(--ink)]"
+        />
+      </div>
+      <div class="section-pad !py-12 lg:!py-20">
+        <p class="eyebrow">District file · {@district.authority}</p>
+        <h1 class="display-xl mt-7">{@district.label}</h1>
+        <p class="mt-8 max-w-2xl font-serif text-3xl leading-tight">
+          One district, four independent measures of how power holds its ground.
+        </p>
+        <div class="mt-12 flex flex-wrap gap-3">
+          <span class={["px-3 py-2 data-label", party_bg(@district.party)]}>
+            {party_name(@district.party)}
+          </span>
+          <span class="border-2 border-[var(--ink)] px-3 py-2 data-label">
+            Last margin · {@district.margin} pts
+          </span>
+          <span class="bg-[var(--green)] px-3 py-2 data-label">
+            Neighbor delta · {@district.neighbor_delta}
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <section
+      id="district-scorecard"
+      class="grid border-b-2 border-[var(--ink)] md:grid-cols-2 lg:grid-cols-4"
+    >
+      <div class="p-7 md:border-r-2 md:border-[var(--ink)]">
+        <.metric_bar
+          label="Geographic compactness"
+          value={@district.compactness}
+          display={"#{@district.compactness} / 100"}
+          tone={:yellow}
+          note={"National rank #{@district.compactness_rank} of 435"}
+        />
+      </div>
+      <div class="p-7 lg:border-r-2 lg:border-[var(--ink)]">
+        <.metric_bar
+          label="Map bias"
+          value={@district.map_bias}
+          display={"#{@district.map_bias} / 100"}
+          tone={:red}
+          note="Statewide map signal, not a district shape score"
+        />
+      </div>
+      <div class="p-7 md:border-r-2 md:border-[var(--ink)]">
+        <.metric_bar
+          label="Party turnover"
+          value={min(@district.turnover * 20, 100)}
+          display={"#{@district.turnover} switches"}
+          tone={:blue}
+          note="Within the published comparison window"
+        />
+      </div>
+      <div class="p-7">
+        <.metric_bar
+          label="Incumbent tenure"
+          value={min(@district.tenure * 4, 100)}
+          display={"#{@district.tenure} years"}
+          tone={:green}
+          note="Current officeholder only"
+        />
+      </div>
+    </section>
+
+    <section class="section-pad grid gap-14 lg:grid-cols-[0.85fr_1.15fr]">
+      <div>
+        <p class="eyebrow">Compared with the field</p>
+        <h2 class="display-md mt-6">Local context. National scale.</h2>
+        <p class="mt-8 max-w-xl text-sm leading-6">
+          Every attribute should answer two questions: how unusual is this district nationally, and how different is it from the districts surrounding it?
+        </p>
+      </div>
+      <div class="comparison-field border-2 border-[var(--ink)] bg-[var(--paper-bright)] p-7 md:p-10">
+        <div class="grid gap-10 md:grid-cols-2">
+          <div>
+            <span class="data-label">National rank</span>
+            <strong class="mt-5 block text-7xl font-black tracking-[-0.1em]">
+              {@district.compactness_rank}
+            </strong>
+            <span class="text-sm">of 435 by compactness</span>
+          </div>
+          <div>
+            <span class="data-label">Surrounding districts</span>
+            <strong class="mt-5 block text-7xl font-black tracking-[-0.1em]">
+              {@district.neighbor_delta}
+            </strong>
+            <span class="text-sm">points from neighbor average</span>
+          </div>
+        </div>
+        <div class="mt-12 border-t-2 border-[var(--ink)] pt-7">
+          <span class="data-label">Recent party history</span>
+          <p class="mt-4 font-mono text-sm font-bold uppercase tracking-wide">
+            {@district.history_summary}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid border-t-2 border-[var(--ink)] lg:grid-cols-2">
+      <div class="section-pad bg-[var(--yellow)] lg:border-r-2 lg:border-[var(--ink)]">
+        <p class="eyebrow">Methodological honesty</p>
+        <h2 class="display-md mt-6">An odd shape is evidence. It is not a conviction.</h2>
+        <.link navigate={~p"/methodology"} class="ink-button mt-10">
+          Read the method <span>→</span>
+        </.link>
+      </div>
+      <div class="section-pad bg-[var(--green)]">
+        <p class="eyebrow">The Fenno question</p>
+        <h2 class="display-md mt-6">
+          Would you vote this incumbent out if everyone else did too?
+        </h2>
+        <.link navigate={~p"/act"} id="district-action" class="paper-button mt-10">
+          Answer honestly <span>→</span>
+        </.link>
+      </div>
+    </section>
+  </article>
+</Layouts.app>

@@ -86,6 +86,7 @@ defmodule VNIWeb do
       import Phoenix.HTML
       # Core UI components
       import VNIWeb.CoreComponents
+      import VNIWeb.PublicComponents
 
       # Common modules used in templates
       alias Phoenix.LiveView.JS

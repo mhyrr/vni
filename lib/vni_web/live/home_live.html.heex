@@ -1,0 +1,130 @@
+<Layouts.app flash={@flash} active={:home}>
+  <section id="home-hero" class="hero-field editorial-shell">
+    <div class="hero-copy">
+      <p class="eyebrow">The incumbency machine · American edition</p>
+      <h1 class="display-xl mt-8 max-w-[1050px]">
+        You hate Congress.<br />You'll re-elect <span class="text-[var(--blue)]">your</span>
+        part of it.
+      </h1>
+      <div class="mt-12 grid max-w-4xl gap-10 border-t-2 border-[var(--ink)] pt-8 md:grid-cols-2">
+        <p class="font-serif text-2xl leading-[1.08] md:text-3xl">
+          The machine survives because every district believes its incumbent is the last good one.
+        </p>
+        <div>
+          <p class="max-w-md text-sm font-medium leading-6">
+            See the borders, tenure, partisan history, and electoral insulation that keep power where it already is.
+          </p>
+          <.link navigate={~p"/districts"} id="home-find-district" class="ink-button mt-8">
+            Find your district <span aria-hidden="true">→</span>
+          </.link>
+        </div>
+      </div>
+    </div>
+    <div class="hero-collision" aria-label="Red and blue party fields crossed by a new green line">
+      <div class="collision-label">435<br />exceptions</div>
+      <div class="collision-arrow">
+        Policy should win. Not power. <span class="float-right">↗</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="ticker" aria-label="VNI doctrine">
+    <div class="ticker-track">
+      <span>No incumbents</span><span>No gerrymanders</span><span>Term limits</span><span>Leave the Supreme Court alone</span><span>Policy should win. Not power.</span><span>No incumbents</span><span>No gerrymanders</span><span>Term limits</span><span>Leave the Supreme Court alone</span><span>Policy should win. Not power.</span>
+    </div>
+  </div>
+
+  <section id="the-paradox" class="section-pad editorial-shell bg-[var(--yellow)]">
+    <div class="argument-grid">
+      <div class="argument-number">01</div>
+      <div>
+        <p class="eyebrow">Fenno's paradox</p>
+        <h2 class="display-lg mt-6">Everyone agrees. Everyone makes one exception.</h2>
+      </div>
+      <div class="slash-card mt-8 lg:mt-24">
+        <p class="font-serif text-2xl leading-tight">
+          Congress is unpopular in the aggregate and remarkably durable one district at a time.
+        </p>
+        <p class="mt-8 text-sm leading-6">
+          Your representative answers your calls. Knows the county fair. Brings home the grant. The other 434 are the problem. Multiply that belief by every district and permanent power looks democratic.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="the-evidence" class="section-pad editorial-shell bg-[var(--paper)]">
+    <div class="grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+      <div>
+        <p class="eyebrow">The evidence</p>
+        <h2 class="display-lg mt-6">Start with the shape of power.</h2>
+      </div>
+      <div class="border-l-2 border-[var(--ink)] pl-8 lg:pl-14">
+        <p class="font-serif text-2xl leading-tight md:text-4xl">
+          District lines do not prove a gerrymander. They do tell us where to look—and who should answer for the map.
+        </p>
+        <p class="mt-7 max-w-2xl text-sm leading-6">
+          The Atlas puts geometric compactness beside map bias, party turnover, incumbent tenure, authorship, and litigation. Different measurements. One public record.
+        </p>
+        <.link navigate={~p"/atlas"} id="home-open-atlas" class="ink-button mt-9">
+          Open the Atlas <span aria-hidden="true">↗</span>
+        </.link>
+      </div>
+    </div>
+
+    <div class="mt-20 grid border-2 border-[var(--ink)] md:grid-cols-4">
+      <div class="min-h-48 bg-[var(--blue)] p-5 text-white md:border-r-2 md:border-[var(--ink)]">
+        <span class="data-label">Party</span>
+        <strong class="mt-16 block text-5xl font-black tracking-[-0.08em]">BLUE</strong>
+      </div>
+      <div class="min-h-48 bg-[var(--red)] p-5 md:border-r-2 md:border-[var(--ink)]">
+        <span class="data-label">Party</span>
+        <strong class="mt-16 block text-5xl font-black tracking-[-0.08em]">RED</strong>
+      </div>
+      <div class="min-h-48 bg-[var(--yellow)] p-5 md:border-r-2 md:border-[var(--ink)]">
+        <span class="data-label">Evidence</span>
+        <strong class="mt-16 block text-5xl font-black tracking-[-0.08em]">OPEN</strong>
+      </div>
+      <div class="min-h-48 bg-[var(--green)] p-5">
+        <span class="data-label">Action</span>
+        <strong class="mt-16 block text-5xl font-black tracking-[-0.08em]">CROSS</strong>
+      </div>
+    </div>
+  </section>
+
+  <section
+    id="the-doctrine"
+    class="editorial-shell grid border-y-2 border-[var(--ink)] lg:grid-cols-2"
+  >
+    <div class="section-pad bg-[var(--blue)] text-white lg:border-r-2 lg:border-[var(--ink)]">
+      <p class="eyebrow">For Democrats</p>
+      <p class="display-md mt-7">Your incumbent too.</p>
+      <p class="mt-10 max-w-xl font-serif text-2xl leading-tight">
+        This works only if nobody gets an exemption for voting the right way.
+      </p>
+    </div>
+    <div class="section-pad bg-[var(--red)]">
+      <p class="eyebrow">For Republicans</p>
+      <p class="display-md mt-7">Your incumbent too.</p>
+      <p class="mt-10 max-w-xl font-serif text-2xl leading-tight">
+        This works only if nobody gets an exemption for voting the right way.
+      </p>
+    </div>
+  </section>
+
+  <section id="the-action" class="section-pad editorial-shell bg-[var(--green)]">
+    <div class="grid gap-12 lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
+      <div>
+        <p class="eyebrow">The coordination problem</p>
+        <h2 class="display-lg mt-6">Cross the line—together.</h2>
+      </div>
+      <div>
+        <p class="font-serif text-2xl leading-tight">
+          Would you vote against your incumbent if enough voters elsewhere promised the same?
+        </p>
+        <.link navigate={~p"/act"} id="home-answer-question" class="paper-button mt-9">
+          Answer the question <span aria-hidden="true">→</span>
+        </.link>
+      </div>
+    </div>
+  </section>
+</Layouts.app>
