@@ -9,3 +9,12 @@
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
+
+unless System.get_env("VNI_SKIP_DISTRICT_SEEDS") in ["1", "true"] do
+  summary = VNI.Atlas.Census.seed_current!()
+
+  IO.puts(
+    "Seeded #{summary.districts} congressional districts " <>
+      "from Census TIGER/Line #{summary.vintage}."
+  )
+end

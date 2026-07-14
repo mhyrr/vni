@@ -81,6 +81,10 @@ defmodule VNI.ScoresTest do
     assert second.id == ctx.hook.id
     assert second.score.national_rank == 2
     assert first.score.composite > second.score.composite
+
+    [least_compact, most_compact] = Scores.list_least_compact(:reock)
+    assert least_compact.id == ctx.hook.id
+    assert most_compact.id == ctx.square.id
   end
 
   test "districts under superseded maps are excluded from ranking", ctx do

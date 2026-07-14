@@ -31,7 +31,10 @@ vni-*.tar
 # Ignore digested assets cache.
 /priv/static/cache_manifest.json
 
+# Downloaded Census TIGER/Line archives. URLs and expected contents are
+# versioned in VNI.Atlas.Census; the archives themselves are a local cache.
+/priv/repo/data/tiger/
+
 # In case you use Node.js/npm, you want to ignore these.
 npm-debug.log
 /assets/node_modules/
-

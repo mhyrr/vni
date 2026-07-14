@@ -1,7 +1,16 @@
 defmodule VNIWeb.DistrictLive.Index do
   use VNIWeb, :live_view
 
-  alias VNIWeb.PreviewData
+  alias VNI.Scores
+  alias VNIWeb.DistrictPresenter
+
+  @sorts %{
+    "composite" => :composite,
+    "polsby_popper" => :polsby_popper,
+    "reock" => :reock,
+    "convex_hull" => :convex_hull,
+    "schwartzberg" => :schwartzberg
+  }
 
   def mount(_params, _session, socket) do
     {:ok,
@@ -11,11 +20,22 @@ defmodule VNIWeb.DistrictLive.Index do
   end
 
   def handle_params(params, _uri, socket) do
-    sort = PreviewData.parse_sort(params["sort"])
+    sort = Map.get(@sorts, params["sort"], :composite)
 
     {:noreply,
      socket
      |> assign(:sort, sort)
-     |> stream(:districts, PreviewData.sort(sort), reset: true)}
+     |> stream_async(
+       :districts,
+       fn ->
+         districts =
+           sort
+           |> Scores.list_least_compact()
+           |> Enum.map(&DistrictPresenter.present/1)
+
+         {:ok, districts, reset: true}
+       end,
+       reset: true
+     )}
   end
 end

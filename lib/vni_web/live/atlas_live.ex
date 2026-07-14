@@ -1,13 +1,21 @@
 defmodule VNIWeb.AtlasLive do
   use VNIWeb, :live_view
 
-  alias VNIWeb.PreviewData
+  alias VNI.Scores
+  alias VNIWeb.DistrictPresenter
 
   def mount(_params, _session, socket) do
     {:ok,
      socket
      |> assign(:page_title, "The Atlas")
      |> stream_configure(:districts, dom_id: &"district-#{&1.slug}")
-     |> stream(:districts, PreviewData.all())}
+     |> stream_async(:districts, fn ->
+       districts =
+         :composite
+         |> Scores.list_least_compact()
+         |> Enum.map(&DistrictPresenter.present/1)
+
+       {:ok, districts}
+     end)}
   end
 end

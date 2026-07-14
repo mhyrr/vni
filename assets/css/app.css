@@ -374,14 +374,14 @@ a:focus-visible, button:focus-visible {
 
 .atlas-field {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   border-top: 2px solid var(--ink);
   border-left: 2px solid var(--ink);
 }
 
 .atlas-cell {
   position: relative;
-  min-height: 190px;
+  min-height: 165px;
   padding: 1rem;
   overflow: hidden;
   border-right: 2px solid var(--ink);
@@ -555,6 +555,7 @@ a:focus-visible, button:focus-visible {
   .primary-nav a { min-height: 48px; }
   .hero-field { grid-template-columns: 1fr; }
   .hero-collision { min-height: 430px; }
+  .atlas-field { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .argument-grid { grid-template-columns: 0.35fr 1fr; }
   .argument-grid > :last-child { grid-column: 2; }
   .district-card { grid-template-columns: 1fr 44px; }

@@ -21,13 +21,34 @@ defmodule Mix.Tasks.Vni.Ingest.Shapefiles do
 
   @impl Mix.Task
   def run(args) do
-    {opts, _, _} = OptionParser.parse(args, strict: [congress: :integer])
+    Logger.configure(level: :info)
+
+    {opts, _, invalid} =
+      OptionParser.parse(args,
+        strict: [congress: :integer, cache_dir: :string, force: :boolean]
+      )
+
+    if invalid != [], do: Mix.raise("invalid options: #{inspect(invalid)}")
+
     congress = opts[:congress] || Mix.raise("--congress is required, e.g. --congress 119")
 
-    Mix.raise("""
-    Not implemented yet. Will ingest TIGER/Line CD#{congress} shapefiles:
-    download → ogr2ogr staging table → promote to districts under a
-    congress-#{congress} map version per state.
-    """)
+    if congress != 119 do
+      Mix.raise("only the current 119th Congress importer is implemented")
+    end
+
+    ingest_opts =
+      []
+      |> maybe_put(:cache_dir, opts[:cache_dir])
+      |> maybe_put(:force_download, opts[:force])
+
+    summary = VNI.Atlas.Census.seed_current!(ingest_opts)
+
+    Mix.shell().info(
+      "Imported #{summary.districts} districts across #{summary.states} states " <>
+        "from TIGER/Line #{summary.vintage} (Congress #{summary.congress})."
+    )
   end
+
+  defp maybe_put(options, _key, nil), do: options
+  defp maybe_put(options, key, value), do: Keyword.put(options, key, value)
 end

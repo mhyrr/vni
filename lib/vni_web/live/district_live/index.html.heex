@@ -1,5 +1,5 @@
 <Layouts.app flash={@flash} active={:districts}>
-  <.preview_notice />
+  <.dataset_notice />
 
   <section id="district-index" class="editorial-shell bg-[var(--paper)]">
     <div class="section-pad grid gap-12 lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
@@ -9,44 +9,58 @@
       </div>
       <div>
         <p class="font-serif text-3xl leading-tight">
-          No magic score. Sort the districts by the attribute you care about, then compare each with its neighbors and the nation.
+          No magic score. Sort every district by the composite or inspect the four geometric measurements independently.
         </p>
         <p class="mt-7 text-sm leading-6">
-          “Map bias” is a placeholder for a sourced statewide gerrymandering measure. Compactness remains geometry, not a verdict.
+          Lower is less compact. Compactness remains geometry, not a verdict about why a line was drawn.
         </p>
       </div>
     </div>
 
     <nav id="district-sort" class="sort-rail" aria-label="Sort districts">
       <.link
-        patch={~p"/districts?sort=compactness"}
-        id="sort-compactness"
-        class={["sort-link", @sort == :compactness && "is-active"]}
+        patch={~p"/districts?sort=composite"}
+        id="sort-composite"
+        class={["sort-link", @sort == :composite && "is-active"]}
       >
-        01 · Least compact
+        01 · Composite
       </.link>
       <.link
-        patch={~p"/districts?sort=map_bias"}
-        id="sort-map-bias"
-        class={["sort-link", @sort == :map_bias && "is-active"]}
+        patch={~p"/districts?sort=polsby_popper"}
+        id="sort-polsby-popper"
+        class={["sort-link", @sort == :polsby_popper && "is-active"]}
       >
-        02 · Highest map bias
+        02 · Polsby–Popper
       </.link>
       <.link
-        patch={~p"/districts?sort=turnover"}
-        id="sort-turnover"
-        class={["sort-link", @sort == :turnover && "is-active"]}
+        patch={~p"/districts?sort=reock"}
+        id="sort-reock"
+        class={["sort-link", @sort == :reock && "is-active"]}
       >
-        03 · Most party switches
+        03 · Reock
       </.link>
       <.link
-        patch={~p"/districts?sort=tenure"}
-        id="sort-tenure"
-        class={["sort-link", @sort == :tenure && "is-active"]}
+        patch={~p"/districts?sort=convex_hull"}
+        id="sort-convex-hull"
+        class={["sort-link", @sort == :convex_hull && "is-active"]}
       >
-        04 · Longest tenure
+        04 · Convex hull
+      </.link>
+      <.link
+        patch={~p"/districts?sort=schwartzberg"}
+        id="sort-schwartzberg"
+        class={["sort-link", @sort == :schwartzberg && "is-active"]}
+      >
+        05 · Schwartzberg
       </.link>
     </nav>
+
+    <div :if={@districts.loading} id="districts-loading" class="section-pad !py-10 data-label">
+      Loading 435 district geometries…
+    </div>
+    <div :if={@districts.failed} id="districts-error" class="section-pad !py-10">
+      District data could not be loaded.
+    </div>
 
     <div id="districts" class="district-grid" phx-update="stream">
       <.link
@@ -57,36 +71,38 @@
         class="district-card"
       >
         <div class="district-identity">
-          <.district_shape variant={district.shape} party={district.party} />
+          <.district_shape path={district.shape_path} tone={district.tone} />
           <div>
-            <span class={["inline-block px-2 py-1 data-label", party_bg(district.party)]}>
-              {district.lean}
+            <span class="inline-block bg-[var(--ink)] px-2 py-1 text-white data-label">
+              119th Congress
             </span>
             <h2 class="mt-3 text-4xl font-black tracking-[-0.08em]">{district.label}</h2>
             <p class="mt-1 font-serif text-lg">{district.state}</p>
-            <p class="mt-3 text-xs text-[var(--muted)]">{district.authority}</p>
+            <p class="mt-3 text-xs text-[var(--muted)]">
+              {district.land_area} km² · {district.perimeter} km perimeter
+            </p>
           </div>
         </div>
         <div class="district-metrics">
           <div class="district-metric">
-            <span class="data-label">Compactness</span>
-            <strong>{district.compactness}</strong>
-            <span class="text-xs">Rank {district.compactness_rank} / 435</span>
+            <span class="data-label">Composite</span>
+            <strong>{district.composite}</strong>
+            <span class="text-xs">Rank {district.national_rank} / 435</span>
           </div>
           <div class="district-metric">
-            <span class="data-label">Map bias</span>
-            <strong>{district.map_bias}</strong>
-            <span class="text-xs">Statewide signal</span>
+            <span class="data-label">Polsby–Popper</span>
+            <strong>{district.polsby_popper}</strong>
+            <span class="text-xs">Area vs perimeter</span>
           </div>
           <div class="district-metric">
-            <span class="data-label">Party switches</span>
-            <strong>{district.turnover}</strong>
-            <span class="text-xs">Recent history</span>
+            <span class="data-label">Reock</span>
+            <strong>{district.reock}</strong>
+            <span class="text-xs">Bounding circle</span>
           </div>
           <div class="district-metric">
-            <span class="data-label">Tenure</span>
-            <strong>{district.tenure}</strong>
-            <span class="text-xs">Years in office</span>
+            <span class="data-label">Convex hull</span>
+            <strong>{district.convex_hull}</strong>
+            <span class="text-xs">Enclosing hull</span>
           </div>
         </div>
         <span class="district-arrow" aria-hidden="true">→</span>

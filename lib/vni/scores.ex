@@ -45,25 +45,46 @@ defmodule VNI.Scores do
 
     Repo.query!(
       """
+      -- Transform and construct the hull once. The minimum enclosing circle
+      -- of a geometry is exactly the minimum enclosing circle of its convex
+      -- hull, while the hull has far fewer points for TIGER coastlines.
+      WITH base AS MATERIALIZED (
+        SELECT d.id,
+          ST_Area(d.geom::geography) AS area_m2,
+          ST_Perimeter(d.geom::geography) AS perimeter_m,
+          ST_Transform(d.geom, 5070) AS geom_5070
+        FROM districts d
+        WHERE d.map_version_id = $1
+          AND d.geom IS NOT NULL
+      ),
+      hulls AS MATERIALIZED (
+        SELECT id, area_m2, perimeter_m,
+          ST_Area(geom_5070) AS projected_area,
+          ST_ConvexHull(geom_5070) AS hull
+        FROM base
+      ),
+      measurements AS MATERIALIZED (
+        SELECT id, area_m2, perimeter_m, projected_area,
+          ST_Area(hull) AS hull_area,
+          ST_Area(ST_MinimumBoundingCircle(hull)) AS circle_area
+        FROM hulls
+      )
       -- Each ratio is mathematically <= 1 (isoperimetric inequality; a shape
       -- never exceeds its hull or bounding circle), so LEAST(1.0, ...) only
       -- absorbs float noise from GEOS, which varies by PostGIS version.
       UPDATE district_scores ds SET
-        polsby_popper = LEAST(1.0, 4 * pi() * ST_Area(d.geom::geography)
-          / NULLIF(power(ST_Perimeter(d.geom::geography), 2), 0)),
-        schwartzberg = LEAST(1.0, 2 * pi() * sqrt(ST_Area(d.geom::geography) / pi())
-          / NULLIF(ST_Perimeter(d.geom::geography), 0)),
-        reock = LEAST(1.0, ST_Area(ST_Transform(d.geom, 5070))
-          / NULLIF(ST_Area(ST_MinimumBoundingCircle(ST_Transform(d.geom, 5070))), 0)),
-        convex_hull = LEAST(1.0, ST_Area(ST_Transform(d.geom, 5070))
-          / NULLIF(ST_Area(ST_ConvexHull(ST_Transform(d.geom, 5070))), 0)),
+        polsby_popper = LEAST(1.0, 4 * pi() * m.area_m2
+          / NULLIF(power(m.perimeter_m, 2), 0)),
+        schwartzberg = LEAST(1.0, 2 * pi() * sqrt(m.area_m2 / pi())
+          / NULLIF(m.perimeter_m, 0)),
+        reock = LEAST(1.0, m.projected_area / NULLIF(m.circle_area, 0)),
+        convex_hull = LEAST(1.0, m.projected_area / NULLIF(m.hull_area, 0)),
         updated_at = now()
-      FROM districts d
-      WHERE d.id = ds.district_id
-        AND d.map_version_id = $1
-        AND d.geom IS NOT NULL
+      FROM measurements m
+      WHERE m.id = ds.district_id
       """,
-      [map_version_id]
+      [map_version_id],
+      timeout: :infinity
     )
 
     :ok
@@ -115,7 +136,8 @@ defmodule VNI.Scores do
       FROM ranked r
       WHERE ds.id = r.id
       """,
-      [Atom.to_string(level)]
+      [Atom.to_string(level)],
+      timeout: :infinity
     )
 
     :ok
@@ -133,6 +155,53 @@ defmodule VNI.Scores do
     |> Repo.all()
   end
 
+  @sortable_metrics [:composite, :polsby_popper, :reock, :convex_hull, :schwartzberg]
+  @display_district_fields [
+    :id,
+    :map_version_id,
+    :state,
+    :number,
+    :slug,
+    :geom_simplified,
+    :land_area_sqkm,
+    :perimeter_km
+  ]
+
+  @doc "Current scored districts ordered from least to most compact by one metric."
+  def list_least_compact(metric \\ :composite, level \\ :congressional)
+
+  def list_least_compact(metric, level) when metric in @sortable_metrics do
+    from(d in District,
+      join: s in assoc(d, :score),
+      join: mv in assoc(d, :map_version),
+      where:
+        mv.level == ^level and is_nil(mv.effective_until) and
+          not is_nil(field(s, ^metric)),
+      order_by: [asc: field(s, ^metric), asc: d.state, asc: d.number],
+      select: struct(d, ^@display_district_fields),
+      preload: [score: s, map_version: mv]
+    )
+    |> Repo.all()
+  end
+
+  def list_least_compact(metric, _level) do
+    raise ArgumentError, "unsupported compactness metric: #{inspect(metric)}"
+  end
+
+  @doc "A current scored district trimmed to the fields needed by the public UI."
+  def get_current_district(slug, level \\ :congressional) do
+    from(d in District,
+      join: s in assoc(d, :score),
+      join: mv in assoc(d, :map_version),
+      where:
+        d.slug == ^slug and mv.level == ^level and is_nil(mv.effective_until) and
+          not is_nil(s.composite),
+      select: struct(d, ^@display_district_fields),
+      preload: [score: s, map_version: mv]
+    )
+    |> Repo.one()
+  end
+
   def get_score(district_id), do: Repo.get_by(DistrictScore, district_id: district_id)
 
   # One score row per district in the map version, stamped with the current
@@ -147,7 +216,8 @@ defmodule VNI.Scores do
       ON CONFLICT (district_id)
       DO UPDATE SET methodology_version = EXCLUDED.methodology_version, updated_at = now()
       """,
-      [map_version_id, @methodology_version]
+      [map_version_id, @methodology_version],
+      timeout: :infinity
     )
   end
 end

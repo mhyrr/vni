@@ -1,5 +1,36 @@
 This is a web application written using the Phoenix web framework.
 
+## Development Commands
+
+### Essential Commands
+- `mix setup` - Install dependencies, create/migrate database, setup assets
+- `mix phx.server` - **NEVER RUN** (user manages server separately)
+- `mix test` - Run full test suite (includes database setup)
+- `mix ecto.reset` - Drop, create, and migrate database with seeds
+- `mix assets.build` - Build Tailwind CSS and esbuild assets
+- `mix assets.deploy` - Build and minify assets for production
+- Always use Tidewave's tools for evaluating code, querying the database, etc.
+
+Use `get_docs` to access documentation and the `get_source_location` tool to
+find module/function definitions.
+
+### Database Management
+- Database runs in Docker Desktop (PostgreSQL instance)
+- Database name: `revrec_dev`
+- **NEVER** re-run seeds without explicit permission
+
+### Testing & Quality
+- `mix test` - Comprehensive test suite with automatic database setup (excludes expensive integration tests)
+- `mix test --include integration` - Run all tests including AI integration tests (costs money via OpenAI API)
+- `mix test test/integration/ai_natural_language_test.exs --include integration` - Run specific integration test file
+- `mix credo` - Static analysis and code quality checks
+- `mix sobelow` - Security vulnerability scanner
+
+## Project guidelines
+
+- Use `mix precommit` alias when you are done with all changes and fix any pending issues
+- Use the already included and available `:req` (`Req`) library for HTTP requests, **avoid** `:httpoison`, `:tesla`, and `:httpc`. Req is included by default and is the preferred HTTP client for Phoenix apps
+
 ## Project guidelines
 
 - Use `mix precommit` alias when you are done with all changes and fix any pending issues

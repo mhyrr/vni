@@ -17,6 +17,8 @@ defmodule Mix.Tasks.Vni.Score do
 
   @impl Mix.Task
   def run(args) do
+    Logger.configure(level: :info)
+
     {opts, _, _} = OptionParser.parse(args, strict: [map_version: :integer])
 
     case opts[:map_version] do

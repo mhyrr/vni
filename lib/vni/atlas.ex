@@ -21,6 +21,17 @@ defmodule VNI.Atlas do
     |> Repo.insert()
   end
 
+  @doc "Idempotent upsert keyed on the map-version source identity."
+  def upsert_map_version(attrs) do
+    %MapVersion{}
+    |> MapVersion.changeset(attrs)
+    |> Repo.insert(
+      on_conflict: {:replace, [:source_url, :updated_at]},
+      conflict_target: [:state, :level, :congress, :effective_from],
+      returning: true
+    )
+  end
+
   def get_map_version!(id), do: Repo.get!(MapVersion, id)
 
   @doc "The map currently in effect for a state at a level, or nil."
@@ -65,6 +76,24 @@ defmodule VNI.Atlas do
   def list_districts(%MapVersion{} = map_version) do
     from(d in District, where: d.map_version_id == ^map_version.id, order_by: [d.state, d.number])
     |> Repo.all()
+  end
+
+  @doc "Derive display geometry and geodesic measurements after geometry ingest."
+  def refresh_district_geometries!(%MapVersion{} = map_version) do
+    Repo.query!(
+      """
+      UPDATE districts
+      SET geom_simplified = ST_Multi(ST_SimplifyPreserveTopology(geom, 0.005)),
+          land_area_sqkm = ST_Area(geom::geography) / 1000000.0,
+          perimeter_km = ST_Perimeter(geom::geography) / 1000.0,
+          updated_at = NOW()
+      WHERE map_version_id = $1
+        AND geom IS NOT NULL
+      """,
+      [map_version.id]
+    )
+
+    :ok
   end
 
   @doc "Resolve a slug against current maps at a level. Returns nil if unknown."

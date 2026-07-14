@@ -1,22 +1,18 @@
 defmodule VNIWeb.DistrictLive.Show do
   use VNIWeb, :live_view
 
-  alias VNIWeb.PreviewData
+  alias VNI.Scores
+  alias VNIWeb.DistrictPresenter
 
   def mount(%{"slug" => slug}, _session, socket) do
-    case PreviewData.get(slug) do
-      nil ->
-        {:ok,
-         socket
-         |> put_flash(:error, "District not found")
-         |> push_navigate(to: ~p"/districts")}
-
-      district ->
-        {:ok,
-         assign(socket,
-           page_title: "#{district.label} district profile",
-           district: district
-         )}
-    end
+    {:ok,
+     socket
+     |> assign(:page_title, "#{String.upcase(slug)} district profile")
+     |> assign_async(:district, fn ->
+       case Scores.get_current_district(slug) do
+         nil -> {:error, :not_found}
+         district -> {:ok, %{district: DistrictPresenter.present(district)}}
+       end
+     end)}
   end
 end
