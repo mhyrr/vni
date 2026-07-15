@@ -31,9 +31,11 @@ defmodule VNI.Politics do
   def get_profile(district_id), do: Repo.get_by(DistrictProfile, district_id: district_id)
 
   @doc """
-  Partisan lean from presidential results by CD: weighted two-cycle average
-  of the district's margin relative to the national margin. Positive =
-  more Republican than the nation, negative = more Democratic (R+/D-).
+  Partisan lean: weighted two-cycle average of the district's deviation
+  from the nation. Positive = more Republican than the nation, negative =
+  more Democratic (R+/D-). Inputs must be commensurable series — the
+  results ingest feeds R shares of the two-party presidential vote, in
+  percentage points (see `VNI.Politics.Results`).
 
   Our own published formula on public data — not Cook PVI, which is a
   licensed product. Weights favor the more recent cycle 3:1.
