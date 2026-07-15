@@ -74,7 +74,23 @@
       >
         08 · Lean
       </.link>
+      <.link
+        patch={~p"/districts?sort=map_bias"}
+        id="sort-map-bias"
+        class={["sort-link", @sort == :map_bias && "is-active"]}
+      >
+        09 · Map skew
+      </.link>
     </nav>
+
+    <p :if={@sort == :map_bias} id="districts-map-bias-caveat" class="px-5 py-4 text-sm md:px-10">
+      Map skew orders districts by their state's mean–median gap, largest magnitude first — a property of the statewide map, identical for every district in the state and silent about any one shape. States with too few districts to measure sort last — <.link
+        navigate={~p"/methodology#methodology-bias"}
+        class="font-bold underline underline-offset-4"
+      >
+        what this number can and cannot see
+      </.link>.
+    </p>
 
     <p :if={@sort == :lean} id="districts-lean-caveat" class="px-5 py-4 text-sm md:px-10">
       Lean sorts by distance from the nation, so the safest red and blue seats sit side by side. It is evidence of terrain, never a verdict on a seat — <.link
@@ -138,6 +154,35 @@
             <span class="data-label">Convex hull</span>
             <strong>{district.convex_hull}</strong>
             <span class="text-xs">Enclosing hull</span>
+          </div>
+        </div>
+        <div :if={@sort_kind == :map_bias} class="district-metrics">
+          <div class="district-metric">
+            <span class="data-label">State map skew</span>
+            <strong>{district.state_skew || "—"}</strong>
+            <span :if={district.state_skew} class="text-xs">
+              Median district vs state average · statewide
+            </span>
+            <span :if={!district.state_skew} class="text-xs">Too few districts to measure</span>
+          </div>
+          <div class="district-metric">
+            <span class="data-label">Lean</span>
+            <strong>{district.partisan_lean || "—"}</strong>
+            <span class="text-xs">vs the nation · our formula</span>
+          </div>
+          <div class="district-metric">
+            <span class="data-label">Last margin</span>
+            <strong>{if district.last_margin, do: "+#{district.last_margin}", else: "—"}</strong>
+            <span :if={district.last_margin_cycle} class="text-xs">
+              {district.last_margin_cycle} general
+            </span>
+          </div>
+          <div class="district-metric">
+            <span class="data-label">Composite</span>
+            <strong>{district.composite || "—"}</strong>
+            <span :if={district.national_rank} class="text-xs">
+              Rank {district.national_rank} / {district.ranked_total}
+            </span>
           </div>
         </div>
         <div :if={@sort_kind == :political} class="district-metrics">

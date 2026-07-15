@@ -118,6 +118,26 @@ defmodule VNI.Scores.StateBias do
     Enum.find(state_rows(level), &(&1.state == state))
   end
 
+  @doc """
+  Current scored districts ordered by their state's absolute mean–median
+  gap, largest first — the /districts "map skew" sort. The gap is a
+  property of the statewide map, identical for every district in the
+  state; sorting by magnitude interleaves R- and D-favoring maps, the
+  same symmetry the lean sort uses. Districts in states below the seat
+  floor sort last, never out.
+  """
+  def list_districts_by_skew(level \\ :congressional) do
+    skew = Map.new(state_rows(level), &{&1.state, &1.mean_median})
+
+    VNI.Scores.list_least_compact(:composite, level)
+    |> Enum.sort_by(fn district ->
+      case skew[district.state] do
+        nil -> {1, 0.0, district.state, district.number}
+        gap -> {0, -abs(gap), district.state, district.number}
+      end
+    end)
+  end
+
   defp atomize(nil), do: nil
   defp atomize(value) when is_binary(value), do: String.to_existing_atom(value)
 end

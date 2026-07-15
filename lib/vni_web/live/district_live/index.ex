@@ -19,6 +19,8 @@ defmodule VNIWeb.DistrictLive.Index do
     "lean" => :lean
   }
 
+  @bias_sorts %{"map_bias" => :map_bias}
+
   def mount(_params, _session, socket) do
     {:ok,
      socket
@@ -37,10 +39,15 @@ defmodule VNIWeb.DistrictLive.Index do
        fn ->
          districts =
            case sort_kind do
-             :compactness -> Scores.list_least_compact(sort)
-             :political -> Politics.list_most_entrenched(sort)
+             :compactness ->
+               Scores.list_least_compact(sort) |> DistrictPresenter.present_field()
+
+             :political ->
+               Politics.list_most_entrenched(sort) |> DistrictPresenter.present_field()
+
+             :map_bias ->
+               list_by_map_bias()
            end
-           |> DistrictPresenter.present_field()
 
          {:ok, districts, reset: true}
        end,
@@ -52,7 +59,22 @@ defmodule VNIWeb.DistrictLive.Index do
     cond do
       sort = @metric_sorts[param] -> {sort, :compactness}
       sort = @political_sorts[param] -> {sort, :political}
+      sort = @bias_sorts[param] -> {sort, :map_bias}
       true -> {:composite, :compactness}
     end
+  end
+
+  # The map-skew sort carries each district's statewide gap onto the
+  # card: presenter maps stay the interface, the state's skew string is
+  # merged in by position (list order is preserved by present_field).
+  defp list_by_map_bias do
+    districts = Scores.StateBias.list_districts_by_skew()
+    skews = VNIWeb.StatePresenter.skew_by_state()
+
+    districts
+    |> DistrictPresenter.present_field()
+    |> Enum.zip_with(districts, fn presented, district ->
+      Map.put(presented, :state_skew, skews[district.state])
+    end)
   end
 end

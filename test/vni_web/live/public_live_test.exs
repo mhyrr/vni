@@ -115,6 +115,23 @@ defmodule VNIWeb.PublicLiveTest do
     assert has_element?(view, "#districts > a:first-of-type[data-slug='md-3']")
     assert has_element?(view, "#district-md-3 .district-metric", "D+21")
     assert has_element?(view, "#districts-lean-caveat a[href='/methodology#methodology-lean']")
+
+    view
+    |> element("#sort-map-bias")
+    |> render_click()
+
+    assert_patch(view, ~p"/districts?sort=map_bias")
+    render_async(view)
+    # Every seeded state sits below the seat floor: the skew cell states
+    # why, the caveat rides, and the nil-skew group falls back to state
+    # order (AK first).
+    assert has_element?(
+             view,
+             "#districts-map-bias-caveat a[href='/methodology#methodology-bias']"
+           )
+
+    assert has_element?(view, "#district-md-3 .district-metric", "Too few districts to measure")
+    assert has_element?(view, "#districts > a:first-of-type[data-slug='ak-0']")
   end
 
   test "district profile presents incumbent and population facts", %{conn: conn} do
