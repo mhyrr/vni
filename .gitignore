@@ -40,6 +40,7 @@ vni-*.tar
 # guestbook and are fetched manually once).
 /priv/repo/data/medsl/
 /priv/repo/data/downballot/
+/priv/repo/data/census-rel/
 
 # In case you use Node.js/npm, you want to ignore these.
 npm-debug.log

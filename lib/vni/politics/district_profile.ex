@@ -29,6 +29,9 @@ defmodule VNI.Politics.DistrictProfile do
     field :voting_age_population, :integer
     field :acs_vintage, :integer
     field :population_source_url, :string
+    field :counties, {:array, :map}
+    field :places, {:array, :map}
+    field :geography_source_url, :string
 
     timestamps(type: :utc_datetime)
   end
@@ -50,7 +53,10 @@ defmodule VNI.Politics.DistrictProfile do
       :population,
       :voting_age_population,
       :acs_vintage,
-      :population_source_url
+      :population_source_url,
+      :counties,
+      :places,
+      :geography_source_url
     ])
     |> foreign_key_constraint(:district_id)
     |> unique_constraint(:district_id)
