@@ -169,6 +169,12 @@ defmodule VNI.Politics.ResultsTest do
 
     assert_in_delta wy0.partisan_lean, expected_wy0, 0.06
     assert wy0.partisan_lean > 15
+
+    # The raw R shares behind the lean persist for the statewide
+    # mean–median measure.
+    assert_in_delta tx33.pres_share_2024, 100.0 * 30 / 100, 0.001
+    assert_in_delta tx33.pres_share_2020, 100.0 * 28 / 100, 0.001
+    assert_in_delta wy0.pres_share_2024, 100.0 * 72 / 98, 0.001
   end
 
   test "margins and lean merge on the shared profile row", ctx do

@@ -55,6 +55,10 @@ defmodule VNI.Politics.Results do
   National shares are computed from MEDSL "U.S. President 1976–2024"
   (CC0, https://doi.org/10.7910/DVN/42MVDX), also a guestbook-gated
   local cache.
+
+  The raw district R shares (`pres_share_2024`, `pres_share_2020`) are
+  persisted alongside the computed lean — they are the inputs to the
+  statewide mean–median map-bias measure (`VNI.Scores.StateBias`).
   """
 
   require Logger
@@ -242,6 +246,8 @@ defmodule VNI.Politics.Results do
             {:ok, _profile} =
               Politics.upsert_profile(district, %{
                 partisan_lean: Float.round(lean, 1),
+                pres_share_2024: Map.fetch!(district_shares, 2024),
+                pres_share_2020: Map.fetch!(district_shares, 2020),
                 lean_source_url: @lean_source_url
               })
 

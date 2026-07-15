@@ -22,6 +22,8 @@ defmodule VNI.Politics.DistrictProfile do
     field :last_margin_party, Ecto.Enum, values: [:dem, :rep, :ind]
     field :margin_source_url, :string
     field :partisan_lean, :float
+    field :pres_share_2024, :float
+    field :pres_share_2020, :float
     field :lean_source_url, :string
     field :bioguide_id, :string
     field :incumbent_source_url, :string
@@ -47,6 +49,8 @@ defmodule VNI.Politics.DistrictProfile do
       :last_margin_party,
       :margin_source_url,
       :partisan_lean,
+      :pres_share_2024,
+      :pres_share_2020,
       :lean_source_url,
       :bioguide_id,
       :incumbent_source_url,
