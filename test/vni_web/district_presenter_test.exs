@@ -163,6 +163,11 @@ defmodule VNIWeb.DistrictPresenterTest do
     assert presented.partisan_lean == "D+21"
     assert presented.partisan_lean_party_key == :dem
 
+    # Lean color grammar: hue = direction, opacity = magnitude on [0.2, 1.0],
+    # saturating at ±30 points. D+20.8 → blue at 0.2 + 0.8 × 20.8/30.
+    assert presented.lean_tone == :blue
+    assert presented.lean_intensity == 0.75
+
     # Authorship, exactly as curated.
     assert presented.map_authority == "the state legislature"
     assert presented.map_authority_short == "Legislature"
@@ -212,6 +217,8 @@ defmodule VNIWeb.DistrictPresenterTest do
 
     # No lean or geography ingested yet — nil, not a crash or a zero.
     assert is_nil(presented.partisan_lean)
+    assert presented.lean_tone == :neutral
+    assert is_nil(presented.lean_intensity)
     assert is_nil(presented.county_line)
 
     # At-large: no authority, but the citation still documents the seat.

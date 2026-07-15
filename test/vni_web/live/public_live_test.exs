@@ -50,6 +50,73 @@ defmodule VNIWeb.PublicLiveTest do
     refute has_element?(view, "#atlas-field", "challenger")
   end
 
+  test "atlas colors by partisan lean with the caveat one click away", %{conn: conn} do
+    seed_districts!()
+    {:ok, view, _html} = live(conn, ~p"/atlas")
+    render_async(view)
+
+    assert has_element?(view, "#color-compactness.is-active")
+    refute has_element?(view, "#atlas-lean-caveat")
+
+    view
+    |> element("#color-lean")
+    |> render_click()
+
+    assert_patch(view, ~p"/atlas?color=lean")
+    render_async(view)
+    assert has_element?(view, "#color-lean.is-active")
+
+    # Evidence colors: hue is direction, fill opacity is magnitude, and the
+    # badge carries the lean itself.
+    assert has_element?(view, "#district-md-3 svg path[class*='--blue'][fill-opacity]")
+    assert has_element?(view, "#district-md-3", "D+21")
+
+    # No lean record → paper, never a party color.
+    refute has_element?(view, "#district-tx-35 svg path[fill-opacity]")
+
+    # Doctrine: the methodology caveat stays one click away.
+    assert has_element?(view, "#atlas-lean-caveat[href='/methodology#methodology-lean']")
+    assert has_element?(view, "#atlas-lean-legend a[href='/methodology#methodology-lean']")
+    assert has_element?(view, "#atlas-lean-legend", "never a verdict")
+  end
+
+  test "district directory sorts by the entrenchment record", %{conn: conn} do
+    seed_districts!()
+    {:ok, view, _html} = live(conn, ~p"/districts?sort=tenure")
+    render_async(view)
+
+    # Longest-serving incumbent first; the profile-less district sorts last.
+    assert has_element?(view, "#sort-tenure.is-active")
+    assert has_element?(view, "#districts > a:first-of-type[data-slug='md-3']")
+    assert has_element?(view, "#districts > a:last-of-type[data-slug='tx-35']")
+
+    assert has_element?(
+             view,
+             "#district-md-3 .district-metric",
+             "Years in the House · since 2013"
+           )
+
+    view
+    |> element("#sort-margin")
+    |> render_click()
+
+    assert_patch(view, ~p"/districts?sort=margin")
+    render_async(view)
+    # Unopposed records 100 — the strongest entrenchment signal tops the sort.
+    assert has_element?(view, "#districts > a:first-of-type[data-slug='ak-0']")
+    assert has_element?(view, "#district-ak-0 .district-metric", "Unopposed · 2024 general")
+
+    view
+    |> element("#sort-lean")
+    |> render_click()
+
+    assert_patch(view, ~p"/districts?sort=lean")
+    render_async(view)
+    assert has_element?(view, "#districts > a:first-of-type[data-slug='md-3']")
+    assert has_element?(view, "#district-md-3 .district-metric", "D+21")
+    assert has_element?(view, "#districts-lean-caveat a[href='/methodology#methodology-lean']")
+  end
+
   test "district profile presents incumbent and population facts", %{conn: conn} do
     seed_districts!()
     {:ok, view, _html} = live(conn, ~p"/districts/md-3")

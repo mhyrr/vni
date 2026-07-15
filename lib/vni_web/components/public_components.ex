@@ -5,12 +5,13 @@ defmodule VNIWeb.PublicComponents do
 
   attr :path, :string, required: true
   attr :tone, :atom, default: :yellow
+  attr :fill_opacity, :float, default: nil
   attr :class, :string, default: nil
 
   def district_shape(assigns) do
     ~H"""
     <svg viewBox="0 0 100 100" aria-hidden="true" class={@class}>
-      <path d={@path} fill-rule="evenodd" class={tone_fill(@tone)} />
+      <path d={@path} fill-rule="evenodd" class={tone_fill(@tone)} fill-opacity={@fill_opacity} />
       <path
         d={@path}
         fill-rule="evenodd"

@@ -20,12 +20,44 @@
   </section>
 
   <section class="editorial-shell bg-[var(--paper)]">
-    <div class="flex items-end justify-between gap-6 px-5 py-4 md:px-10">
+    <div class="flex flex-wrap items-end justify-between gap-6 px-5 py-4 md:px-10">
       <div>
         <p class="data-label">National map field</p>
         <p class="mt-1 font-serif text-lg">Select a district to inspect its profile.</p>
       </div>
-      <span class="data-label hidden md:block">Color = composite compactness band</span>
+      <div class="flex items-center gap-4">
+        <.link
+          :if={@color_by == :lean}
+          id="atlas-lean-caveat"
+          navigate={~p"/methodology#methodology-lean"}
+          class="data-label underline underline-offset-4"
+        >
+          Lean is evidence, never a verdict — the formula ↗
+        </.link>
+        <nav
+          id="atlas-color-by"
+          class="flex border-2 border-[var(--ink)]"
+          aria-label="Color districts by"
+        >
+          <.link
+            patch={~p"/atlas"}
+            id="color-compactness"
+            class={["sort-link !min-w-0 !flex-none", @color_by == :compactness && "is-active"]}
+          >
+            Color · Compactness
+          </.link>
+          <.link
+            patch={~p"/atlas?color=lean"}
+            id="color-lean"
+            class={[
+              "sort-link !min-w-0 !flex-none border-l border-[var(--ink)] !border-r-0",
+              @color_by == :lean && "is-active"
+            ]}
+          >
+            Color · Partisan lean
+          </.link>
+        </nav>
+      </div>
     </div>
     <div :if={@districts.loading} id="atlas-loading" class="px-5 py-8 data-label md:px-10">
       Loading the national field…
@@ -42,9 +74,15 @@
       >
         <span class="data-label">{district.label}</span>
         <span class="absolute top-4 right-4 bg-[var(--ink)] px-2 py-1 text-white data-label">
-          {district.composite || "—"}
+          {if @color_by == :lean,
+            do: district.partisan_lean || "—",
+            else: district.composite || "—"}
         </span>
-        <.district_shape path={district.shape_path} tone={district.tone} />
+        <.district_shape
+          path={district.shape_path}
+          tone={if @color_by == :lean, do: district.lean_tone, else: district.tone}
+          fill_opacity={if @color_by == :lean, do: district.lean_intensity}
+        />
         <span class="data-label atlas-cell-meta">
           <span>{district.state}</span>
           <span :if={district.national_rank}>
@@ -102,7 +140,7 @@
         </p>
       </div>
       <div class="grid gap-8 border-l-2 border-[var(--ink)] pl-8 md:grid-cols-2 lg:pl-14">
-        <div>
+        <div :if={@color_by == :compactness}>
           <p class="data-label">Composite color bands</p>
           <.metric_bar
             label="Red · 0–24"
@@ -113,6 +151,35 @@
           <.metric_bar label="Yellow · 25–49" value={50} display="Lower half" tone={:yellow} />
           <.metric_bar label="Green · 50–74" value={75} display="Upper half" tone={:green} />
           <.metric_bar label="Blue · 75–100" value={100} display="Most compact" tone={:blue} />
+        </div>
+        <div :if={@color_by == :lean} id="atlas-lean-legend">
+          <p class="data-label">Lean color grammar</p>
+          <ul class="mt-6 space-y-4 text-sm leading-6">
+            <li class="flex items-baseline gap-3">
+              <span class="h-3.5 w-3.5 shrink-0 self-center border border-[var(--ink)] bg-[var(--blue)]">
+              </span>
+              D+ · bluer than the nation
+            </li>
+            <li class="flex items-baseline gap-3">
+              <span class="h-3.5 w-3.5 shrink-0 self-center border border-[var(--ink)] bg-[var(--paper-bright)]">
+              </span>
+              EVEN · on the national number
+            </li>
+            <li class="flex items-baseline gap-3">
+              <span class="h-3.5 w-3.5 shrink-0 self-center border border-[var(--ink)] bg-[var(--red)]">
+              </span>
+              R+ · redder than the nation
+            </li>
+          </ul>
+          <p class="mt-6 max-w-xs text-sm leading-6">
+            Depth of color is the size of the gap, saturating at ±30 points. Contorted shapes turn up in both colors — both parties draw them.
+          </p>
+          <.link
+            navigate={~p"/methodology#methodology-lean"}
+            class="mt-4 inline-block text-sm font-bold underline underline-offset-4"
+          >
+            Lean is evidence, never a verdict — read the formula
+          </.link>
         </div>
         <div class="comparison-field border-2 border-[var(--ink)] p-5">
           <p class="data-label">What the composite contains</p>

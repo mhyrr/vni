@@ -166,6 +166,8 @@ defmodule VNIWeb.DistrictPresenter do
       margin_source_url: profile.margin_source_url,
       partisan_lean: lean_label(profile.partisan_lean),
       partisan_lean_party_key: lean_party(profile.partisan_lean),
+      lean_tone: lean_tone(profile.partisan_lean),
+      lean_intensity: lean_intensity(profile.partisan_lean),
       lean_source_url: profile.lean_source_url,
       county_line: geography_line(profile.counties, 3),
       place_line: geography_line(profile.places, 4),
@@ -193,6 +195,8 @@ defmodule VNIWeb.DistrictPresenter do
       margin_source_url: nil,
       partisan_lean: nil,
       partisan_lean_party_key: nil,
+      lean_tone: :neutral,
+      lean_intensity: nil,
       lean_source_url: nil,
       county_line: nil,
       place_line: nil,
@@ -224,6 +228,27 @@ defmodule VNIWeb.DistrictPresenter do
       n when n > 0 -> :rep
       _n -> :dem
     end
+  end
+
+  # Lean color grammar: party hue carries the direction of the evidence,
+  # depth of color carries its size. Unknown and EVEN districts stay paper.
+  defp lean_tone(nil), do: :neutral
+
+  defp lean_tone(lean) do
+    case round(lean) do
+      0 -> :neutral
+      n when n > 0 -> :red
+      _n -> :blue
+    end
+  end
+
+  # Fill opacity in [0.2, 1.0]; the scale saturates at ±30 points so a
+  # handful of extreme districts don't flatten everything else to pastel.
+  defp lean_intensity(nil), do: nil
+
+  defp lean_intensity(lean) do
+    magnitude = min(abs(lean / 1), 30.0)
+    Float.round(0.2 + 0.8 * magnitude / 30.0, 2)
   end
 
   # "Cook County (part) · Lake County" — ingested order, trimmed for the

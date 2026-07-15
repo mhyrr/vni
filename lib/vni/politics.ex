@@ -6,9 +6,26 @@ defmodule VNI.Politics do
   public record states.
   """
 
+  import Ecto.Query
+
   alias VNI.Repo
   alias VNI.Atlas.District
   alias VNI.Politics.DistrictProfile
+
+  @entrenchment_sorts [:tenure, :margin, :lean]
+
+  # Mirrors the display field set in VNI.Scores.list_least_compact/2 — both
+  # feed the same presenter, so the shapes must stay interchangeable.
+  @display_district_fields [
+    :id,
+    :map_version_id,
+    :state,
+    :number,
+    :slug,
+    :geom_simplified,
+    :land_area_sqkm,
+    :perimeter_km
+  ]
 
   @doc """
   Idempotent upsert keyed on district — ingest tasks are rerunnable.
@@ -29,6 +46,46 @@ defmodule VNI.Politics do
   end
 
   def get_profile(district_id), do: Repo.get_by(DistrictProfile, district_id: district_id)
+
+  @doc """
+  Current scored districts ordered by an entrenchment attribute, most
+  entrenched first: longest tenure, widest last margin, or largest lean
+  magnitude. Lean sorts by absolute deviation, so the safest red and blue
+  seats interleave — the evidence stays symmetric by construction.
+
+  Districts without the ingested fact sort last, never out.
+  """
+  def list_most_entrenched(attr, level \\ :congressional)
+
+  def list_most_entrenched(attr, level) when attr in @entrenchment_sorts do
+    from(d in District,
+      join: s in assoc(d, :score),
+      join: mv in assoc(d, :map_version),
+      left_join: p in assoc(d, :profile),
+      where:
+        mv.level == ^level and is_nil(mv.effective_until) and
+          not is_nil(s.polsby_popper),
+      order_by: ^entrenchment_order(attr),
+      order_by: [asc: d.state, asc: d.number],
+      select: struct(d, ^@display_district_fields),
+      preload: [profile: p, score: s, map_version: mv]
+    )
+    |> Repo.all()
+  end
+
+  def list_most_entrenched(attr, _level) do
+    raise ArgumentError, "unsupported entrenchment sort: #{inspect(attr)}"
+  end
+
+  # Longest tenure = earliest first House year.
+  defp entrenchment_order(:tenure),
+    do: [asc_nulls_last: dynamic([d, s, mv, p], p.incumbent_since)]
+
+  defp entrenchment_order(:margin),
+    do: [desc_nulls_last: dynamic([d, s, mv, p], p.last_margin_pct)]
+
+  defp entrenchment_order(:lean),
+    do: [desc_nulls_last: dynamic([d, s, mv, p], fragment("ABS(?)", p.partisan_lean))]
 
   @doc """
   Partisan lean: weighted two-cycle average of the district's deviation
