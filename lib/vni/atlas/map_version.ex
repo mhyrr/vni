@@ -29,6 +29,7 @@ defmodule VNI.Atlas.MapVersion do
 
     field :controlling_party, Ecto.Enum, values: [:dem, :rep, :split, :nonpartisan]
     field :source_url, :string
+    field :authorship_source_url, :string
 
     has_many :districts, VNI.Atlas.District
 
@@ -45,7 +46,8 @@ defmodule VNI.Atlas.MapVersion do
       :effective_until,
       :authority,
       :controlling_party,
-      :source_url
+      :source_url,
+      :authorship_source_url
     ])
     |> validate_required([:state, :level, :effective_from])
     |> validate_format(:state, ~r/^[A-Z]{2}$/, message: "must be a two-letter USPS code")

@@ -17,4 +17,11 @@ unless System.get_env("VNI_SKIP_DISTRICT_SEEDS") in ["1", "true"] do
     "Seeded #{summary.districts} congressional districts " <>
       "from Census TIGER/Line #{summary.vintage}."
   )
+
+  authorship = VNI.Atlas.MapAuthorship.seed_current!()
+
+  IO.puts(
+    "Stamped map authorship (Loyola, All About Redistricting) on " <>
+      "#{authorship.updated} current map versions."
+  )
 end
