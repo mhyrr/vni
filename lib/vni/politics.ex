@@ -10,7 +10,7 @@ defmodule VNI.Politics do
 
   alias VNI.Repo
   alias VNI.Atlas.District
-  alias VNI.Politics.DistrictProfile
+  alias VNI.Politics.{DistrictProfile, StateCycle}
 
   @entrenchment_sorts [:tenure, :margin, :lean]
 
@@ -86,6 +86,31 @@ defmodule VNI.Politics do
 
   defp entrenchment_order(:lean),
     do: [desc_nulls_last: dynamic([d, s, mv, p], fragment("ABS(?)", p.partisan_lean))]
+
+  @doc "One state's seats–votes series, oldest cycle first."
+  def state_history(state) do
+    from(sc in StateCycle, where: sc.state == ^state, order_by: sc.cycle)
+    |> Repo.all()
+  end
+
+  @doc """
+  The most recent seats–votes row per state, as a state-keyed map.
+  Feeds the /states index fact pair.
+  """
+  def latest_state_cycles do
+    latest =
+      from(sc in StateCycle,
+        select: %{state: sc.state, cycle: max(sc.cycle)},
+        group_by: sc.state
+      )
+
+    from(sc in StateCycle,
+      join: l in subquery(latest),
+      on: sc.state == l.state and sc.cycle == l.cycle
+    )
+    |> Repo.all()
+    |> Map.new(&{&1.state, &1})
+  end
 
   @doc """
   Partisan lean: weighted two-cycle average of the district's deviation

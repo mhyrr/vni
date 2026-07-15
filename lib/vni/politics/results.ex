@@ -135,10 +135,18 @@ defmodule VNI.Politics.Results do
       at(row, col, "state_po") not in @non_voting
   end
 
-  # The deciding contest for one district-cycle: runoff rows when a runoff
-  # happened, otherwise the general itself. Returns nil when no rankable
-  # candidate remains (never the case in practice).
-  defp decide_race(group, col) do
+  @doc """
+  The deciding contest for one district-cycle: runoff rows when a runoff
+  happened, otherwise the general itself. Fusion lines are aggregated by
+  candidate; the winner's party is the raw MEDSL string of their
+  highest-vote line — callers map it to their own storage semantics.
+  Returns nil when no rankable candidate remains (never in practice).
+
+  Shared with `VNI.Politics.StateHistory`, which counts the same winners
+  into statewide delegation tallies — the seat counts and the margins
+  must agree on who won.
+  """
+  def decide_race(group, col) do
     group =
       case Enum.filter(group, &(at(&1, col, "runoff") == "TRUE")) do
         [] -> group
@@ -169,10 +177,18 @@ defmodule VNI.Politics.Results do
 
         denominator = winner.votes + Enum.sum(Enum.map(rest, & &1.votes))
 
-        %{
-          margin: Float.round(100.0 * (winner.votes - runner_up_votes) / denominator, 2),
-          party: winner_party(winner.party)
-        }
+        margin =
+          if denominator == 0 do
+            # Some states skip the tally for unopposed seats entirely
+            # (FL-24 2016 records 0 of 0 votes): the sole ranked
+            # candidate wins at the unopposed margin.
+            if rest != [], do: Logger.warning("all-zero multi-candidate race: #{inspect(group)}")
+            100.0
+          else
+            Float.round(100.0 * (winner.votes - runner_up_votes) / denominator, 2)
+          end
+
+        %{margin: margin, party: winner.party}
     end
   end
 
@@ -189,7 +205,7 @@ defmodule VNI.Politics.Results do
           Politics.upsert_profile(district, %{
             last_margin_pct: race.margin,
             last_margin_cycle: race.cycle,
-            last_margin_party: race.party,
+            last_margin_party: winner_party(race.party),
             margin_source_url: @house_source_url
           })
 
@@ -328,10 +344,16 @@ defmodule VNI.Politics.Results do
     end)
   end
 
-  defp at(row, col, name), do: Enum.at(row, Map.fetch!(col, name))
+  @doc "Non-voting delegate seats — no district in the 435-seat map set."
+  def non_voting, do: @non_voting
+
+  @doc "Cell access by header name; shared with the state-history ingest."
+  def at(row, col, name), do: Enum.at(row, Map.fetch!(col, name))
+
   defp int_at(row, col, name), do: row |> at(col, name) |> String.to_integer()
 
-  defp read_cache!(path) do
+  @doc "Read a guestbook-gated MEDSL cache, with fetch instructions on miss."
+  def read_cache!(path) do
     case File.read(path) do
       {:ok, csv} ->
         csv
