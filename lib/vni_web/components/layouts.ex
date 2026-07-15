@@ -25,6 +25,9 @@ defmodule VNIWeb.Layouts do
         <.link navigate={~p"/districts"} class={[@active == :districts && "is-active"]}>
           Districts
         </.link>
+        <.link navigate={~p"/states"} class={[@active == :states && "is-active"]}>
+          States
+        </.link>
         <.link navigate={~p"/methodology"} class={[@active == :methodology && "is-active"]}>
           Method
         </.link>
@@ -49,6 +52,7 @@ defmodule VNIWeb.Layouts do
       <div class="grid grid-cols-2 gap-x-10 gap-y-2 text-sm font-bold uppercase tracking-wide">
         <.link navigate={~p"/atlas"}>Atlas</.link>
         <.link navigate={~p"/districts"}>Districts</.link>
+        <.link navigate={~p"/states"}>States</.link>
         <.link navigate={~p"/methodology"}>Methodology</.link>
         <.link navigate={~p"/sources"}>Sources</.link>
         <.link navigate={~p"/act"}>Act</.link>

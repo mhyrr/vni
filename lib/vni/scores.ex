@@ -227,6 +227,25 @@ defmodule VNI.Scores do
     raise ArgumentError, "unsupported compactness metric: #{inspect(metric)}"
   end
 
+  @doc """
+  A state's current scored districts, ordered by district number (at-large
+  first). Feeds the `/states/:state` districts section — same display
+  fields and preloads as `list_least_compact/2`, so both share a presenter.
+  """
+  def list_state_districts(state, level \\ :congressional) do
+    from(d in District,
+      join: s in assoc(d, :score),
+      join: mv in assoc(d, :map_version),
+      where:
+        d.state == ^state and mv.level == ^level and is_nil(mv.effective_until) and
+          not is_nil(s.polsby_popper),
+      order_by: [asc: d.number],
+      select: struct(d, ^@display_district_fields),
+      preload: [:profile, score: s, map_version: mv]
+    )
+    |> Repo.all()
+  end
+
   @doc "A current scored district trimmed to the fields needed by the public UI."
   def get_current_district(slug, level \\ :congressional) do
     from(d in District,

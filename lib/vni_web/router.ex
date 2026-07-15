@@ -22,6 +22,8 @@ defmodule VNIWeb.Router do
       live "/atlas", AtlasLive, :index
       live "/districts", DistrictLive.Index, :index
       live "/districts/:slug", DistrictLive.Show, :show
+      live "/states", StateLive.Index, :index
+      live "/states/:state", StateLive.Show, :show
       live "/methodology", MethodologyLive, :index
       live "/sources", SourcesLive, :index
       live "/act", ActionLive, :index

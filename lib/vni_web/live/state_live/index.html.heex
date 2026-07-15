@@ -1,0 +1,146 @@
+<Layouts.app flash={@flash} active={:states}>
+  <.dataset_notice />
+
+  <section id="state-index" class="editorial-shell bg-[var(--paper)]">
+    <div class="section-pad grid gap-12 border-b-2 border-[var(--ink)] lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
+      <div>
+        <p class="eyebrow">The maps · 119th Congress</p>
+        <h1 class="display-xl mt-7">A district is a shape. A map is a choice.</h1>
+      </div>
+      <p class="font-serif text-3xl leading-tight">
+        Partisan distortion is a property of a statewide map. This page is where it shows — and where it doesn't.
+      </p>
+    </div>
+
+    <p id="state-index-caveat" class="section-pad !py-8 max-w-3xl text-sm leading-6">
+      The vote–seat pair shows the gap. The tipping-point skew says whether the lines helped. Neither is a verdict without the third column — who drew the map.
+      <.link
+        navigate={~p"/methodology#methodology-bias"}
+        class="font-bold underline underline-offset-4"
+      >
+        Method + caveats →
+      </.link>
+    </p>
+
+    <nav id="state-sort" class="sort-rail" aria-label="Sort states">
+      <.link
+        patch={~p"/states?sort=skew"}
+        id="sort-skew"
+        class={["sort-link", @sort == "skew" && "is-active"]}
+      >
+        01 · Tipping-point skew
+      </.link>
+      <.link
+        patch={~p"/states?sort=gap"}
+        id="sort-gap"
+        class={["sort-link", @sort == "gap" && "is-active"]}
+      >
+        02 · Vote–seat gap
+      </.link>
+      <.link
+        patch={~p"/states?sort=seats"}
+        id="sort-seats"
+        class={["sort-link", @sort == "seats" && "is-active"]}
+      >
+        03 · Seats
+      </.link>
+      <.link
+        patch={~p"/states?sort=authority"}
+        id="sort-authority"
+        class={["sort-link", @sort == "authority" && "is-active"]}
+      >
+        04 · Drawn by
+      </.link>
+      <.link
+        patch={~p"/states?sort=state"}
+        id="sort-state"
+        class={["sort-link", @sort == "state" && "is-active"]}
+      >
+        05 · State
+      </.link>
+    </nav>
+
+    <div class="overflow-x-auto">
+      <table id="state-table" class="w-full border-collapse text-left text-sm">
+        <thead>
+          <tr class="border-b-2 border-[var(--ink)]">
+            <th class="section-pad !py-4 data-label">State</th>
+            <th class="section-pad !py-4 data-label">Seats</th>
+            <th class="section-pad !py-4 data-label">Drawn by</th>
+            <th class="section-pad !py-4 data-label">Pres vote R / D</th>
+            <th class="section-pad !py-4 data-label">Seats R / D</th>
+            <th class="section-pad !py-4 data-label">Tipping-point skew</th>
+            <th class="section-pad !py-4 data-label">Least compact</th>
+          </tr>
+        </thead>
+        <tbody id="state-rows">
+          <tr
+            :for={row <- @districted_rows}
+            id={"state-#{row.state_code}"}
+            class="border-b border-[var(--ink)]"
+          >
+            <td class="section-pad !py-4 font-bold">
+              <.link navigate={~p"/states/#{row.state_code}"} class="underline underline-offset-4">
+                {row.state_name}
+              </.link>
+            </td>
+            <td class="section-pad !py-4">{row.seats}</td>
+            <td class="section-pad !py-4">
+              <span>{row.authority_label}</span>
+              <.party_mark
+                :if={row.party_badge_key}
+                party={row.party_badge_key}
+                label={row.party_badge_label}
+                class="ml-2 !px-2 !py-0.5"
+              />
+            </td>
+            <td class="section-pad !py-4 font-mono">{row.pres_vote_display}</td>
+            <td class="section-pad !py-4 font-mono">{row.seats_display}</td>
+            <td class="section-pad !py-4 font-mono font-bold">
+              <span :if={!row.skew_missing}>{row.skew_display}</span>
+              <span :if={row.skew_missing} title="too few districts">—</span>
+            </td>
+            <td class="section-pad !py-4">
+              <.link
+                :if={row.worst_district_slug}
+                navigate={~p"/districts/#{row.worst_district_slug}"}
+                class="underline underline-offset-4"
+              >
+                {row.worst_district_label}
+              </.link>
+              <span :if={!row.worst_district_slug}>—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <section
+      id="state-at-large"
+      class="section-pad bg-[var(--paper-bright)] border-t-2 border-[var(--ink)]"
+    >
+      <p class="eyebrow">At-large — no lines drawn.</p>
+      <p class="mt-6 max-w-2xl font-serif text-2xl leading-snug">
+        Six states elect one representative statewide. The border is the district; nobody drew it. Nothing to bias.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-4">
+        <.link
+          :for={row <- @at_large_rows}
+          navigate={~p"/states/#{row.state_code}"}
+          class="border-2 border-[var(--ink)] px-4 py-2 data-label"
+        >
+          {row.state_name}
+        </.link>
+      </div>
+    </section>
+
+    <div class="section-pad flex flex-wrap items-baseline justify-between gap-6 border-t-2 border-[var(--ink)]">
+      <p class="max-w-xl font-serif text-xl leading-snug">
+        Methodology {@methodology_version}. Every figure on this page carries a public source.
+      </p>
+      <.link navigate={~p"/sources"} id="state-index-open-sources" class="paper-button">
+        See the data sources <span aria-hidden="true">→</span>
+      </.link>
+    </div>
+  </section>
+</Layouts.app>

@@ -65,6 +65,9 @@ defmodule VNIWeb.DistrictPresenter do
     "WY" => "Wyoming"
   }
 
+  @doc "Full state name for a two-letter postal code, shared with StatePresenter."
+  def state_name(code), do: Map.get(@state_names, code, code)
+
   @doc """
   Present a whole current field at once: the ranked denominator is counted
   from the set itself, so "of N" always matches the published ranking.
@@ -83,7 +86,7 @@ defmodule VNIWeb.DistrictPresenter do
       slug: district.slug,
       label: label(district.state, district.number),
       at_large: district.number == 0,
-      state: Map.get(@state_names, district.state, district.state),
+      state: state_name(district.state),
       state_code: district.state,
       congress: map_version.congress,
       source_url: map_version.source_url,
