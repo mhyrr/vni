@@ -52,7 +52,9 @@ defmodule VNIWeb.Layouts do
         <.link navigate={~p"/methodology"}>Methodology</.link>
         <.link navigate={~p"/act"}>Act</.link>
       </div>
-      <p class="font-mono text-xs uppercase">Methodology 2026.1 · Prototype</p>
+      <p class="font-mono text-xs uppercase">
+        Methodology {VNI.Scores.methodology_version()} · Prototype
+      </p>
     </footer>
 
     <.flash_group flash={@flash} />

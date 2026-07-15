@@ -20,7 +20,18 @@ defmodule VNI.ScoresTest do
     {:ok, square} = Atlas.upsert_district(mv, %{state: "TX", number: 1, geom: square_geom()})
     {:ok, hook} = Atlas.upsert_district(mv, %{state: "TX", number: 2, geom: hook_geom()})
 
-    %{map_version: mv, square: square, hook: hook}
+    {:ok, wy_mv} =
+      Atlas.create_map_version(%{
+        state: "WY",
+        level: :congressional,
+        congress: 119,
+        effective_from: ~D[2023-01-03]
+      })
+
+    {:ok, at_large} =
+      Atlas.upsert_district(wy_mv, %{state: "WY", number: 0, geom: square_geom()})
+
+    %{map_version: mv, square: square, hook: hook, at_large: at_large}
   end
 
   defp square_geom do
@@ -81,10 +92,49 @@ defmodule VNI.ScoresTest do
     assert second.id == ctx.hook.id
     assert second.score.national_rank == 2
     assert first.score.composite > second.score.composite
+    assert Scores.ranked_count(:congressional) == 2
 
-    [least_compact, most_compact] = Scores.list_least_compact(:reock)
+    [least_compact, most_compact, unranked] = Scores.list_least_compact(:reock)
     assert least_compact.id == ctx.hook.id
     assert most_compact.id == ctx.square.id
+    assert unranked.id == ctx.at_large.id
+  end
+
+  test "at-large districts keep raw metrics but stay outside the ranking", ctx do
+    :ok = Scores.score_current!(:congressional)
+
+    at_large = Scores.get_score(ctx.at_large.id)
+
+    for metric <- [:polsby_popper, :reock, :convex_hull, :schwartzberg] do
+      value = Map.fetch!(at_large, metric)
+      assert value > 0.0 and value <= 1.0, "at-large #{metric} out of range: #{inspect(value)}"
+    end
+
+    assert is_nil(at_large.composite)
+    assert is_nil(at_large.national_rank)
+    refute Enum.any?(Scores.list_ranked(:congressional), &(&1.id == ctx.at_large.id))
+
+    # It stays in the public field, sorted after every ranked district.
+    assert ctx.at_large.id ==
+             :composite |> Scores.list_least_compact() |> List.last() |> Map.fetch!(:id)
+
+    assert %{slug: "wy-0"} = Scores.get_current_district("wy-0")
+  end
+
+  test "re-ranking clears a stale at-large composite and rank", ctx do
+    :ok = Scores.score_current!(:congressional)
+
+    # Simulate scores published before at-large districts were excluded.
+    ctx.at_large.id
+    |> Scores.get_score()
+    |> Ecto.Changeset.change(composite: 0.9, national_rank: 1)
+    |> VNI.Repo.update!()
+
+    :ok = Scores.normalize_and_rank!(:congressional)
+
+    at_large = Scores.get_score(ctx.at_large.id)
+    assert is_nil(at_large.composite)
+    assert is_nil(at_large.national_rank)
   end
 
   test "districts under superseded maps are excluded from ranking", ctx do

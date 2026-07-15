@@ -12,6 +12,10 @@ defmodule VNI.Scores do
   after min-max normalization across the current map set at a level;
   national_rank orders by composite descending (1 = most compact).
 
+  At-large districts (number 0) keep their raw metrics but are excluded
+  from normalization and ranking: their "shape" is the state border, drawn
+  by nobody, so it is not evidence about a map-drawer (2026.2).
+
   Bump @methodology_version whenever a formula changes — published scores
   must be reproducible against a stated version.
   """
@@ -22,7 +26,7 @@ defmodule VNI.Scores do
   alias VNI.Atlas.District
   alias VNI.Scores.DistrictScore
 
-  @methodology_version "2026.1"
+  @methodology_version "2026.2"
 
   def methodology_version, do: @methodology_version
 
@@ -95,6 +99,10 @@ defmodule VNI.Scores do
   version at the given level. Min-max normalization is computed over that
   same set, so scores are only comparable within a methodology version and
   scoring pass.
+
+  At-large districts are excluded from the set entirely — they neither
+  receive a composite/rank nor influence the min-max bounds — and any
+  composite/rank they carry from an earlier methodology is cleared.
   """
   def normalize_and_rank!(level \\ :congressional) do
     Repo.query!(
@@ -106,6 +114,7 @@ defmodule VNI.Scores do
         JOIN map_versions mv ON mv.id = d.map_version_id
         WHERE mv.level = $1
           AND mv.effective_until IS NULL
+          AND d.number <> 0
           AND ds.polsby_popper IS NOT NULL
       ),
       bounds AS (
@@ -140,7 +149,33 @@ defmodule VNI.Scores do
       timeout: :infinity
     )
 
+    Repo.query!(
+      """
+      UPDATE district_scores ds
+      SET composite = NULL, national_rank = NULL, updated_at = now()
+      FROM districts d
+      JOIN map_versions mv ON mv.id = d.map_version_id
+      WHERE ds.district_id = d.id
+        AND mv.level = $1
+        AND mv.effective_until IS NULL
+        AND d.number = 0
+        AND (ds.composite IS NOT NULL OR ds.national_rank IS NOT NULL)
+      """,
+      [Atom.to_string(level)],
+      timeout: :infinity
+    )
+
     :ok
+  end
+
+  @doc "How many current districts hold a national rank (at-large excluded)."
+  def ranked_count(level \\ :congressional) do
+    from(d in District,
+      join: s in assoc(d, :score),
+      join: mv in assoc(d, :map_version),
+      where: mv.level == ^level and is_nil(mv.effective_until) and not is_nil(s.national_rank)
+    )
+    |> Repo.aggregate(:count)
   end
 
   @doc "Ranked current districts (1 = most compact), scores and profiles preloaded."
@@ -167,7 +202,11 @@ defmodule VNI.Scores do
     :perimeter_km
   ]
 
-  @doc "Current scored districts ordered from least to most compact by one metric."
+  @doc """
+  Current scored districts ordered from least to most compact by one metric.
+  At-large districts have no composite, so a composite sort places them
+  last — present in the field, outside the ranking.
+  """
   def list_least_compact(metric \\ :composite, level \\ :congressional)
 
   def list_least_compact(metric, level) when metric in @sortable_metrics do
@@ -176,8 +215,8 @@ defmodule VNI.Scores do
       join: mv in assoc(d, :map_version),
       where:
         mv.level == ^level and is_nil(mv.effective_until) and
-          not is_nil(field(s, ^metric)),
-      order_by: [asc: field(s, ^metric), asc: d.state, asc: d.number],
+          not is_nil(s.polsby_popper),
+      order_by: [asc_nulls_last: field(s, ^metric), asc: d.state, asc: d.number],
       select: struct(d, ^@display_district_fields),
       preload: [score: s, map_version: mv]
     )
@@ -195,7 +234,7 @@ defmodule VNI.Scores do
       join: mv in assoc(d, :map_version),
       where:
         d.slug == ^slug and mv.level == ^level and is_nil(mv.effective_until) and
-          not is_nil(s.composite),
+          not is_nil(s.polsby_popper),
       select: struct(d, ^@display_district_fields),
       preload: [score: s, map_version: mv]
     )

@@ -2,7 +2,7 @@
   <section id="methodology-page" class="editorial-shell bg-[var(--paper)]">
     <header class="section-pad grid gap-12 border-b-2 border-[var(--ink)] lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
       <div>
-        <p class="eyebrow">Open method · Version 2026.1</p>
+        <p class="eyebrow">Open method · Version {VNI.Scores.methodology_version()}</p>
         <h1 class="display-xl mt-7">Measure what the number actually means.</h1>
       </div>
       <p class="font-serif text-3xl leading-tight">
@@ -37,6 +37,23 @@
         <h2 class="display-md mt-6">How long has power stayed put?</h2>
         <p class="mt-8 max-w-xl text-base leading-7">
           Tenure is arithmetic: the current year minus the first year in office. It does not care whether the officeholder is effective, popular, Democratic, or Republican. That is the point.
+        </p>
+      </section>
+    </div>
+
+    <div id="methodology-limits" class="grid border-t-2 border-[var(--ink)] lg:grid-cols-2">
+      <section class="section-pad border-b-2 border-[var(--ink)] bg-[var(--paper-bright)] lg:border-r-2 lg:border-b-0">
+        <span class="data-label">05 · What the ranking excludes</span>
+        <h2 class="display-md mt-6">At-large states have no lines to judge.</h2>
+        <p class="mt-8 max-w-xl text-base leading-7">
+          Six states elect one representative statewide: Alaska, Delaware, North Dakota, South Dakota, Vermont, Wyoming. Their "district" is the state border, drawn by no map-maker. Since version 2026.2 they keep their raw measures but sit outside normalization and the national rank — the ranking covers the 429 drawn districts. Before this change the two extremes of the ranking were both un-drawn shapes, which measured geography, not authorship.
+        </p>
+      </section>
+      <section class="section-pad bg-[var(--paper-bright)]">
+        <span class="data-label">06 · Geography is a confound</span>
+        <h2 class="display-md mt-6">Islands score low. Nobody drew the ocean.</h2>
+        <p class="mt-8 max-w-xl text-base leading-7">
+          Hawaii's 2nd is the worked example. It is a drawn district — Hawaii has two — so it stays in the ranking, but its score is dominated by an island chain and its coastline, not by anyone's line-drawing. Coastlines, archipelagos, and jagged natural borders depress every measure here. A low score is a reason to inspect the record of who drew the map and why. It is never, by itself, a verdict.
         </p>
       </section>
     </div>

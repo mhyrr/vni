@@ -25,7 +25,12 @@
         ]}>
           <div class="flex items-center justify-between gap-5">
             <span class="data-label">{district.state} · Congressional district</span>
-            <span class="data-label">Composite {district.composite}</span>
+            <span :if={!district.at_large} class="data-label">
+              Composite {district.composite}
+            </span>
+            <span :if={district.at_large} class="data-label">
+              At-large · no district lines drawn
+            </span>
           </div>
           <.district_shape
             path={district.shape_path}
@@ -107,13 +112,13 @@
           </a>
         </div>
         <div class="comparison-field border-2 border-[var(--ink)] bg-[var(--paper-bright)] p-7 md:p-10">
-          <div class="grid gap-10 md:grid-cols-2">
+          <div :if={!district.at_large} class="grid gap-10 md:grid-cols-2">
             <div>
               <span class="data-label">National compactness rank</span>
               <strong class="mt-5 block text-7xl font-black tracking-[-0.1em]">
                 {district.national_rank}
               </strong>
-              <span class="text-sm">of 435 · rank 1 is most compact</span>
+              <span class="text-sm">of {district.ranked_total} · rank 1 is most compact</span>
             </div>
             <div>
               <span class="data-label">Composite</span>
@@ -122,6 +127,15 @@
               </strong>
               <span class="text-sm">of 100 after national normalization</span>
             </div>
+          </div>
+          <div :if={district.at_large} id="district-at-large">
+            <span class="data-label">National compactness rank</span>
+            <strong class="mt-5 block text-6xl font-black tracking-[-0.06em]">
+              AT-LARGE
+            </strong>
+            <span class="text-sm">
+              No district lines drawn — the shape is the state border, so it is excluded from the {district.ranked_total}-district ranking. Raw measures above describe the state, not a map-drawer.
+            </span>
           </div>
           <div class="mt-12 border-t-2 border-[var(--ink)] pt-7">
             <span class="data-label">Reproducibility</span>

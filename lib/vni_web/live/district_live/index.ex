@@ -31,7 +31,7 @@ defmodule VNIWeb.DistrictLive.Index do
          districts =
            sort
            |> Scores.list_least_compact()
-           |> Enum.map(&DistrictPresenter.present/1)
+           |> DistrictPresenter.present_field()
 
          {:ok, districts, reset: true}
        end,

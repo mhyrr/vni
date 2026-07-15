@@ -42,12 +42,15 @@
       >
         <span class="data-label">{district.label}</span>
         <span class="absolute top-4 right-4 bg-[var(--ink)] px-2 py-1 text-white data-label">
-          {district.composite}
+          {district.composite || "—"}
         </span>
         <.district_shape path={district.shape_path} tone={district.tone} />
         <span class="data-label atlas-cell-meta">
           <span>{district.state}</span>
-          <span>Rank {district.national_rank} / 435</span>
+          <span :if={district.national_rank}>
+            Rank {district.national_rank} / {district.ranked_total}
+          </span>
+          <span :if={district.at_large}>AT-LARGE · no district lines drawn</span>
         </span>
       </.link>
     </div>
@@ -84,10 +87,14 @@
             </div>
             <div class="border-t border-[var(--ink)] pt-6">
               <strong class="text-5xl font-black tracking-[-0.08em]">0–1</strong>
-              <p class="mt-2 text-sm">Each measure normalized across the current national map</p>
+              <p class="mt-2 text-sm">
+                Each measure normalized across the drawn districts of the current national map — at-large states carry no lines and no rank
+              </p>
             </div>
             <div class="border-t border-[var(--ink)] pt-6">
-              <strong class="text-5xl font-black tracking-[-0.08em]">2026.1</strong>
+              <strong class="text-5xl font-black tracking-[-0.08em]">
+                {VNI.Scores.methodology_version()}
+              </strong>
               <p class="mt-2 text-sm">Published methodology version</p>
             </div>
           </div>

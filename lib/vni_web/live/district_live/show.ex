@@ -10,8 +10,11 @@ defmodule VNIWeb.DistrictLive.Show do
      |> assign(:page_title, "#{String.upcase(slug)} district profile")
      |> assign_async(:district, fn ->
        case Scores.get_current_district(slug) do
-         nil -> {:error, :not_found}
-         district -> {:ok, %{district: DistrictPresenter.present(district)}}
+         nil ->
+           {:error, :not_found}
+
+         district ->
+           {:ok, %{district: DistrictPresenter.present(district, Scores.ranked_count())}}
        end
      end)}
   end

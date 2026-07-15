@@ -62,12 +62,24 @@ defmodule VNIWeb.DistrictPresenter do
     "WY" => "Wyoming"
   }
 
-  def present(%District{score: score, map_version: map_version} = district)
+  @doc """
+  Present a whole current field at once: the ranked denominator is counted
+  from the set itself, so "of N" always matches the published ranking.
+  """
+  def present_field(districts) do
+    ranked_total = Enum.count(districts, & &1.score.national_rank)
+    Enum.map(districts, &present(&1, ranked_total))
+  end
+
+  def present(district, ranked_total \\ nil)
+
+  def present(%District{score: score, map_version: map_version} = district, ranked_total)
       when not is_nil(score) and not is_nil(map_version) do
     %{
       id: district.id,
       slug: district.slug,
       label: label(district.state, district.number),
+      at_large: district.number == 0,
       state: Map.get(@state_names, district.state, district.state),
       state_code: district.state,
       congress: map_version.congress,
@@ -75,12 +87,13 @@ defmodule VNIWeb.DistrictPresenter do
       shape_path: svg_path(district.geom_simplified || district.geom),
       land_area: number(district.land_area_sqkm),
       perimeter: number(district.perimeter_km),
-      composite: percent(score.composite),
+      composite: score.composite && percent(score.composite),
       polsby_popper: percent(score.polsby_popper),
       reock: percent(score.reock),
       convex_hull: percent(score.convex_hull),
       schwartzberg: percent(score.schwartzberg),
       national_rank: score.national_rank,
+      ranked_total: ranked_total,
       methodology_version: score.methodology_version,
       tone: compactness_tone(score.composite)
     }
@@ -89,6 +102,7 @@ defmodule VNIWeb.DistrictPresenter do
   def percent(nil), do: 0
   def percent(value), do: value |> Kernel.*(100) |> round()
 
+  defp compactness_tone(nil), do: :neutral
   defp compactness_tone(value) when value < 0.25, do: :red
   defp compactness_tone(value) when value < 0.50, do: :yellow
   defp compactness_tone(value) when value < 0.75, do: :green

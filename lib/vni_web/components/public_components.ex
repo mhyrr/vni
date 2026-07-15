@@ -28,7 +28,9 @@ defmodule VNIWeb.PublicComponents do
   def dataset_notice(assigns) do
     ~H"""
     <div id={@id} class="preview-notice">
-      <strong>119th Congress · U.S. Census TIGER/Line 2025 · methodology 2026.1</strong>
+      <strong>
+        119th Congress · U.S. Census TIGER/Line 2025 · methodology {VNI.Scores.methodology_version()}
+      </strong>
     </div>
     """
   end
@@ -63,6 +65,7 @@ defmodule VNIWeb.PublicComponents do
   def tone_bg(:blue), do: "bg-[var(--blue)] text-white"
   def tone_bg(:red), do: "bg-[var(--red)] text-[var(--ink)]"
   def tone_bg(:green), do: "bg-[var(--green)] text-[var(--ink)]"
+  def tone_bg(:neutral), do: "bg-[var(--paper-bright)] text-[var(--ink)]"
   def tone_bg(_tone), do: "bg-[var(--yellow)] text-[var(--ink)]"
 
   def metric_fill(:blue), do: "bg-[var(--blue)]"

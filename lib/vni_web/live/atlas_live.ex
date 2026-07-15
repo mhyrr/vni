@@ -13,7 +13,7 @@ defmodule VNIWeb.AtlasLive do
        districts =
          :composite
          |> Scores.list_least_compact()
-         |> Enum.map(&DistrictPresenter.present/1)
+         |> DistrictPresenter.present_field()
 
        {:ok, districts}
      end)}
