@@ -29,11 +29,7 @@ defmodule VNIWeb.PublicLiveTest do
     # Ranking covers drawn districts only; at-large shows the badge, not a rank.
     assert has_element?(view, "#district-md-3 .atlas-cell-meta", "Rank 1 / 2")
 
-    assert has_element?(
-             view,
-             "#district-ak-0 .atlas-cell-meta",
-             "AT-LARGE · no district lines drawn"
-           )
+    assert has_element?(view, "#district-ak-0 .atlas-cell-meta", "AT-LARGE · no lines drawn")
 
     refute has_element?(view, "#district-ak-0 .atlas-cell-meta", "Rank")
 

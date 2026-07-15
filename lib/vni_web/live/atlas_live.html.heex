@@ -50,16 +50,21 @@
           <span :if={district.national_rank}>
             Rank {district.national_rank} / {district.ranked_total}
           </span>
-          <span :if={district.at_large}>AT-LARGE · no district lines drawn</span>
-          <span :if={district.incumbent_name} class="truncate">
-            {district.incumbent_name}
+          <span :if={district.at_large} class="col-span-2 truncate">
+            AT-LARGE · no lines drawn
+          </span>
+          <span
+            :if={district.incumbent_name}
+            class="col-span-2 flex min-w-0 items-baseline gap-1.5"
+          >
             <.party_mark
               party={district.incumbent_party_key}
               label={district.incumbent_party}
-              class="ml-1 !px-1.5 !py-0.5"
+              class="!px-1 !py-0"
             />
+            <span class="truncate">{district.incumbent_name}</span>
           </span>
-          <span :if={district.population}>Pop. {district.population}</span>
+          <span :if={district.population} class="col-span-2">Pop. {district.population}</span>
         </span>
       </.link>
     </div>
