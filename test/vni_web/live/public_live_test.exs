@@ -243,6 +243,32 @@ defmodule VNIWeb.PublicLiveTest do
     assert has_element?(view, "#methodology-lean", "Unopposed seats record 100")
   end
 
+  test "sources page renders the ingest registry of record", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/sources")
+
+    # Every registry row, straight from docs/data-sources.md, linked out.
+    assert has_element?(view, "#sources-list", "Census TIGER/Line 2025, CD119")
+    assert has_element?(view, "#sources-list", "MIT Election Data + Science Lab")
+    assert has_element?(view, "#sources-list a[href*='census.gov']")
+    assert has_element?(view, "#sources-list a[href*='doi.org']")
+    assert has_element?(view, "#sources-list a[href*='redistricting.lls.edu']")
+
+    # The access notes ride along, including the one sourcing exception
+    # and the hard line against licensed or challenger data.
+    assert has_element?(view, "#sources-notes", "The Downballot exception")
+    assert has_element?(view, "#sources-notes", "Never used")
+    assert has_element?(view, "#sources-notes", "Cook PVI")
+
+    assert has_element?(view, "#sources-open-methodology[href='/methodology']")
+  end
+
+  test "sources page is linked from the methodology and the footer", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/methodology")
+
+    assert has_element?(view, "#methodology-open-sources[href='/sources']")
+    assert has_element?(view, "#site-footer a[href='/sources']")
+  end
+
   test "action prototype responds without persisting data", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/act")
 

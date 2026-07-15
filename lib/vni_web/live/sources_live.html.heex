@@ -1,0 +1,60 @@
+<Layouts.app flash={@flash} active={:sources}>
+  <section id="sources-page" class="editorial-shell bg-[var(--paper)]">
+    <header class="section-pad grid gap-12 border-b-2 border-[var(--ink)] lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+      <div>
+        <p class="eyebrow">The registry of record · {length(@sources)} datasets</p>
+        <h1 class="display-xl mt-7">Every figure carries its source.</h1>
+      </div>
+      <p class="font-serif text-3xl leading-tight">
+        Everything VNI ingests comes from government or non-partisan sources, cited on the row it feeds. This page is where those citations resolve. The one exception is documented below, with its justification.
+      </p>
+    </header>
+
+    <div id="sources-list">
+      <article
+        :for={source <- @sources}
+        class="grid gap-6 border-b border-[var(--ink)] px-5 py-8 md:grid-cols-[1.4fr_1fr_1fr] md:items-baseline md:px-10"
+      >
+        <div>
+          <h2 class="text-2xl font-black tracking-[-0.04em]">
+            <a href={source.url} class="underline underline-offset-4" rel="external">
+              {source.name} <span aria-hidden="true">↗</span>
+            </a>
+          </h2>
+          <p class="mt-3 max-w-lg text-sm leading-6">{source.feeds}</p>
+        </div>
+        <div>
+          <p class="data-label">Publisher</p>
+          <p class="mt-2 font-serif text-lg leading-snug">{source.publisher}</p>
+        </div>
+        <div>
+          <p class="data-label">License / terms</p>
+          <p class="mt-2 text-sm leading-6">{source.license}</p>
+        </div>
+      </article>
+    </div>
+
+    <section
+      id="sources-notes"
+      class="section-pad grid gap-10 bg-[var(--paper-bright)] lg:grid-cols-2"
+    >
+      <div class="lg:col-span-2">
+        <p class="eyebrow">Access notes and hard lines</p>
+      </div>
+      <article :for={note <- @notes} class="border-l-2 border-[var(--ink)] pl-6">
+        <h2 class="data-label">{note.title}</h2>
+        <p class="mt-4 max-w-xl text-sm leading-7">{note.body}</p>
+      </article>
+    </section>
+
+    <div class="section-pad flex flex-wrap items-baseline justify-between gap-6 border-t-2 border-[var(--ink)]">
+      <p class="max-w-xl font-serif text-xl leading-snug">
+        How these inputs become scores — the formulas, the caveats, and what the numbers can never say —
+        lives in the methodology.
+      </p>
+      <.link navigate={~p"/methodology"} id="sources-open-methodology" class="paper-button">
+        Read the methodology <span aria-hidden="true">→</span>
+      </.link>
+    </div>
+  </section>
+</Layouts.app>

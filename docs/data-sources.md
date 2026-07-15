@@ -4,8 +4,9 @@ The registry of record for every dataset VNI ingests. Doctrine: all
 ingested data comes from government or non-partisan sources, cited with a
 source URL on every row it feeds; the one exception is noted inline and
 carries its own justification. Update this file in the same commit as any
-new or changed ingest. A public `/sources` page will render this list
-(TK-014).
+new or changed ingest. The public `/sources` page renders this file at
+compile time (`VNIWeb.SourcesLive`) — the table and Notes formats below
+are load-bearing.
 
 | Source | Feeds | Publisher | License / terms |
 |---|---|---|---|

@@ -50,6 +50,7 @@ defmodule VNIWeb.Layouts do
         <.link navigate={~p"/atlas"}>Atlas</.link>
         <.link navigate={~p"/districts"}>Districts</.link>
         <.link navigate={~p"/methodology"}>Methodology</.link>
+        <.link navigate={~p"/sources"}>Sources</.link>
         <.link navigate={~p"/act"}>Act</.link>
       </div>
       <p class="font-mono text-xs uppercase">

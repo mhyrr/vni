@@ -23,6 +23,7 @@ defmodule VNIWeb.Router do
       live "/districts", DistrictLive.Index, :index
       live "/districts/:slug", DistrictLive.Show, :show
       live "/methodology", MethodologyLive, :index
+      live "/sources", SourcesLive, :index
       live "/act", ActionLive, :index
     end
   end
