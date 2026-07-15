@@ -191,10 +191,10 @@ defmodule VNIWeb.StatePresenter do
   # -- History chart ---------------------------------------------------------
 
   @width 800
-  @height 280
-  @margin_x 40
-  @margin_top 20
-  @margin_bottom 30
+  @height 300
+  @margin_x 52
+  @margin_top 24
+  @margin_bottom 44
   @plot_height @height - @margin_top - @margin_bottom
   @plot_width @width - 2 * @margin_x
 
@@ -203,8 +203,9 @@ defmodule VNIWeb.StatePresenter do
   chart library. Steps trace the Republican seat share every cycle;
   circles mark the Republican share of the two-party presidential vote in
   presidential years only; the yellow bar in each presidential year is the
-  gap between the two. Returns a safe iodata tuple, or nil for an empty
-  series.
+  gap between the two. Every square and circle carries a CSS-hover tip
+  (year and exact value) so the chart answers "what is this mark" in
+  place. Returns a safe iodata tuple, or nil for an empty series.
   """
   def chart_svg([]), do: nil
 
@@ -220,11 +221,14 @@ defmodule VNIWeb.StatePresenter do
     step = step_path(points)
     squares = points |> Enum.filter(& &1.seat_y) |> Enum.map_join("", &square_svg/1)
     circles = points |> Enum.filter(& &1.vote_y) |> Enum.map_join("", &circle_svg/1)
+    years = points |> Enum.filter(&(rem(&1.year, 8) == 0)) |> Enum.map_join("", &year_label_svg/1)
     rule_y = y_for(50)
 
     Phoenix.HTML.raw("""
     <svg viewBox="0 0 #{@width} #{@height}" role="img" aria-label="Seats and votes since 1976" class="state-history-chart">
       <line x1="#{@margin_x}" y1="#{fmt(rule_y)}" x2="#{@width - @margin_x}" y2="#{fmt(rule_y)}" stroke="var(--ink)" stroke-width="1" stroke-dasharray="4 4" />
+      #{y_axis_svg()}
+      #{years}
       #{bars}
       <path d="#{step}" fill="none" stroke="var(--ink)" stroke-width="2" />
       #{squares}
@@ -245,6 +249,9 @@ defmodule VNIWeb.StatePresenter do
 
     %{
       x: x,
+      year: cycle.cycle,
+      seats_rep: cycle.seats_rep,
+      total: total,
       seat_share: seat_share,
       seat_y: seat_share && y_for(seat_share),
       vote_share: vote_share,
@@ -268,15 +275,48 @@ defmodule VNIWeb.StatePresenter do
     build_step(acc, point, rest)
   end
 
-  defp square_svg(%{x: x, seat_y: y}) do
+  defp square_svg(%{x: x, seat_y: y} = point) do
     size = 6
     half = size / 2
+    tip = tip_svg(x, y, "#{point.year} · R seats #{point.seats_rep} of #{point.total}")
 
-    "<rect x=\"#{fmt(x - half)}\" y=\"#{fmt(y - half)}\" width=\"#{size}\" height=\"#{size}\" fill=\"var(--ink)\" stroke=\"var(--ink)\" />"
+    "<g class=\"chart-pt\">" <>
+      hit_svg(x, y) <>
+      "<rect x=\"#{fmt(x - half)}\" y=\"#{fmt(y - half)}\" width=\"#{size}\" height=\"#{size}\" fill=\"var(--ink)\" stroke=\"var(--ink)\" />" <>
+      tip <> "</g>"
   end
 
-  defp circle_svg(%{x: x, vote_y: y}) do
-    "<circle cx=\"#{fmt(x)}\" cy=\"#{fmt(y)}\" r=\"5\" fill=\"var(--paper)\" stroke=\"var(--ink)\" stroke-width=\"2\" />"
+  defp circle_svg(%{x: x, vote_y: y} = point) do
+    tip = tip_svg(x, y, "#{point.year} · R vote #{decimal1(point.vote_share)}%")
+
+    "<g class=\"chart-pt\">" <>
+      hit_svg(x, y) <>
+      "<circle cx=\"#{fmt(x)}\" cy=\"#{fmt(y)}\" r=\"5\" fill=\"var(--paper)\" stroke=\"var(--ink)\" stroke-width=\"2\" />" <>
+      tip <> "</g>"
+  end
+
+  # Generous invisible hover target around each mark.
+  defp hit_svg(x, y) do
+    "<rect class=\"chart-hit\" x=\"#{fmt(x - 11)}\" y=\"#{fmt(y - 11)}\" width=\"22\" height=\"22\" fill=\"transparent\" />"
+  end
+
+  # Hover tip: hidden until the group is hovered (CSS), clamped inside the
+  # viewBox, flipped below the mark when the mark sits near the top.
+  defp tip_svg(x, y, text) do
+    tx = x |> max(@margin_x + 50.0) |> min(@width - @margin_x - 50.0)
+    ty = if y < @margin_top + 46, do: y + 28, else: y - 16
+
+    "<text class=\"chart-tip\" x=\"#{fmt(tx)}\" y=\"#{fmt(ty)}\" text-anchor=\"middle\">#{text}</text>"
+  end
+
+  defp y_axis_svg do
+    Enum.map_join([0, 50, 100], "", fn pct ->
+      "<text class=\"chart-axis\" x=\"#{@margin_x - 10}\" y=\"#{fmt(y_for(pct) + 4)}\" text-anchor=\"end\">#{pct}%</text>"
+    end)
+  end
+
+  defp year_label_svg(%{x: x, year: year}) do
+    "<text class=\"chart-axis\" x=\"#{fmt(x)}\" y=\"#{@height - 12}\" text-anchor=\"middle\">#{year}</text>"
   end
 
   defp bar_svg(%{x: x, vote_y: vote_y, seat_y: seat_y}) do

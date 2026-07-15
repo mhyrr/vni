@@ -491,6 +491,31 @@ a:focus-visible, button:focus-visible {
 
 .district-card:hover .district-arrow { transform: translateX(6px); }
 
+.state-history-chart .chart-axis {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  fill: var(--ink);
+  opacity: 0.55;
+}
+
+.state-history-chart .chart-hit { cursor: crosshair; }
+
+.state-history-chart .chart-tip {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 14px;
+  font-weight: 800;
+  fill: var(--ink);
+  stroke: var(--paper);
+  stroke-width: 5px;
+  paint-order: stroke;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 80ms ease;
+}
+
+.state-history-chart .chart-pt:hover .chart-tip { opacity: 1; }
+
 .sort-rail {
   display: flex;
   gap: 0;
