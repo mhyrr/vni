@@ -15,21 +15,12 @@ Use `get_docs` to access documentation and the `get_source_location` tool to
 find module/function definitions.
 
 ### Database Management
-- Database runs in Docker Desktop (PostgreSQL instance)
-- Database name: `revrec_dev`
-- **NEVER** re-run seeds without explicit permission
+- Database runs in Docker (shared PostGIS container from `~/work/infra/`)
+- Database name: `vni_dev`
+- Seeds are idempotent (Census TIGER ingest, upserts on natural identity); safe to re-run
 
 ### Testing & Quality
-- `mix test` - Comprehensive test suite with automatic database setup (excludes expensive integration tests)
-- `mix test --include integration` - Run all tests including AI integration tests (costs money via OpenAI API)
-- `mix test test/integration/ai_natural_language_test.exs --include integration` - Run specific integration test file
-- `mix credo` - Static analysis and code quality checks
-- `mix sobelow` - Security vulnerability scanner
-
-## Project guidelines
-
-- Use `mix precommit` alias when you are done with all changes and fix any pending issues
-- Use the already included and available `:req` (`Req`) library for HTTP requests, **avoid** `:httpoison`, `:tesla`, and `:httpc`. Req is included by default and is the preferred HTTP client for Phoenix apps
+- `mix test` - Comprehensive test suite with automatic database setup
 
 ## Project guidelines
 

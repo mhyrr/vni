@@ -1,6 +1,27 @@
 # VNI — Vote No Incumbents
 
-Phoenix/LiveView + PostGIS political data project. Design spec: `docs/design/001-design-pass-1.md`. Phoenix conventions: `AGENTS.md`.
+Phoenix 1.8/LiveView + PostGIS political data project: the public case against
+incumbency entrenchment. Design spec: `docs/design/001-design-pass-1.md`,
+interface pass: `docs/design/002-interface-pass-1.md`. Phoenix/Elixir framework
+conventions: `AGENTS.md`.
+
+## Development commands
+
+### Essential commands
+- `mix setup` — install deps, create/migrate database, build assets
+- `mix precommit` — compile with warnings-as-errors, unused-deps check, format, test. Run before claiming done.
+- `mix test` — full suite (sandboxed against the local Docker PostGIS)
+- `mix ecto.reset` — drop, create, migrate, seed. Seeds ingest all 435 districts from Census TIGER/Line (archives cached under `priv/repo/data/tiger/`; first run downloads ~50 zips). `VNI_SKIP_DISTRICT_SEEDS=1` skips.
+- `mix vni.ingest.shapefiles` — (re)ingest TIGER CD119 geometry, idempotent
+- `mix vni.score` — full scoring pass: metrics, normalize, national rank
+- `mix phx.server` — **NEVER RUN** (user manages the dev server separately)
+- Use Tidewave's tools for runtime evaluation and database queries when the dev server is up; `get_docs` for documentation, `get_source_location` for definitions.
+
+### Database
+- Local Postgres runs in Docker: `docker compose up -d` in `~/work/infra/` (imresamu/postgis:17-3.5, pinned to major 17 to match Fly prod and the data volume). Database `vni_dev`, credentials postgres/postgres on localhost:5432.
+- The volume `arete_postgres-data` holds every project's dev DBs — never remove it.
+- Brew postgresql@14/16/17 are installed but stopped; don't start them (port 5432 collision on the loopback).
+- GDAL's `ogr2ogr` (brew postgis formula) is required for shapefile ingest.
 
 ## Load-bearing subsystems (handle inline, never delegate)
 
@@ -10,12 +31,12 @@ Phoenix/LiveView + PostGIS political data project. Design spec: `docs/design/001
 
 ## Doctrine constraints on code and copy
 
-Exclusively anti-entrenchment: incumbency, gerrymandering, term limits. No position on anything the parties fight about. SCOTUS carve-out (no term limits there). No challenger info on district pages — any challenger will do; the purity is the point. Published facts only in `VNI.Politics`. Never use Cook PVI (licensed); lean comes from our formula over public data.
+Exclusively anti-entrenchment: incumbency, gerrymandering, term limits. No position on anything the parties fight about. SCOTUS carve-out (no term limits there). No challenger info on district pages — any challenger will do; the purity is the point. Published facts only in `VNI.Politics`. Never use Cook PVI (licensed); lean comes from our formula over public data. All ingested data must come from government or non-partisan sources, cited with a source URL.
 
-## Conventions
+## Project conventions
 
 - Ingest tasks are rerunnable and idempotent (upserts keyed on natural identity).
 - Compactness scoring is Elixir orchestrating SQL — keep the math in PostGIS, the orchestration thin.
 - Hand-curated data (map authorship, ~50 rows) lives in seeds with a source URL per row.
-- `mix precommit` before claiming done (compile --warnings-as-errors, format, test).
-- Local Postgres runs in Docker: `docker compose up -d` in `~/work/infra/` (imresamu/postgis:17-3.5, pinned to major 17 to match Fly prod and the data volume). The volume `arete_postgres-data` holds every project's dev DBs — never remove it. Brew postgresql@14/16/17 are installed but stopped; don't start them (port 5432 collision on the loopback).
+- Public LiveViews consume `VNIWeb.DistrictPresenter` maps, never raw structs — geometry stays out of the socket.
+- Use `:req` (`Req`) for HTTP; avoid `:httpoison`, `:tesla`, `:httpc`.

@@ -28,7 +28,6 @@ defmodule VNIWeb.PublicComponents do
   def dataset_notice(assigns) do
     ~H"""
     <div id={@id} class="preview-notice">
-      <span>Live dataset</span>
       <strong>119th Congress · U.S. Census TIGER/Line 2025 · methodology 2026.1</strong>
     </div>
     """
