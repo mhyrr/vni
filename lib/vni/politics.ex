@@ -10,12 +10,19 @@ defmodule VNI.Politics do
   alias VNI.Atlas.District
   alias VNI.Politics.DistrictProfile
 
-  @doc "Idempotent upsert keyed on district — legislator ingest is rerunnable."
+  @doc """
+  Idempotent upsert keyed on district — ingest tasks are rerunnable.
+
+  Only the fields present in `attrs` are replaced on conflict, so the
+  independent ingests that share this row (legislators, results, ACS)
+  merge instead of clobbering each other.
+  """
   def upsert_profile(%District{} = district, attrs) do
-    %DistrictProfile{district_id: district.id}
-    |> DistrictProfile.changeset(attrs)
-    |> Repo.insert(
-      on_conflict: {:replace_all_except, [:id, :district_id, :inserted_at]},
+    changeset = DistrictProfile.changeset(%DistrictProfile{district_id: district.id}, attrs)
+    replace = Map.keys(changeset.changes) ++ [:updated_at]
+
+    Repo.insert(changeset,
+      on_conflict: {:replace, replace},
       conflict_target: [:district_id],
       returning: true
     )

@@ -16,6 +16,7 @@ defmodule VNI.Politics.DistrictProfile do
     field :last_margin_pct, :float
     field :partisan_lean, :float
     field :bioguide_id, :string
+    field :incumbent_source_url, :string
 
     timestamps(type: :utc_datetime)
   end
@@ -28,7 +29,8 @@ defmodule VNI.Politics.DistrictProfile do
       :incumbent_since,
       :last_margin_pct,
       :partisan_lean,
-      :bioguide_id
+      :bioguide_id,
+      :incumbent_source_url
     ])
     |> foreign_key_constraint(:district_id)
     |> unique_constraint(:district_id)
