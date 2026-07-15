@@ -26,7 +26,7 @@ defmodule VNI.Scores do
   alias VNI.Atlas.District
   alias VNI.Scores.DistrictScore
 
-  @methodology_version "2026.2"
+  @methodology_version "2026.3"
 
   def methodology_version, do: @methodology_version
 
