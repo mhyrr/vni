@@ -2,26 +2,26 @@
   <.dataset_notice />
 
   <article id={"state-profile-#{@state.state}"} class="editorial-shell bg-[var(--paper)]">
-    <header class="section-pad grid gap-8 border-b-2 border-[var(--ink)] lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+    <header class="section-pad !py-12 grid gap-8 border-b-2 border-[var(--ink)] lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
       <div>
         <p class="eyebrow">The map · 119th Congress</p>
-        <h1 class="display-xl mt-7">{@state.state_name}</h1>
+        <h1 class="display-lg mt-4">{@state.state_name}</h1>
       </div>
       <span id="state-seat-count" class="data-label lg:justify-self-end">
         {@state.seats_label}
       </span>
     </header>
 
-    <section id="state-authorship" class="section-pad border-b-2 border-[var(--ink)]">
+    <section id="state-authorship" class="section-pad !py-12 border-b-2 border-[var(--ink)]">
       <p class="eyebrow">Who drew this map</p>
-      <h2 :if={!@state.at_large} class="display-md mt-6">{@state.authority_full}</h2>
-      <h2 :if={@state.at_large} class="display-md mt-6">
+      <h2 :if={!@state.at_large} class="display-md mt-4">{@state.authority_full}</h2>
+      <h2 :if={@state.at_large} class="display-md mt-4">
         No map drawn. One representative, statewide — the border is the district.
       </h2>
       <a
         :if={@state.authorship_source_url}
         href={@state.authorship_source_url}
-        class="ink-button mt-10"
+        class="ink-button mt-6"
       >
         Source: Loyola, All About Redistricting <span aria-hidden="true">↗</span>
       </a>
@@ -30,7 +30,7 @@
     <section
       :if={!@state.at_large}
       id="state-bias"
-      class="section-pad border-b-2 border-[var(--ink)]"
+      class="section-pad !py-12 border-b-2 border-[var(--ink)]"
     >
       <p class="eyebrow">2024 · seats and votes</p>
       <div :if={@state.fact_pair} class="mt-8 grid gap-6 md:grid-cols-2">
@@ -70,7 +70,7 @@
       </p>
     </section>
 
-    <section id="state-history" class="section-pad border-b-2 border-[var(--ink)]">
+    <section id="state-history" class="section-pad !py-12 border-b-2 border-[var(--ink)]">
       <p class="eyebrow">Seats and votes since 1976</p>
       <div class="mt-8">{@state.chart_svg}</div>
       <p :if={!@state.chart_svg} id="state-history-empty" class="mt-8 text-sm leading-6">
@@ -81,7 +81,7 @@
       </p>
     </section>
 
-    <section id="state-districts" class="section-pad border-b-2 border-[var(--ink)]">
+    <section id="state-districts" class="section-pad !py-12 border-b-2 border-[var(--ink)]">
       <p class="eyebrow">The districts</p>
       <div
         id="state-district-rows"
@@ -112,7 +112,7 @@
       </div>
     </section>
 
-    <div class="section-pad flex flex-wrap items-baseline justify-between gap-6">
+    <div class="section-pad !py-12 flex flex-wrap items-baseline justify-between gap-6">
       <p class="max-w-xl font-serif text-xl leading-snug">
         Methodology {@methodology_version}.
       </p>

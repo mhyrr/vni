@@ -2,17 +2,17 @@
   <.dataset_notice />
 
   <section id="state-index" class="editorial-shell bg-[var(--paper)]">
-    <div class="section-pad grid gap-12 border-b-2 border-[var(--ink)] lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
+    <div class="section-pad !py-12 grid gap-12 border-b-2 border-[var(--ink)] lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
       <div>
         <p class="eyebrow">The maps · 119th Congress</p>
-        <h1 class="display-xl mt-7">A district is a shape. A map is a choice.</h1>
+        <h1 class="display-lg mt-4">A district is a shape. A map is a choice.</h1>
       </div>
       <p class="font-serif text-3xl leading-tight">
         Partisan distortion is a property of a statewide map. This page is where it shows — and where it doesn't.
       </p>
     </div>
 
-    <p id="state-index-caveat" class="section-pad !py-8 max-w-3xl text-sm leading-6">
+    <p id="state-index-caveat" class="section-pad !py-6 max-w-3xl text-sm leading-6">
       The vote–seat pair shows the gap. The tipping-point skew says whether the lines helped. Neither is a verdict without the third column — who drew the map.
       <.link
         navigate={~p"/methodology#methodology-bias"}
@@ -64,13 +64,13 @@
       <table id="state-table" class="w-full border-collapse text-left text-sm">
         <thead>
           <tr class="border-b-2 border-[var(--ink)]">
-            <th class="section-pad !py-4 data-label">State</th>
-            <th class="section-pad !py-4 data-label">Seats</th>
-            <th class="section-pad !py-4 data-label">Drawn by</th>
-            <th class="section-pad !py-4 data-label">Pres vote R / D</th>
-            <th class="section-pad !py-4 data-label">Seats R / D</th>
-            <th class="section-pad !py-4 data-label">Tipping-point skew</th>
-            <th class="section-pad !py-4 data-label">Least compact</th>
+            <th class="px-5 py-4 whitespace-nowrap md:px-10 data-label">State</th>
+            <th class="px-5 py-4 whitespace-nowrap md:px-10 data-label">Seats</th>
+            <th class="px-5 py-4 whitespace-nowrap md:px-10 data-label">Drawn by</th>
+            <th class="px-5 py-4 whitespace-nowrap md:px-10 data-label">Pres vote R / D</th>
+            <th class="px-5 py-4 whitespace-nowrap md:px-10 data-label">Seats R / D</th>
+            <th class="px-5 py-4 whitespace-nowrap md:px-10 data-label">Tipping-point skew</th>
+            <th class="px-5 py-4 whitespace-nowrap md:px-10 data-label">Least compact</th>
           </tr>
         </thead>
         <tbody id="state-rows">
@@ -79,13 +79,13 @@
             id={"state-#{row.state_code}"}
             class="border-b border-[var(--ink)]"
           >
-            <td class="section-pad !py-4 font-bold">
+            <td class="px-5 py-4 whitespace-nowrap md:px-10 font-bold">
               <.link navigate={~p"/states/#{row.state_code}"} class="underline underline-offset-4">
                 {row.state_name}
               </.link>
             </td>
-            <td class="section-pad !py-4">{row.seats}</td>
-            <td class="section-pad !py-4">
+            <td class="px-5 py-4 whitespace-nowrap md:px-10">{row.seats}</td>
+            <td class="px-5 py-4 whitespace-nowrap md:px-10">
               <span>{row.authority_label}</span>
               <.party_mark
                 :if={row.party_badge_key}
@@ -94,13 +94,15 @@
                 class="ml-2 !px-2 !py-0.5"
               />
             </td>
-            <td class="section-pad !py-4 font-mono">{row.pres_vote_display}</td>
-            <td class="section-pad !py-4 font-mono">{row.seats_display}</td>
-            <td class="section-pad !py-4 font-mono font-bold">
+            <td class="px-5 py-4 whitespace-nowrap md:px-10 font-mono">
+              {row.pres_vote_display}
+            </td>
+            <td class="px-5 py-4 whitespace-nowrap md:px-10 font-mono">{row.seats_display}</td>
+            <td class="px-5 py-4 whitespace-nowrap md:px-10 font-mono font-bold">
               <span :if={!row.skew_missing}>{row.skew_display}</span>
               <span :if={row.skew_missing} title="too few districts">—</span>
             </td>
-            <td class="section-pad !py-4">
+            <td class="px-5 py-4 whitespace-nowrap md:px-10">
               <.link
                 :if={row.worst_district_slug}
                 navigate={~p"/districts/#{row.worst_district_slug}"}
