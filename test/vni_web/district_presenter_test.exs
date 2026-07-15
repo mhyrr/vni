@@ -2,6 +2,7 @@ defmodule VNIWeb.DistrictPresenterTest do
   use ExUnit.Case, async: true
 
   alias VNI.Atlas.{District, MapVersion}
+  alias VNI.Politics.DistrictProfile
   alias VNI.Scores.DistrictScore
   alias VNIWeb.DistrictPresenter
 
@@ -82,5 +83,49 @@ defmodule VNIWeb.DistrictPresenterTest do
     assert presented.ranked_total == 429
     assert presented.tone == :neutral
     assert presented.polsby_popper == 40
+
+    # Profile not loaded → every profile fact is nil, never NotLoaded leakage.
+    assert is_nil(presented.incumbent_name)
+    assert is_nil(presented.population)
+  end
+
+  test "presents ingested profile facts with raw party letter and arithmetic tenure" do
+    district = %District{
+      id: 3,
+      state: "TX",
+      number: 33,
+      slug: "tx-33",
+      map_version: %MapVersion{congress: 119, source_url: "https://example.test/tx.zip"},
+      score: %DistrictScore{
+        composite: 0.5,
+        polsby_popper: 0.5,
+        reock: 0.5,
+        convex_hull: 0.5,
+        schwartzberg: 0.5,
+        national_rank: 200,
+        methodology_version: "2026.2"
+      },
+      profile: %DistrictProfile{
+        incumbent_name: "Marc A. Veasey",
+        incumbent_party: :dem,
+        incumbent_since: 2013,
+        incumbent_source_url: "https://unitedstates.github.io/congress-legislators/",
+        population: 789_013,
+        voting_age_population: 560_000,
+        acs_vintage: 2024,
+        population_source_url: "https://api.census.gov/data/2024/acs/acs5"
+      }
+    }
+
+    presented = DistrictPresenter.present(district)
+
+    assert presented.incumbent_name == "Marc A. Veasey"
+    assert presented.incumbent_party == "D"
+    assert presented.incumbent_party_key == :dem
+    assert presented.incumbent_since == 2013
+    assert presented.incumbent_tenure == Date.utc_today().year - 2013
+    assert presented.population == "789,013"
+    assert presented.voting_age_population == "560,000"
+    assert presented.acs_vintage == 2024
   end
 end

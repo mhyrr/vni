@@ -218,7 +218,7 @@ defmodule VNI.Scores do
           not is_nil(s.polsby_popper),
       order_by: [asc_nulls_last: field(s, ^metric), asc: d.state, asc: d.number],
       select: struct(d, ^@display_district_fields),
-      preload: [score: s, map_version: mv]
+      preload: [:profile, score: s, map_version: mv]
     )
     |> Repo.all()
   end
@@ -236,7 +236,7 @@ defmodule VNI.Scores do
         d.slug == ^slug and mv.level == ^level and is_nil(mv.effective_until) and
           not is_nil(s.polsby_popper),
       select: struct(d, ^@display_district_fields),
-      preload: [score: s, map_version: mv]
+      preload: [:profile, score: s, map_version: mv]
     )
     |> Repo.one()
   end

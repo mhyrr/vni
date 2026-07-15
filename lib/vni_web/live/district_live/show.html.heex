@@ -100,6 +100,60 @@
         </div>
       </section>
 
+      <section
+        :if={district.incumbent_name || district.population}
+        id="district-representative"
+        class="grid border-b-2 border-[var(--ink)] lg:grid-cols-2"
+      >
+        <div
+          :if={district.incumbent_name}
+          class="section-pad border-b-2 border-[var(--ink)] lg:border-r-2 lg:border-b-0"
+        >
+          <p class="eyebrow">The incumbent</p>
+          <h2 class="display-md mt-6">{district.incumbent_name}</h2>
+          <div class="mt-10 flex flex-wrap gap-3">
+            <.party_mark
+              party={district.incumbent_party_key}
+              label={"Party · #{district.incumbent_party}"}
+              class="!px-3 !py-2"
+            />
+            <span class="border-2 border-[var(--ink)] px-3 py-2 data-label">
+              In the House since {district.incumbent_since}
+            </span>
+            <span class="bg-[var(--ink)] px-3 py-2 text-white data-label">
+              Tenure · {district.incumbent_tenure} years
+            </span>
+          </div>
+          <p class="mt-10 max-w-xl text-sm leading-6">
+            Facts from the public record: name, party, first year in the House. No challenger appears here — any challenger will do.
+          </p>
+          <a href={district.incumbent_source_url} class="ink-button mt-10">
+            Open the congressional record source <span>↗</span>
+          </a>
+        </div>
+        <div :if={district.population} class="section-pad">
+          <p class="eyebrow">The people represented</p>
+          <div class="mt-6 grid gap-10 md:grid-cols-2">
+            <div>
+              <span class="data-label">Population</span>
+              <strong class="mt-5 block text-6xl font-black tracking-[-0.08em]">
+                {district.population}
+              </strong>
+            </div>
+            <div>
+              <span class="data-label">Voting age</span>
+              <strong class="mt-5 block text-6xl font-black tracking-[-0.08em]">
+                {district.voting_age_population}
+              </strong>
+            </div>
+          </div>
+          <p class="mt-10 text-sm leading-6">
+            U.S. Census ACS {district.acs_vintage} five-year estimates.
+            <a href={district.population_source_url} class="underline">Open the query ↗</a>
+          </p>
+        </div>
+      </section>
+
       <section class="section-pad grid gap-14 lg:grid-cols-[0.85fr_1.15fr]">
         <div>
           <p class="eyebrow">Compared with the field</p>

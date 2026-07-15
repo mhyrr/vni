@@ -3,11 +3,14 @@ defmodule VNIWeb.DistrictPresenter do
   Turns current district records into the small, geometry-safe maps consumed
   by the public LiveViews.
 
-  The presenter deliberately exposes only sourced shape data. Political
-  fields join this contract after their own ingestion pipeline exists.
+  Every exposed fact is sourced: shape data cites the Census map version,
+  incumbent facts cite the legislators dataset, population cites its ACS
+  request. Profile fields are nil until their ingest has run — templates
+  render only what the record supports.
   """
 
   alias VNI.Atlas.District
+  alias VNI.Politics.DistrictProfile
 
   @state_names %{
     "AL" => "Alabama",
@@ -97,7 +100,49 @@ defmodule VNIWeb.DistrictPresenter do
       methodology_version: score.methodology_version,
       tone: compactness_tone(score.composite)
     }
+    |> Map.merge(profile_fields(district.profile))
   end
+
+  # Published facts only, exactly as ingested: party stays the raw letter,
+  # tenure is arithmetic (current year minus first year in office).
+  defp profile_fields(%DistrictProfile{} = profile) do
+    %{
+      incumbent_name: profile.incumbent_name,
+      incumbent_party: party_letter(profile.incumbent_party),
+      incumbent_party_key: profile.incumbent_party,
+      incumbent_since: profile.incumbent_since,
+      incumbent_tenure: tenure(profile.incumbent_since),
+      incumbent_source_url: profile.incumbent_source_url,
+      population: profile.population && number(profile.population),
+      voting_age_population:
+        profile.voting_age_population && number(profile.voting_age_population),
+      acs_vintage: profile.acs_vintage,
+      population_source_url: profile.population_source_url
+    }
+  end
+
+  defp profile_fields(_missing_or_not_loaded) do
+    %{
+      incumbent_name: nil,
+      incumbent_party: nil,
+      incumbent_party_key: nil,
+      incumbent_since: nil,
+      incumbent_tenure: nil,
+      incumbent_source_url: nil,
+      population: nil,
+      voting_age_population: nil,
+      acs_vintage: nil,
+      population_source_url: nil
+    }
+  end
+
+  defp party_letter(:dem), do: "D"
+  defp party_letter(:rep), do: "R"
+  defp party_letter(:ind), do: "I"
+  defp party_letter(nil), do: nil
+
+  defp tenure(nil), do: nil
+  defp tenure(since), do: Date.utc_today().year - since
 
   def percent(nil), do: 0
   def percent(value), do: value |> Kernel.*(100) |> round()

@@ -35,6 +35,25 @@ defmodule VNIWeb.PublicComponents do
     """
   end
 
+  attr :party, :atom, default: nil
+  attr :label, :string, required: true
+  attr :class, :string, default: nil
+
+  @doc """
+  A party marker in evidence colors: blue for D, red for R, outlined for
+  anything else. Raw record data only — the color states the party, it
+  never grades the officeholder.
+  """
+  def party_mark(assigns) do
+    ~H"""
+    <span class={["px-2 py-1 data-label", party_chip(@party), @class]}>{@label}</span>
+    """
+  end
+
+  defp party_chip(:dem), do: "bg-[var(--blue)] text-white"
+  defp party_chip(:rep), do: "bg-[var(--red)] text-[var(--ink)]"
+  defp party_chip(_party), do: "border-2 border-[var(--ink)]"
+
   attr :label, :string, required: true
   attr :value, :integer, required: true
   attr :display, :string, required: true
