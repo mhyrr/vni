@@ -64,7 +64,29 @@
             />
             <span class="truncate">{district.incumbent_name}</span>
           </span>
-          <span :if={district.population} class="col-span-2">Pop. {district.population}</span>
+          <span
+            :if={district.population || district.partisan_lean}
+            class="col-span-2 flex min-w-0 items-baseline justify-between gap-1.5"
+          >
+            <span :if={district.population} class="truncate">Pop. {district.population}</span>
+            <span :if={district.partisan_lean} class="whitespace-nowrap">
+              Lean {district.partisan_lean}
+            </span>
+          </span>
+          <span
+            :if={district.last_margin}
+            class="col-span-2 flex min-w-0 items-baseline gap-1.5"
+          >
+            <.party_mark
+              party={district.last_margin_party_key}
+              label={if district.unopposed, do: "UNOPPOSED", else: "+#{district.last_margin}"}
+              class="!px-1 !py-0"
+            />
+            <span class="truncate">{district.last_margin_cycle} margin</span>
+          </span>
+          <span :if={district.map_authority_short} class="col-span-2 truncate">
+            Map · {district.map_authority_short}<span :if={district.map_controlling_party_short}> · {district.map_controlling_party_short}</span>
+          </span>
         </span>
       </.link>
     </div>

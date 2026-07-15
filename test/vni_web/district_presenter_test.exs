@@ -95,7 +95,13 @@ defmodule VNIWeb.DistrictPresenterTest do
       state: "TX",
       number: 33,
       slug: "tx-33",
-      map_version: %MapVersion{congress: 119, source_url: "https://example.test/tx.zip"},
+      map_version: %MapVersion{
+        congress: 119,
+        source_url: "https://example.test/tx.zip",
+        authority: :legislature,
+        controlling_party: :rep,
+        authorship_source_url: "https://redistricting.lls.edu/state/texas/"
+      },
       score: %DistrictScore{
         composite: 0.5,
         polsby_popper: 0.5,
@@ -113,7 +119,25 @@ defmodule VNIWeb.DistrictPresenterTest do
         population: 789_013,
         voting_age_population: 560_000,
         acs_vintage: 2024,
-        population_source_url: "https://api.census.gov/data/2024/acs/acs5"
+        population_source_url: "https://api.census.gov/data/2024/acs/acs5",
+        last_margin_pct: 30.85,
+        last_margin_cycle: 2024,
+        last_margin_party: :dem,
+        margin_source_url: "https://doi.org/10.7910/DVN/IG0UN2",
+        partisan_lean: -20.8,
+        lean_source_url: "https://docs.google.com/spreadsheets/d/example",
+        counties: [
+          %{"name" => "Tarrant County", "partial" => true},
+          %{"name" => "Dallas County", "partial" => true},
+          %{"name" => "Denton County", "partial" => true},
+          %{"name" => "Ellis County", "partial" => false},
+          %{"name" => "Johnson County", "partial" => false}
+        ],
+        places: [
+          %{"name" => "Fort Worth", "partial" => true},
+          %{"name" => "Dallas", "partial" => true}
+        ],
+        geography_source_url: "https://www2.census.gov/geo/docs/maps-data/data/rel2020/cd-sld"
       }
     }
 
@@ -127,5 +151,71 @@ defmodule VNIWeb.DistrictPresenterTest do
     assert presented.population == "789,013"
     assert presented.voting_age_population == "560,000"
     assert presented.acs_vintage == 2024
+
+    # Margin: one display decimal, winner party in evidence colors.
+    assert presented.last_margin == "30.9"
+    assert presented.last_margin_cycle == 2024
+    assert presented.last_margin_party == "D"
+    assert presented.last_margin_party_key == :dem
+    refute presented.unopposed
+
+    # Lean rounds for display with our R+/D+ sign convention.
+    assert presented.partisan_lean == "D+21"
+    assert presented.partisan_lean_party_key == :dem
+
+    # Authorship, exactly as curated.
+    assert presented.map_authority == "the state legislature"
+    assert presented.map_authority_short == "Legislature"
+    assert presented.map_controlling_party == "Republicans in control at adoption"
+    assert presented.map_controlling_party_short == "R"
+    assert presented.authorship_source_url =~ "redistricting.lls.edu"
+
+    # Location lines trim with a counted overflow, never silently.
+    assert presented.county_line ==
+             "Tarrant County (part) · Dallas County (part) · Denton County (part) · +2 more"
+
+    assert presented.place_line == "Fort Worth (part) · Dallas (part)"
+  end
+
+  test "presents an unopposed margin and a nonpartisan authority" do
+    district = %District{
+      id: 4,
+      state: "AK",
+      number: 0,
+      slug: "ak-0",
+      map_version: %MapVersion{
+        congress: 119,
+        source_url: "https://example.test/ak.zip",
+        authorship_source_url: "https://redistricting.lls.edu/state/alaska/"
+      },
+      score: %DistrictScore{
+        composite: nil,
+        polsby_popper: 0.5,
+        reock: 0.5,
+        convex_hull: 0.5,
+        schwartzberg: 0.5,
+        national_rank: nil,
+        methodology_version: "2026.2"
+      },
+      profile: %DistrictProfile{
+        last_margin_pct: 100.0,
+        last_margin_cycle: 2024,
+        last_margin_party: :rep
+      }
+    }
+
+    presented = DistrictPresenter.present(district)
+
+    assert presented.unopposed
+    assert presented.last_margin == "100.0"
+    assert presented.last_margin_party_key == :rep
+
+    # No lean or geography ingested yet — nil, not a crash or a zero.
+    assert is_nil(presented.partisan_lean)
+    assert is_nil(presented.county_line)
+
+    # At-large: no authority, but the citation still documents the seat.
+    assert is_nil(presented.map_authority)
+    assert presented.authorship_source_url =~ "alaska"
   end
 end

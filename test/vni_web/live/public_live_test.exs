@@ -37,6 +37,17 @@ defmodule VNIWeb.PublicLiveTest do
     assert has_element?(view, "#district-md-3 .atlas-cell-meta", "Sample Incumbent")
     assert has_element?(view, "#district-md-3 .atlas-cell-meta", "Pop. 789,013")
     refute has_element?(view, "#district-tx-35 .atlas-cell-meta", "Pop.")
+
+    # Margin, lean, and map authorship join the strip, in evidence colors.
+    assert has_element?(view, "#district-md-3 .atlas-cell-meta", "Lean D+21")
+    assert has_element?(view, "#district-md-3 .atlas-cell-meta", "+9.2")
+    assert has_element?(view, "#district-md-3 .atlas-cell-meta", "2024 margin")
+    assert has_element?(view, "#district-md-3 .atlas-cell-meta", "Map · Legislature · D")
+    assert has_element?(view, "#district-ak-0 .atlas-cell-meta", "UNOPPOSED")
+
+    # No authority row where nobody drew lines; never any challenger.
+    refute has_element?(view, "#district-ak-0 .atlas-cell-meta", "Map ·")
+    refute has_element?(view, "#atlas-field", "challenger")
   end
 
   test "district profile presents incumbent and population facts", %{conn: conn} do
@@ -56,6 +67,46 @@ defmodule VNIWeb.PublicLiveTest do
 
     # Doctrine hard line: incumbent facts only, never challenger info.
     assert has_element?(view, "#district-representative", "No challenger appears here")
+  end
+
+  test "district profile surfaces margin, lean, authorship, and location", %{conn: conn} do
+    seed_districts!()
+    {:ok, view, _html} = live(conn, ~p"/districts/md-3")
+    render_async(view)
+
+    # Location line from the relationship files, cited.
+    assert has_element?(view, "#district-location", "Anne Arundel County (part)")
+    assert has_element?(view, "#district-location", "Annapolis")
+    assert has_element?(view, "#district-location a[href*='census.gov']")
+
+    # Last margin rides with the incumbent, in evidence colors, sourced.
+    assert has_element?(view, "#district-representative", "Won by 9.2 pts · 2024 general")
+    assert has_element?(view, "#district-representative a[href*='doi.org']")
+
+    # Authorship: who held the pen, cited to All About Redistricting.
+    assert has_element?(view, "#district-map-author", "Drawn by the state legislature.")
+    assert has_element?(view, "#district-map-author", "Democrats in control at adoption")
+    assert has_element?(view, "#district-map-author a[href*='redistricting.lls.edu']")
+
+    # Lean is labeled as our formula, linked to the methodology, sourced,
+    # and framed as context — never a verdict.
+    assert has_element?(view, "#district-lean", "D+21")
+    assert has_element?(view, "#district-lean", "our own formula")
+    assert has_element?(view, "#district-lean", "never Cook PVI")
+    assert has_element?(view, "#district-lean", "It is not a verdict.")
+    assert has_element?(view, "#district-lean a[href='/methodology']")
+    assert has_element?(view, "#district-lean a[href*='docs.google.com']")
+  end
+
+  test "at-large profile shows unopposed margin and authorless map", %{conn: conn} do
+    seed_districts!()
+    {:ok, view, _html} = live(conn, ~p"/districts/ak-0")
+    render_async(view)
+
+    assert has_element?(view, "#district-representative", "Unopposed · 2024 general")
+    assert has_element?(view, "#district-map-author", "Nobody drew this line.")
+    assert has_element?(view, "#district-map-author", "the state border is the district")
+    refute has_element?(view, "#district-lean")
   end
 
   test "district profile omits the representative section without ingested facts", %{conn: conn} do
@@ -116,6 +167,15 @@ defmodule VNIWeb.PublicLiveTest do
     assert has_element?(view, "#methodology-limits", "Hawaii's 2nd is the worked example.")
   end
 
+  test "methodology publishes the lean formula and margin rules", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/methodology")
+
+    assert has_element?(view, "#methodology-lean", "0.75 × (district − nation, 2024)")
+    assert has_element?(view, "#methodology-lean", "not Cook PVI")
+    assert has_element?(view, "#methodology-lean", "It is never a verdict on either.")
+    assert has_element?(view, "#methodology-lean", "Unopposed seats record 100")
+  end
+
   test "action prototype responds without persisting data", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/act")
 
@@ -135,7 +195,10 @@ defmodule VNIWeb.PublicLiveTest do
         level: :congressional,
         congress: 119,
         effective_from: ~D[2025-01-03],
-        source_url: "https://www2.census.gov/geo/tiger/TIGER2025/CD/"
+        source_url: "https://www2.census.gov/geo/tiger/TIGER2025/CD/",
+        authority: :legislature,
+        controlling_party: :dem,
+        authorship_source_url: "https://redistricting.lls.edu/state/maryland/"
       })
 
     {:ok, compact} =
@@ -154,7 +217,22 @@ defmodule VNIWeb.PublicLiveTest do
         population: 789_013,
         voting_age_population: 560_000,
         acs_vintage: 2024,
-        population_source_url: "https://api.census.gov/data/2024/acs/acs5"
+        population_source_url: "https://api.census.gov/data/2024/acs/acs5",
+        last_margin_pct: 9.2,
+        last_margin_cycle: 2024,
+        last_margin_party: :dem,
+        margin_source_url: "https://doi.org/10.7910/DVN/IG0UN2",
+        partisan_lean: -20.8,
+        lean_source_url: "https://docs.google.com/spreadsheets/d/example",
+        counties: [
+          %{"name" => "Anne Arundel County", "partial" => true},
+          %{"name" => "Howard County", "partial" => false}
+        ],
+        places: [
+          %{"name" => "Annapolis", "partial" => false},
+          %{"name" => "Columbia", "partial" => false}
+        ],
+        geography_source_url: "https://www2.census.gov/geo/docs/maps-data/data/rel2020/cd-sld"
       })
 
     {:ok, texas_map} =
@@ -179,14 +257,27 @@ defmodule VNIWeb.PublicLiveTest do
         level: :congressional,
         congress: 119,
         effective_from: ~D[2025-01-03],
-        source_url: "https://www2.census.gov/geo/tiger/TIGER2025/CD/"
+        source_url: "https://www2.census.gov/geo/tiger/TIGER2025/CD/",
+        authorship_source_url: "https://redistricting.lls.edu/state/alaska/"
       })
 
-    {:ok, _at_large} =
+    {:ok, at_large} =
       Atlas.upsert_district(alaska_map, %{
         state: "AK",
         number: 0,
         geom: square_geometry(-150.0, 61.0)
+      })
+
+    {:ok, _at_large_profile} =
+      Politics.upsert_profile(at_large, %{
+        incumbent_name: "Sample At-Large",
+        incumbent_party: :rep,
+        incumbent_since: 2023,
+        incumbent_source_url: "https://unitedstates.github.io/congress-legislators/",
+        last_margin_pct: 100.0,
+        last_margin_cycle: 2024,
+        last_margin_party: :rep,
+        margin_source_url: "https://doi.org/10.7910/DVN/IG0UN2"
       })
 
     :ok = Atlas.refresh_district_geometries!(map_version)

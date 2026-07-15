@@ -100,8 +100,48 @@ defmodule VNIWeb.DistrictPresenter do
       methodology_version: score.methodology_version,
       tone: compactness_tone(score.composite)
     }
+    |> Map.merge(authorship_fields(map_version))
     |> Map.merge(profile_fields(district.profile))
   end
+
+  # Map authorship, exactly as curated: the institution that drew the
+  # current map and the party in control of that process at adoption.
+  defp authorship_fields(map_version) do
+    %{
+      map_authority: authority_label(map_version.authority),
+      map_authority_short: authority_short(map_version.authority),
+      map_controlling_party: controlling_party_label(map_version.controlling_party),
+      map_controlling_party_key: map_version.controlling_party,
+      map_controlling_party_short: controlling_party_short(map_version.controlling_party),
+      authorship_source_url: map_version.authorship_source_url
+    }
+  end
+
+  defp authority_label(:legislature), do: "the state legislature"
+  defp authority_label(:independent_commission), do: "an independent commission"
+  defp authority_label(:politician_commission), do: "a politician commission"
+  defp authority_label(:court), do: "the state court"
+  defp authority_label(:special_master), do: "a court-appointed special master"
+  defp authority_label(nil), do: nil
+
+  defp authority_short(:legislature), do: "Legislature"
+  defp authority_short(:independent_commission), do: "Ind. commission"
+  defp authority_short(:politician_commission), do: "Pol. commission"
+  defp authority_short(:court), do: "Court"
+  defp authority_short(:special_master), do: "Special master"
+  defp authority_short(nil), do: nil
+
+  defp controlling_party_label(:dem), do: "Democrats in control at adoption"
+  defp controlling_party_label(:rep), do: "Republicans in control at adoption"
+  defp controlling_party_label(:split), do: "control split between the parties"
+  defp controlling_party_label(:nonpartisan), do: "no party in control"
+  defp controlling_party_label(nil), do: nil
+
+  # The hover strip carries the party letter only where a party held the
+  # pen; commissions and courts speak through the authority label alone.
+  defp controlling_party_short(:dem), do: "D"
+  defp controlling_party_short(:rep), do: "R"
+  defp controlling_party_short(_other), do: nil
 
   # Published facts only, exactly as ingested: party stays the raw letter,
   # tenure is arithmetic (current year minus first year in office).
@@ -117,7 +157,19 @@ defmodule VNIWeb.DistrictPresenter do
       voting_age_population:
         profile.voting_age_population && number(profile.voting_age_population),
       acs_vintage: profile.acs_vintage,
-      population_source_url: profile.population_source_url
+      population_source_url: profile.population_source_url,
+      last_margin: margin(profile.last_margin_pct),
+      last_margin_cycle: profile.last_margin_cycle,
+      last_margin_party: party_letter(profile.last_margin_party),
+      last_margin_party_key: profile.last_margin_party,
+      unopposed: profile.last_margin_pct == 100.0,
+      margin_source_url: profile.margin_source_url,
+      partisan_lean: lean_label(profile.partisan_lean),
+      partisan_lean_party_key: lean_party(profile.partisan_lean),
+      lean_source_url: profile.lean_source_url,
+      county_line: geography_line(profile.counties, 3),
+      place_line: geography_line(profile.places, 4),
+      geography_source_url: profile.geography_source_url
     }
   end
 
@@ -132,8 +184,65 @@ defmodule VNIWeb.DistrictPresenter do
       population: nil,
       voting_age_population: nil,
       acs_vintage: nil,
-      population_source_url: nil
+      population_source_url: nil,
+      last_margin: nil,
+      last_margin_cycle: nil,
+      last_margin_party: nil,
+      last_margin_party_key: nil,
+      unopposed: false,
+      margin_source_url: nil,
+      partisan_lean: nil,
+      partisan_lean_party_key: nil,
+      lean_source_url: nil,
+      county_line: nil,
+      place_line: nil,
+      geography_source_url: nil
     }
+  end
+
+  # Winning margin in display form: one decimal, in points.
+  defp margin(nil), do: nil
+  defp margin(pct), do: :erlang.float_to_binary(pct / 1, decimals: 1)
+
+  # Lean reads R+n / D+n — our formula's sign convention (positive = more
+  # Republican than the nation). A district on the national number is EVEN.
+  defp lean_label(nil), do: nil
+
+  defp lean_label(lean) do
+    case round(lean) do
+      0 -> "EVEN"
+      n when n > 0 -> "R+#{n}"
+      n -> "D+#{-n}"
+    end
+  end
+
+  defp lean_party(nil), do: nil
+
+  defp lean_party(lean) do
+    case round(lean) do
+      0 -> nil
+      n when n > 0 -> :rep
+      _n -> :dem
+    end
+  end
+
+  # "Cook County (part) · Lake County" — ingested order, trimmed for the
+  # location line, with the overflow counted instead of dropped silently.
+  defp geography_line(nil, _keep), do: nil
+  defp geography_line([], _keep), do: nil
+
+  defp geography_line(entries, keep) do
+    {shown, rest} = Enum.split(entries, keep)
+
+    line =
+      Enum.map_join(shown, " · ", fn entry ->
+        if entry["partial"], do: "#{entry["name"]} (part)", else: entry["name"]
+      end)
+
+    case rest do
+      [] -> line
+      more -> line <> " · +#{length(more)} more"
+    end
   end
 
   defp party_letter(:dem), do: "D"

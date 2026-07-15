@@ -44,6 +44,20 @@
           <p class="mt-8 max-w-2xl font-serif text-3xl leading-tight">
             The enacted boundary, measured four ways against the current national field.
           </p>
+          <p
+            :if={district.county_line}
+            id="district-location"
+            class="mt-7 max-w-2xl data-label leading-5"
+          >
+            {district.county_line}<span :if={district.place_line}> — {district.place_line}</span>
+            <a
+              href={district.geography_source_url}
+              class="underline"
+              title="Census CD119 relationship files"
+            >
+              Census ↗
+            </a>
+          </p>
           <div class="mt-12 flex flex-wrap gap-3">
             <span class="bg-[var(--ink)] px-3 py-2 text-white data-label">
               Census TIGER/Line 2025
@@ -123,13 +137,33 @@
             <span class="bg-[var(--ink)] px-3 py-2 text-white data-label">
               Tenure · {district.incumbent_tenure} years
             </span>
+            <.party_mark
+              :if={district.last_margin}
+              party={district.last_margin_party_key}
+              label={
+                if district.unopposed,
+                  do: "Unopposed · #{district.last_margin_cycle} general",
+                  else:
+                    "Won by #{district.last_margin} pts · #{district.last_margin_cycle} general"
+              }
+              class="!px-3 !py-2"
+            />
           </div>
           <p class="mt-10 max-w-xl text-sm leading-6">
-            Facts from the public record: name, party, first year in the House. No challenger appears here — any challenger will do.
+            Facts from the public record: name, party, first year in the House, last general-election margin. No challenger appears here — any challenger will do.
           </p>
-          <a href={district.incumbent_source_url} class="ink-button mt-10">
-            Open the congressional record source <span>↗</span>
-          </a>
+          <div class="mt-10 flex flex-wrap gap-3">
+            <a href={district.incumbent_source_url} class="ink-button">
+              Open the congressional record source <span>↗</span>
+            </a>
+            <a
+              :if={district.margin_source_url}
+              href={district.margin_source_url}
+              class="ink-button"
+            >
+              Election returns source <span>↗</span>
+            </a>
+          </div>
         </div>
         <div :if={district.population} class="section-pad">
           <p class="eyebrow">The people represented</p>
@@ -151,6 +185,63 @@
             U.S. Census ACS {district.acs_vintage} five-year estimates.
             <a href={district.population_source_url} class="underline">Open the query ↗</a>
           </p>
+        </div>
+      </section>
+
+      <section
+        :if={district.authorship_source_url || district.partisan_lean}
+        id="district-politics"
+        class="grid border-b-2 border-[var(--ink)] lg:grid-cols-2"
+      >
+        <div
+          :if={district.authorship_source_url}
+          id="district-map-author"
+          class="section-pad border-b-2 border-[var(--ink)] lg:border-r-2 lg:border-b-0"
+        >
+          <p class="eyebrow">The map's author</p>
+          <h2 :if={district.map_authority} class="display-md mt-6">
+            Drawn by {district.map_authority}.
+          </h2>
+          <h2 :if={!district.map_authority} class="display-md mt-6">
+            Nobody drew this line.
+          </h2>
+          <div class="mt-10 flex flex-wrap gap-3">
+            <.party_mark
+              :if={district.map_controlling_party}
+              party={district.map_controlling_party_key}
+              label={district.map_controlling_party}
+              class="!px-3 !py-2"
+            />
+            <span
+              :if={!district.map_authority}
+              class="border-2 border-[var(--ink)] px-3 py-2 data-label"
+            >
+              At-large · the state border is the district
+            </span>
+          </div>
+          <p class="mt-10 max-w-xl text-sm leading-6">
+            Every line has an author. Who held the pen — a legislature, a commission, a court — is part of the district's public record.
+          </p>
+          <a href={district.authorship_source_url} class="ink-button mt-10">
+            Source · All About Redistricting <span>↗</span>
+          </a>
+        </div>
+        <div :if={district.partisan_lean} id="district-lean" class="section-pad">
+          <p class="eyebrow">The lean</p>
+          <strong class="mt-6 block text-7xl font-black tracking-[-0.1em]">
+            {district.partisan_lean}
+          </strong>
+          <p class="mt-8 max-w-xl text-sm leading-6">
+            VNI partisan lean — our own formula on public returns, never Cook PVI: the district's two-party presidential vote share against the nation's, two cycles weighted 3-to-1 toward the recent one. Lean is context for the shape and the seat. It is not a verdict.
+          </p>
+          <div class="mt-10 flex flex-wrap gap-3">
+            <.link navigate={~p"/methodology"} class="ink-button">
+              How lean is computed <span>→</span>
+            </.link>
+            <a href={district.lean_source_url} class="ink-button">
+              Open the returns data <span>↗</span>
+            </a>
+          </div>
         </div>
       </section>
 
