@@ -1,8 +1,11 @@
 <Layouts.app flash={@flash} active={:states}>
   <.dataset_notice />
 
-  <article id={"state-profile-#{@state.state}"} class="editorial-shell bg-[var(--paper)]">
-    <header class="section-pad !py-12 grid gap-8 border-b-2 border-[var(--ink)] lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+  <article
+    id={"state-profile-#{@state.state}"}
+    class="state-profile editorial-shell bg-[var(--paper)]"
+  >
+    <header class="section-pad !py-10 grid gap-6 border-b-2 border-[var(--ink)] lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
       <div>
         <p class="eyebrow">The map · 119th Congress</p>
         <h1 class="display-lg mt-4">{@state.state_name}</h1>
@@ -12,7 +15,7 @@
       </span>
     </header>
 
-    <section id="state-authorship" class="section-pad !py-12 border-b-2 border-[var(--ink)]">
+    <section id="state-authorship" class="section-pad !py-10 border-b-2 border-[var(--ink)]">
       <p class="eyebrow">Who drew this map</p>
       <h2 :if={!@state.at_large} class="display-md mt-4">{@state.authority_full}</h2>
       <h2 :if={@state.at_large} class="display-md mt-4">
@@ -30,31 +33,31 @@
     <section
       :if={!@state.at_large}
       id="state-bias"
-      class="section-pad !py-12 border-b-2 border-[var(--ink)]"
+      class="section-pad !py-10 border-b-2 border-[var(--ink)]"
     >
       <p class="eyebrow">2024 · seats and votes</p>
-      <div :if={@state.fact_pair} class="mt-8 grid gap-6 md:grid-cols-2">
-        <div id="state-fact-r" class="border-2 border-[var(--ink)] bg-[var(--red)] p-7">
+      <div :if={@state.fact_pair} class="mt-6 grid gap-6 md:grid-cols-2">
+        <div id="state-fact-r" class="border-2 border-[var(--ink)] bg-[var(--red)] p-6">
           <span class="data-label">Republican</span>
-          <p class="mt-4 text-2xl leading-tight font-black">
+          <p class="mt-3 text-xl leading-tight font-black">
             {@state.fact_pair.r_vote}% of the two-party presidential vote → {@state.fact_pair.seats_rep} of {@state.fact_pair.total} seats
           </p>
         </div>
         <div
           id="state-fact-d"
-          class="border-2 border-[var(--ink)] bg-[var(--blue)] p-7 text-white"
+          class="border-2 border-[var(--ink)] bg-[var(--blue)] p-6 text-white"
         >
           <span class="data-label">Democratic</span>
-          <p class="mt-4 text-2xl leading-tight font-black">
+          <p class="mt-3 text-xl leading-tight font-black">
             {@state.fact_pair.d_vote}% of the two-party presidential vote → {@state.fact_pair.seats_dem} of {@state.fact_pair.total} seats
           </p>
         </div>
       </div>
-      <p :if={!@state.fact_pair} class="mt-8 text-sm leading-6">
+      <p :if={!@state.fact_pair} class="mt-6 text-sm leading-6">
         No presidential-year seats–votes record yet for this state.
       </p>
 
-      <p id="state-skew-line" class="mt-8 text-lg font-bold">
+      <p id="state-skew-line" class="mt-6 text-base font-bold">
         <span :if={@state.seats >= @mean_median_seat_floor} id="state-skew-value">
           Tipping-point skew: {@state.skew_display || "—"}
         </span>
@@ -70,50 +73,69 @@
       </p>
     </section>
 
-    <section id="state-history" class="section-pad !py-12 border-b-2 border-[var(--ink)]">
+    <section id="state-history" class="section-pad !py-10 border-b-2 border-[var(--ink)]">
       <p class="eyebrow">Seats and votes since 1976</p>
-      <div class="mt-8">{@state.chart_svg}</div>
-      <p :if={!@state.chart_svg} id="state-history-empty" class="mt-8 text-sm leading-6">
+      <div class="mt-6 max-w-4xl">{@state.chart_svg}</div>
+      <p :if={!@state.chart_svg} id="state-history-empty" class="mt-6 text-sm leading-6">
         No cycle data yet for this state.
       </p>
-      <p class="mt-6 max-w-3xl text-sm leading-6">
+      <p class="mt-4 max-w-3xl text-sm leading-6">
         Circles: Republican share of the two-party presidential vote. Steps: Republican share of the state's House seats. The yellow bar is the gap between them.
       </p>
     </section>
 
-    <section id="state-districts" class="section-pad !py-12 border-b-2 border-[var(--ink)]">
+    <section id="state-districts" class="section-pad !py-10 border-b-2 border-[var(--ink)]">
       <p class="eyebrow">The districts</p>
-      <div
-        id="state-district-rows"
-        class="mt-8 divide-y-2 divide-[var(--ink)] border-t-2 border-[var(--ink)]"
-      >
-        <.link
-          :for={district <- @districts}
-          id={"state-district-#{district.slug}"}
-          navigate={~p"/districts/#{district.slug}"}
-          class="flex flex-wrap items-center justify-between gap-4 py-5"
+      <div class="mt-6 overflow-x-auto">
+        <div
+          id="state-district-rows"
+          class="min-w-[720px] divide-y-2 divide-[var(--ink)] border-t-2 border-[var(--ink)]"
         >
-          <span class="text-xl font-black">{district.label}</span>
-          <span :if={district.incumbent_name} class="text-sm">
-            {district.incumbent_name} ({district.incumbent_party})
-          </span>
-          <span :if={district.last_margin} class="font-mono text-sm">
-            +{district.last_margin}
-          </span>
-          <span :if={district.partisan_lean} class="font-mono text-sm">
-            {district.partisan_lean}
-          </span>
-          <span :if={district.national_rank} class="text-sm">
-            Rank {district.national_rank} / {district.ranked_total}
-          </span>
-          <span :if={district.at_large} class="text-sm">AT-LARGE · no lines drawn</span>
-          <span class="district-arrow" aria-hidden="true">→</span>
-        </.link>
+          <div class="grid grid-cols-[2.75rem_5rem_1fr_6rem_6rem_9.5rem_2.5rem] items-center gap-4 py-2">
+            <span></span>
+            <span class="data-label">District</span>
+            <span class="data-label">Incumbent</span>
+            <span class="data-label">Margin</span>
+            <span class="data-label">Lean</span>
+            <span class="data-label">Compactness</span>
+            <span></span>
+          </div>
+          <.link
+            :for={district <- @districts}
+            id={"state-district-#{district.slug}"}
+            navigate={~p"/districts/#{district.slug}"}
+            class="grid grid-cols-[2.75rem_5rem_1fr_6rem_6rem_9.5rem_2.5rem] items-center gap-4 py-2.5"
+          >
+            <.district_shape path={district.shape_path} tone={district.tone} class="h-8 w-8" />
+            <span class="text-base font-black">{district.label}</span>
+            <span class="text-sm">
+              {if district.incumbent_name,
+                do: "#{district.incumbent_name} (#{district.incumbent_party})"}
+            </span>
+            <span class="font-mono text-sm">
+              {if district.last_margin, do: "+#{district.last_margin}"}
+            </span>
+            <span class="font-mono text-sm">{district.partisan_lean}</span>
+            <span class="text-sm">
+              {cond do
+                district.at_large ->
+                  "At-large · unranked"
+
+                district.national_rank ->
+                  "Rank #{district.national_rank} / #{district.ranked_total}"
+
+                true ->
+                  "—"
+              end}
+            </span>
+            <span class="district-arrow" aria-hidden="true">→</span>
+          </.link>
+        </div>
       </div>
     </section>
 
-    <div class="section-pad !py-12 flex flex-wrap items-baseline justify-between gap-6">
-      <p class="max-w-xl font-serif text-xl leading-snug">
+    <div class="section-pad !py-10 flex flex-wrap items-baseline justify-between gap-6">
+      <p class="max-w-xl font-serif text-lg leading-snug">
         Methodology {@methodology_version}.
       </p>
       <div class="flex flex-wrap gap-3">

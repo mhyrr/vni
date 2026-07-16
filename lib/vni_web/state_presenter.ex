@@ -300,13 +300,12 @@ defmodule VNIWeb.StatePresenter do
     "<rect class=\"chart-hit\" x=\"#{fmt(x - 11)}\" y=\"#{fmt(y - 11)}\" width=\"22\" height=\"22\" fill=\"transparent\" />"
   end
 
-  # Hover tip: hidden until the group is hovered (CSS), clamped inside the
-  # viewBox, flipped below the mark when the mark sits near the top.
-  defp tip_svg(x, y, text) do
-    tx = x |> max(@margin_x + 50.0) |> min(@width - @margin_x - 50.0)
-    ty = if y < @margin_top + 46, do: y + 28, else: y - 16
+  # Hover tip: hidden until the group is hovered (CSS). Pinned to the top
+  # edge of the chart — mid-plot positions collide with marks and step lines.
+  defp tip_svg(x, _y, text) do
+    tx = x |> max(@margin_x + 95.0) |> min(@width - @margin_x - 95.0)
 
-    "<text class=\"chart-tip\" x=\"#{fmt(tx)}\" y=\"#{fmt(ty)}\" text-anchor=\"middle\">#{text}</text>"
+    "<text class=\"chart-tip\" x=\"#{fmt(tx)}\" y=\"14\" text-anchor=\"middle\">#{text}</text>"
   end
 
   defp y_axis_svg do
