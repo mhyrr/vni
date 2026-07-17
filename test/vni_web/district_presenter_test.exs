@@ -42,7 +42,7 @@ defmodule VNIWeb.DistrictPresenterTest do
     assert presented.national_rank == 400
     assert presented.ranked_total == 429
     assert presented.land_area == "251,458"
-    assert presented.tone == :red
+    assert presented.tone == :worst
     assert presented.shape_path =~ ~r/^M\d+\.\d{2} \d+\.\d{2}L/
     assert String.ends_with?(presented.shape_path, "Z")
   end

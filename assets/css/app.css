@@ -23,6 +23,9 @@
   --red-dark: #a81f21;
   --yellow: #eaff2f;
   --green: #26e88f;
+  /* Compactness ramp only — party evidence stays on the bold --red/--blue. */
+  --orange: #ff8a3d;
+  --green-light: #a5f3cf;
 }
 
 html {
@@ -179,6 +182,52 @@ a:focus-visible, button:focus-visible {
    scale so the header, authorship, and fact pair fit one viewport. */
 .state-profile .display-lg { font-size: clamp(2.2rem, 4.6vw, 5rem); }
 .state-profile .display-md { font-size: clamp(1.55rem, 2.9vw, 3.2rem); }
+
+/* Metric-header tooltip: themed explanation panel on hover/focus. Lives
+   inside data-label headers, so it resets the mono/uppercase treatment. */
+.metric-tip {
+  position: relative;
+  display: inline-block;
+  cursor: help;
+}
+
+.metric-tip .metric-tip-label {
+  border-bottom: 2px dotted var(--ink);
+  padding-bottom: 2px;
+}
+
+.metric-tip .metric-tip-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 30;
+  width: 280px;
+  padding: 0.8rem 0.95rem;
+  border: 2px solid var(--ink);
+  background: var(--paper-bright);
+  box-shadow: 6px 6px 0 var(--yellow);
+  color: var(--ink);
+  font-family: Arial, "Helvetica Neue", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  line-height: 1.45;
+  text-transform: none;
+  white-space: normal;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 100ms ease;
+}
+
+.metric-tip:hover .metric-tip-panel,
+.metric-tip:focus .metric-tip-panel {
+  opacity: 1;
+}
+
+.metric-tip-panel-right {
+  left: auto;
+  right: 0;
+}
 
 .eyebrow,
 .data-label {

@@ -75,7 +75,7 @@
 
     <section id="state-history" class="section-pad !py-10 border-b-2 border-[var(--ink)]">
       <p class="eyebrow">Seats and votes since 1976</p>
-      <div class="mt-6 max-w-4xl">{@state.chart_svg}</div>
+      <div class="mx-auto mt-6 max-w-4xl">{@state.chart_svg}</div>
       <p :if={!@state.chart_svg} id="state-history-empty" class="mt-6 text-sm leading-6">
         No cycle data yet for this state.
       </p>
@@ -86,7 +86,7 @@
 
     <section id="state-districts" class="section-pad !py-10 border-b-2 border-[var(--ink)]">
       <p class="eyebrow">The districts</p>
-      <div class="mt-6 overflow-x-auto">
+      <div class="mt-6 overflow-x-auto md:overflow-visible">
         <div
           id="state-district-rows"
           class="min-w-[720px] divide-y-2 divide-[var(--ink)] border-t-2 border-[var(--ink)]"
@@ -95,9 +95,15 @@
             <span></span>
             <span class="data-label">District</span>
             <span class="data-label">Incumbent</span>
-            <span class="data-label">Margin</span>
-            <span class="data-label">Lean</span>
-            <span class="data-label">Compactness</span>
+            <.metric_header label="Margin">
+              The incumbent's margin of victory in their last general election, in percentage points.
+            </.metric_header>
+            <.metric_header label="Lean">
+              How far the district's presidential vote leans from the national result, over the last two cycles weighted 3-to-1 toward 2024. R+11 reads: 11 points more Republican than the country. Our open formula over official returns.
+            </.metric_header>
+            <.metric_header label="Compactness" align={:right}>
+              National rank by composite shape score — four open metrics, each scored so 100 is a perfect circle. Shape is a signal, not a gerrymander verdict; at-large seats have no lines to score.
+            </.metric_header>
             <span></span>
           </div>
           <.link

@@ -76,20 +76,57 @@ defmodule VNIWeb.PublicComponents do
     """
   end
 
+  # :red / :blue are bold party evidence colors (lean mode) — never
+  # compactness. Compactness runs the diverging :worst → :best ramp:
+  # orange → yellow → light green → green.
   def tone_fill(:blue), do: "fill-[var(--blue)]"
   def tone_fill(:red), do: "fill-[var(--red)]"
   def tone_fill(:green), do: "fill-[var(--green)]"
   def tone_fill(:neutral), do: "fill-[var(--paper-bright)]"
+  def tone_fill(:worst), do: "fill-[var(--orange)]"
+  def tone_fill(:low), do: "fill-[var(--yellow)]"
+  def tone_fill(:mid), do: "fill-[var(--green-light)]"
+  def tone_fill(:best), do: "fill-[var(--green)]"
   def tone_fill(_tone), do: "fill-[var(--yellow)]"
 
   def tone_bg(:blue), do: "bg-[var(--blue)] text-white"
   def tone_bg(:red), do: "bg-[var(--red)] text-[var(--ink)]"
   def tone_bg(:green), do: "bg-[var(--green)] text-[var(--ink)]"
   def tone_bg(:neutral), do: "bg-[var(--paper-bright)] text-[var(--ink)]"
+  def tone_bg(:worst), do: "bg-[var(--orange)] text-[var(--ink)]"
+  def tone_bg(:low), do: "bg-[var(--yellow)] text-[var(--ink)]"
+  def tone_bg(:mid), do: "bg-[var(--green-light)] text-[var(--ink)]"
+  def tone_bg(:best), do: "bg-[var(--green)] text-[var(--ink)]"
   def tone_bg(_tone), do: "bg-[var(--yellow)] text-[var(--ink)]"
 
   def metric_fill(:blue), do: "bg-[var(--blue)]"
   def metric_fill(:red), do: "bg-[var(--red)]"
   def metric_fill(:green), do: "bg-[var(--green)]"
+  def metric_fill(:worst), do: "bg-[var(--orange)]"
+  def metric_fill(:low), do: "bg-[var(--yellow)]"
+  def metric_fill(:mid), do: "bg-[var(--green-light)]"
+  def metric_fill(:best), do: "bg-[var(--green)]"
   def metric_fill(_tone), do: "bg-[var(--yellow)]"
+
+  @doc """
+  Column-header label carrying a themed hover/focus tooltip that explains
+  the metric in place. Keyboard-reachable via tabindex.
+  """
+  attr :label, :string, required: true
+  attr :align, :atom, default: :left, values: [:left, :right]
+  slot :inner_block, required: true
+
+  def metric_header(assigns) do
+    ~H"""
+    <span class="metric-tip" tabindex="0">
+      <span class="data-label metric-tip-label">{@label}</span>
+      <span
+        class={["metric-tip-panel", @align == :right && "metric-tip-panel-right"]}
+        role="tooltip"
+      >
+        {render_slot(@inner_block)}
+      </span>
+    </span>
+    """
+  end
 end

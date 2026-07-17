@@ -204,8 +204,9 @@ defmodule VNIWeb.StatePresenter do
   circles mark the Republican share of the two-party presidential vote in
   presidential years only; the yellow bar in each presidential year is the
   gap between the two. Every square and circle carries a CSS-hover tip
-  (year and exact value) so the chart answers "what is this mark" in
-  place. Returns a safe iodata tuple, or nil for an empty series.
+  (year, vote share, and seat split) pinned to the top edge so the chart
+  answers "what is this mark" in place. Returns a safe iodata tuple, or
+  nil for an empty series.
   """
   def chart_svg([]), do: nil
 
@@ -278,7 +279,7 @@ defmodule VNIWeb.StatePresenter do
   defp square_svg(%{x: x, seat_y: y} = point) do
     size = 6
     half = size / 2
-    tip = tip_svg(x, y, "#{point.year} · R seats #{point.seats_rep} of #{point.total}")
+    tip = tip_svg(x, tip_text(point))
 
     "<g class=\"chart-pt\">" <>
       hit_svg(x, y) <>
@@ -287,13 +288,21 @@ defmodule VNIWeb.StatePresenter do
   end
 
   defp circle_svg(%{x: x, vote_y: y} = point) do
-    tip = tip_svg(x, y, "#{point.year} · R vote #{decimal1(point.vote_share)}%")
+    tip = tip_svg(x, tip_text(point))
 
     "<g class=\"chart-pt\">" <>
       hit_svg(x, y) <>
       "<circle cx=\"#{fmt(x)}\" cy=\"#{fmt(y)}\" r=\"5\" fill=\"var(--paper)\" stroke=\"var(--ink)\" stroke-width=\"2\" />" <>
       tip <> "</g>"
   end
+
+  # One combined readout per cycle — both marks tell the whole year's story.
+  # Midterm squares have no presidential share, so they show seats alone.
+  defp tip_text(%{year: year, vote_share: nil, seats_rep: r, total: total}),
+    do: "#{year} · R seats #{r} of #{total}"
+
+  defp tip_text(%{year: year, vote_share: vote, seats_rep: r, total: total}),
+    do: "#{year} · R vote #{decimal1(vote)}% · R seats #{r} of #{total}"
 
   # Generous invisible hover target around each mark.
   defp hit_svg(x, y) do
@@ -302,8 +311,8 @@ defmodule VNIWeb.StatePresenter do
 
   # Hover tip: hidden until the group is hovered (CSS). Pinned to the top
   # edge of the chart — mid-plot positions collide with marks and step lines.
-  defp tip_svg(x, _y, text) do
-    tx = x |> max(@margin_x + 95.0) |> min(@width - @margin_x - 95.0)
+  defp tip_svg(x, text) do
+    tx = x |> max(@margin_x + 150.0) |> min(@width - @margin_x - 150.0)
 
     "<text class=\"chart-tip\" x=\"#{fmt(tx)}\" y=\"14\" text-anchor=\"middle\">#{text}</text>"
   end

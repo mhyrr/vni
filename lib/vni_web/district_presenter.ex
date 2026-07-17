@@ -284,11 +284,14 @@ defmodule VNIWeb.DistrictPresenter do
   def percent(nil), do: 0
   def percent(value), do: value |> Kernel.*(100) |> round()
 
+  # Party red/blue are bold evidence colors reserved for D/R. Compactness
+  # runs a party-free diverging ramp instead: orange (worst) through yellow
+  # and light green to green (best).
   defp compactness_tone(nil), do: :neutral
-  defp compactness_tone(value) when value < 0.25, do: :red
-  defp compactness_tone(value) when value < 0.50, do: :yellow
-  defp compactness_tone(value) when value < 0.75, do: :green
-  defp compactness_tone(_value), do: :blue
+  defp compactness_tone(value) when value < 0.25, do: :worst
+  defp compactness_tone(value) when value < 0.50, do: :low
+  defp compactness_tone(value) when value < 0.75, do: :mid
+  defp compactness_tone(_value), do: :best
 
   defp label(state, 0), do: "#{state}-AL"
 

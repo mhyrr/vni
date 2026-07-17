@@ -141,16 +141,16 @@
       </div>
       <div class="grid gap-8 border-l-2 border-[var(--ink)] pl-8 md:grid-cols-2 lg:pl-14">
         <div :if={@color_by == :compactness}>
-          <p class="data-label">Composite color bands</p>
+          <p class="data-label">Composite bands · orange = least compact, green = most</p>
           <.metric_bar
-            label="Red · 0–24"
+            label="0–24"
             value={25}
             display="Least compact"
-            tone={:red}
+            tone={:worst}
           />
-          <.metric_bar label="Yellow · 25–49" value={50} display="Lower half" tone={:yellow} />
-          <.metric_bar label="Green · 50–74" value={75} display="Upper half" tone={:green} />
-          <.metric_bar label="Blue · 75–100" value={100} display="Most compact" tone={:blue} />
+          <.metric_bar label="25–49" value={50} display="Lower half" tone={:low} />
+          <.metric_bar label="50–74" value={75} display="Upper half" tone={:mid} />
+          <.metric_bar label="75–100" value={100} display="Most compact" tone={:best} />
         </div>
         <div :if={@color_by == :lean} id="atlas-lean-legend">
           <p class="data-label">Lean color grammar</p>
