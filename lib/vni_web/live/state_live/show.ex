@@ -31,6 +31,7 @@ defmodule VNIWeb.StateLive.Show do
            page_title: "#{StatePresenter.state_name(state)} · state map",
            state: StatePresenter.present_show(row, cycle, history),
            districts: districts,
+           lean_strip: StatePresenter.lean_strip_svg(districts),
            methodology_version: Scores.methodology_version(),
            mean_median_seat_floor: StateBias.mean_median_seat_floor()
          )}

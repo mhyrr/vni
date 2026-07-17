@@ -86,6 +86,12 @@
 
     <section id="state-districts" class="section-pad !py-10 border-b-2 border-[var(--ink)]">
       <p class="eyebrow">The districts</p>
+      <div :if={@lean_strip} id="state-lean-strip" class="mx-auto mt-6 max-w-4xl">
+        {@lean_strip}
+        <p class="mt-2 text-sm leading-6">
+          Each dot is a district's presidential lean. The far-out dots are where one party's surplus votes pool — a couple of them can move every statewide number on this page.
+        </p>
+      </div>
       <div class="mt-6 overflow-x-auto md:overflow-visible">
         <div
           id="state-district-rows"

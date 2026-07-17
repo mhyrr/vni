@@ -13,7 +13,7 @@
     </div>
 
     <p id="state-index-caveat" class="section-pad !py-6 max-w-3xl text-sm leading-6">
-      The vote–seat pair shows the gap. The tipping-point skew says whether the lines helped. Neither is a verdict without the third column — who drew the map.
+      The vote–seat gap shows the outcome: circle = Republican share of the presidential vote, square = its share of seats, the yellow bar between them is the gap. The tipping-point skew says whether the lines helped. Neither is a verdict without the third column — who drew the map.
       <.link
         navigate={~p"/methodology#methodology-bias"}
         class="font-bold underline underline-offset-4"
@@ -24,18 +24,18 @@
 
     <nav id="state-sort" class="sort-rail" aria-label="Sort states">
       <.link
-        patch={~p"/states?sort=skew"}
-        id="sort-skew"
-        class={["sort-link", @sort == "skew" && "is-active"]}
-      >
-        01 · Tipping-point skew
-      </.link>
-      <.link
         patch={~p"/states?sort=gap"}
         id="sort-gap"
         class={["sort-link", @sort == "gap" && "is-active"]}
       >
-        02 · Vote–seat gap
+        01 · Vote–seat gap
+      </.link>
+      <.link
+        patch={~p"/states?sort=skew"}
+        id="sort-skew"
+        class={["sort-link", @sort == "skew" && "is-active"]}
+      >
+        02 · Tipping-point skew
       </.link>
       <.link
         patch={~p"/states?sort=seats"}
@@ -72,13 +72,8 @@
               </.metric_header>
             </th>
             <th class="px-5 py-4 whitespace-nowrap md:px-10">
-              <.metric_header label="Pres vote R / D">
-                Each party's share of the state's two-party presidential vote in 2024, from official returns.
-              </.metric_header>
-            </th>
-            <th class="px-5 py-4 whitespace-nowrap md:px-10">
-              <.metric_header label="Seats R / D">
-                House seats won under this map in 2024.
+              <.metric_header label="Vote–seat gap">
+                The gap between a party's House seat share and its two-party presidential vote share, converted to seats — D+3.3 seats means Democrats hold 3.3 seats more than their vote share. In the strip: circle = Republican vote share, square = Republican seat share, yellow bar = the gap. Arithmetic, not attribution — the skew and Drawn-by columns say whether the lines helped.
               </.metric_header>
             </th>
             <th class="px-5 py-4 whitespace-nowrap md:px-10">
@@ -114,10 +109,12 @@
                 class="ml-2 !px-2 !py-0.5"
               />
             </td>
-            <td class="px-5 py-4 whitespace-nowrap md:px-10 font-mono">
-              {row.pres_vote_display}
+            <td class="px-5 py-4 whitespace-nowrap md:px-10">
+              <span class="flex items-center gap-3">
+                {row.strip_svg}
+                <span class="font-mono font-bold">{row.gap_display || "—"}</span>
+              </span>
             </td>
-            <td class="px-5 py-4 whitespace-nowrap md:px-10 font-mono">{row.seats_display}</td>
             <td class="px-5 py-4 whitespace-nowrap md:px-10 font-mono font-bold">
               <span :if={!row.skew_missing}>{row.skew_display}</span>
               <span :if={row.skew_missing} title="too few districts">—</span>

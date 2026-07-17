@@ -32,7 +32,7 @@ defmodule VNIWeb.StateLive.Index do
   end
 
   defp resolve_sort(sort) when sort in @sorts, do: sort
-  defp resolve_sort(_other), do: "skew"
+  defp resolve_sort(_other), do: "gap"
 
   defp sort_rows(rows, "skew"), do: Enum.sort_by(rows, &(&1.skew_abs || -1), :desc)
   defp sort_rows(rows, "gap"), do: Enum.sort_by(rows, &gap/1, :desc)
@@ -43,9 +43,9 @@ defmodule VNIWeb.StateLive.Index do
     Enum.sort_by(rows, &{authority_rank(&1.authority), -(&1.skew_abs || -1)})
   end
 
-  defp gap(row) do
-    if row.r_vote_pct && row.r_seat_pct, do: abs(row.r_seat_pct - row.r_vote_pct), else: -1
-  end
+  # Gap in seats, not points — a two-seat state's arithmetic noise must
+  # not outrank a fifty-seat state's pattern.
+  defp gap(row), do: if(row.gap_seats, do: abs(row.gap_seats), else: -1)
 
   # Commissions, courts, and special masters group first; the legislature
   # group sorts last, |skew| descending within each.

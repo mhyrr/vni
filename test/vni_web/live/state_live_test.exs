@@ -15,8 +15,8 @@ defmodule VNIWeb.StateLiveTest do
     {:ok, view, _html} = live(conn, ~p"/states")
 
     assert has_element?(view, "#state-tx", "Texas")
-    assert has_element?(view, "#state-tx", "50.0 / 50.0")
-    assert has_element?(view, "#state-tx", "3 / 2")
+    assert has_element?(view, "#state-tx .seats-votes-strip")
+    assert has_element?(view, "#state-tx", "R+0.5 seats")
     assert has_element?(view, "#state-tx", "R+2.0")
     assert has_element?(view, "#state-index #state-tx a[href='/states/tx']")
 
@@ -30,7 +30,7 @@ defmodule VNIWeb.StateLiveTest do
     seed_small_state!()
 
     {:ok, view, _html} = live(conn, ~p"/states")
-    assert has_element?(view, "#sort-skew.is-active")
+    assert has_element?(view, "#sort-gap.is-active")
 
     view |> element("#sort-seats") |> render_click()
     assert_patch(view, ~p"/states?sort=seats")
@@ -43,7 +43,7 @@ defmodule VNIWeb.StateLiveTest do
     assert Enum.take(codes, 2) == ["tx", "ut"]
 
     {:ok, view, _html} = live(conn, ~p"/states?sort=bogus")
-    assert has_element?(view, "#sort-skew.is-active")
+    assert has_element?(view, "#sort-gap.is-active")
   end
 
   test "show page: districted state renders authorship, fact pair, skew", %{conn: conn} do

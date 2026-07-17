@@ -66,7 +66,7 @@
         <span class="data-label">09 · The seats–votes pair</span>
         <h2 class="display-md mt-6">Two facts, side by side.</h2>
         <p class="mt-8 max-w-xl text-base leading-7">
-          For every state we print the Republican share of the two-party presidential vote next to the Republican share of the House delegation — 1976 through 2024, compiled from state-certified returns. The gap between the two numbers is real and we publish it everywhere, including where it flatters nobody. A gap is not a gerrymander: single-winner districts turn 37% of Massachusetts into zero seats with no help from anyone's pen. The pair states the outcome. Attribution is a different measure's job. Vote share exists only in presidential years; midterm delegations print beside the flanking elections, uninterpolated — interpolation is modeling, and this site measures.
+          For every state we print the Republican share of the two-party presidential vote next to the Republican share of the House delegation — 1976 through 2024, compiled from state-certified returns. The gap between the two numbers is real and we publish it everywhere, including where it flatters nobody. On the states index the gap is also converted to seats — share gap times delegation — so a two-seat state's winner-take-all arithmetic does not outrank a fifty-seat state's pattern. A gap is not a gerrymander: single-winner districts turn 37% of Massachusetts into zero seats with no help from anyone's pen. The pair states the outcome. Attribution is a different measure's job. Vote share exists only in presidential years; midterm delegations print beside the flanking elections, uninterpolated — interpolation is modeling, and this site measures.
         </p>
       </section>
       <section class="section-pad border-b-2 border-[var(--ink)]">
@@ -76,16 +76,30 @@
           The mean–median gap: the Republican two-party presidential share of the state's median district, minus the average across its districts. Positive reads R+ — the tipping-point seat runs redder than the state; negative reads D+. It is arithmetic on the same published district shares that feed partisan lean, on the lines actually in force, and it is published for states with {VNI.Scores.StateBias.mean_median_seat_floor()} or more districts. If any district's share is missing, the state publishes nothing — a partial statistic is a guess wearing a number.
         </p>
       </section>
-      <section class="section-pad border-b-2 border-[var(--ink)] lg:border-r-2 lg:border-b-0">
-        <span class="data-label">11 · What the skew cannot see</span>
+      <section class="section-pad border-b-2 border-[var(--ink)] lg:border-r-2">
+        <span class="data-label">11 · The Massachusetts reading</span>
+        <h2 class="display-md mt-6">Nine numbers, one exoneration.</h2>
+        <p class="mt-8 max-w-xl text-base leading-7">
+          Massachusetts's nine districts, by Republican share of the 2024 two-party presidential vote:
+        </p>
+        <p class="mt-6 max-w-xl font-mono text-sm leading-7">
+          17.5 · 26.8 · 36.7 · 37.8 · <strong class="bg-[var(--yellow)] px-1">39.8</strong>
+          · 39.8 · 40.2 · 42.9 · 44.4
+        </p>
+        <p class="mt-6 max-w-xl text-base leading-7">
+          Boston's MA-7 buries a mountain of Democratic surplus in one seat. It drags the state's average district down to 36.2 while the middle district sits at 39.8 — median minus mean, R+3.6. The tipping point runs redder than the state, the opposite of what a Democratic pen would draw. Zero seats for nine on a 37% vote is winner-take-all arithmetic — the most Republican district in the state is 44.4% — and the skew leans against the map's own authors. A huge vote–seat gap the lines did not cause: that is what geography looks like.
+        </p>
+      </section>
+      <section class="section-pad border-b-2 border-[var(--ink)]">
+        <span class="data-label">12 · What the skew cannot see</span>
         <h2 class="display-md mt-6">A measure's blind spots, stated in public.</h2>
         <p class="mt-8 max-w-xl text-base leading-7">
           Two of them. With two districts the median <em>is</em>
           the mean and the statistic reads exactly zero — blind by construction. That is why the floor exists. And because Democratic voters concentrate in cities, the median district runs redder than the state average almost everywhere: geography moves this number before any map-maker does, and it mutes the statistic for maps that lean on that packing. Illinois is the live example — a 14–3 delegation on 44% Republican presidential vote, and a skew near zero. The pair catches what the skew misses. That is why neither number appears on this site without the other.
         </p>
       </section>
-      <section class="section-pad bg-[var(--yellow)]">
-        <span class="data-label">12 · Read it with the record</span>
+      <section class="section-pad bg-[var(--yellow)] lg:col-span-2">
+        <span class="data-label">13 · Read it with the record</span>
         <h2 class="display-md mt-6">Numbers don't draw maps. People do.</h2>
         <p class="mt-8 max-w-xl text-base leading-7">
           Neither measure appears anywhere without the authorship beside it: which institution drew the map, and which party controlled the process at adoption, cited to the public record. There is no composite state score and no ranking — the measures are not commensurable across states with different seat counts and different geography. Sort the table by who drew the maps and read the columns for yourself.

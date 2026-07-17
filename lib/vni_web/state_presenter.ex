@@ -20,6 +20,9 @@ defmodule VNIWeb.StatePresenter do
   cycle, formatted for the table and carrying the raw numbers sort needs.
   """
   def present_index_row(row, cycle) do
+    gap = gap_pts(cycle)
+    gap_seats = gap && gap * row.seats / 100
+
     %{
       state: row.state,
       state_code: String.downcase(row.state),
@@ -31,8 +34,10 @@ defmodule VNIWeb.StatePresenter do
       authority_label: authority_label(row.authority),
       party_badge_key: party_badge(row.authority, row.controlling_party),
       party_badge_label: party_badge_letter(row.controlling_party),
-      pres_vote_display: vote_pair_display(cycle),
-      seats_display: seats_pair_display(cycle),
+      gap_pts: gap,
+      gap_seats: gap_seats,
+      gap_display: gap_seats_label(gap_seats),
+      strip_svg: seats_votes_strip(cycle),
       skew_display: skew_label(row.mean_median),
       skew_missing: is_nil(row.mean_median),
       skew_abs: row.mean_median && abs(row.mean_median),
@@ -135,17 +140,149 @@ defmodule VNIWeb.StatePresenter do
     end
   end
 
-  # -- Fact pair (StateCycle) ------------------------------------------------
+  # -- Vote–seat gap (StateCycle) -------------------------------------------
 
-  def vote_pair_display(nil), do: "—"
-  def vote_pair_display(%StateCycle{pres_r_share: nil}), do: "—"
+  # Seat share minus vote share for the same party, in points. The sign
+  # follows the overrepresented party: positive when Republicans hold a
+  # seat share above their vote share, negative when Democrats do.
+  defp gap_pts(nil), do: nil
+  defp gap_pts(%StateCycle{pres_r_share: nil}), do: nil
 
-  def vote_pair_display(%StateCycle{pres_r_share: r}),
-    do: "#{decimal1(r)} / #{decimal1(100 - r)}"
+  defp gap_pts(%StateCycle{pres_r_share: vote} = cycle) do
+    case r_seat_pct(cycle) do
+      nil -> nil
+      seat_pct -> seat_pct - vote
+    end
+  end
 
-  def seats_pair_display(nil), do: "—"
+  @doc "Vote–seat gap in lean grammar: R+13.2 = R seat share 13.2 pts above its vote share."
+  def gap_label(value), do: skew_label(value)
 
-  def seats_pair_display(%StateCycle{seats_rep: r, seats_dem: d}), do: "#{r} / #{d}"
+  @doc """
+  The gap converted to seats — share gap times delegation size. This is
+  the index's headline figure and sort key: expressing it in seats keeps
+  a two-seat state's winner-take-all arithmetic from outranking a
+  fifty-seat state's pattern.
+  """
+  def gap_seats_label(nil), do: nil
+
+  def gap_seats_label(value) do
+    case skew_label(value) do
+      "EVEN" -> "EVEN"
+      label -> "#{label} seats"
+    end
+  end
+
+  @strip_w 160
+  @strip_h 18
+  @strip_pad 4
+
+  @doc """
+  The history chart's grammar at table-row scale: circle = Republican
+  share of the two-party presidential vote, square = Republican share of
+  House seats, yellow bar = the gap, dashed tick at 50%. Nil when the
+  latest cycle carries no presidential share.
+  """
+  def seats_votes_strip(nil), do: nil
+  def seats_votes_strip(%StateCycle{pres_r_share: nil}), do: nil
+
+  def seats_votes_strip(%StateCycle{pres_r_share: vote} = cycle) do
+    case r_seat_pct(cycle) do
+      nil ->
+        nil
+
+      seat_pct ->
+        vx = strip_x(vote)
+        sx = strip_x(seat_pct)
+        mid = @strip_h / 2
+
+        Phoenix.HTML.raw("""
+        <svg viewBox="0 0 #{@strip_w} #{@strip_h}" class="seats-votes-strip" role="img" aria-label="R vote share #{decimal1(vote)}%, R seat share #{decimal1(seat_pct)}%">
+          <line x1="#{@strip_pad}" y1="#{fmt(mid)}" x2="#{@strip_w - @strip_pad}" y2="#{fmt(mid)}" stroke="var(--ink)" stroke-opacity="0.25" stroke-width="1" />
+          <line x1="#{fmt(strip_x(50))}" y1="2" x2="#{fmt(strip_x(50))}" y2="#{@strip_h - 2}" stroke="var(--ink)" stroke-width="1" stroke-dasharray="2 2" />
+          <line x1="#{fmt(vx)}" y1="#{fmt(mid)}" x2="#{fmt(sx)}" y2="#{fmt(mid)}" stroke="var(--yellow)" stroke-width="6" />
+          <rect x="#{fmt(sx - 3)}" y="#{fmt(mid - 3)}" width="6" height="6" fill="var(--ink)" />
+          <circle cx="#{fmt(vx)}" cy="#{fmt(mid)}" r="3.5" fill="var(--paper-bright)" stroke="var(--ink)" stroke-width="1.8" />
+        </svg>
+        """)
+    end
+  end
+
+  defp strip_x(pct), do: @strip_pad + pct / 100 * (@strip_w - 2 * @strip_pad)
+
+  # -- District lean strip ---------------------------------------------------
+
+  @lean_w 800
+  @lean_h 64
+  @lean_pad 48
+  @lean_axis_y 42
+  @lean_max 50
+
+  @doc """
+  One dot per district on a D–R presidential-lean axis — where each seat
+  sits, and where the surplus votes pool. Dots wear the party evidence
+  colors; leans beyond D+#{@lean_max}/R+#{@lean_max} clamp to the edge.
+  Dots at the same lean stack upward. Each dot carries the chart's
+  top-pinned hover readout. Nil unless at least two districts have leans.
+  """
+  def lean_strip_svg(districts) do
+    dots = Enum.filter(districts, & &1.lean_value)
+
+    if length(dots) < 2 do
+      nil
+    else
+      dots_svg =
+        dots
+        |> Enum.sort_by(& &1.lean_value)
+        |> Enum.map(fn d -> {lean_x(d.lean_value), d} end)
+        |> stack_dots()
+        |> Enum.map_join("", &lean_dot_svg/1)
+
+      Phoenix.HTML.raw("""
+      <svg viewBox="0 0 #{@lean_w} #{@lean_h}" role="img" aria-label="District partisan leans" class="lean-strip">
+        <line x1="#{@lean_pad}" y1="#{@lean_axis_y}" x2="#{@lean_w - @lean_pad}" y2="#{@lean_axis_y}" stroke="var(--ink)" stroke-opacity="0.3" stroke-width="1" />
+        <line x1="#{fmt(lean_x(0))}" y1="20" x2="#{fmt(lean_x(0))}" y2="#{@lean_axis_y + 8}" stroke="var(--ink)" stroke-width="1" stroke-dasharray="3 3" />
+        <text class="chart-axis" x="#{@lean_pad}" y="#{@lean_h - 2}" text-anchor="start">D+#{@lean_max}</text>
+        <text class="chart-axis" x="#{fmt(lean_x(0))}" y="#{@lean_h - 2}" text-anchor="middle">EVEN</text>
+        <text class="chart-axis" x="#{@lean_w - @lean_pad}" y="#{@lean_h - 2}" text-anchor="end">R+#{@lean_max}</text>
+        #{dots_svg}
+      </svg>
+      """)
+    end
+  end
+
+  defp lean_x(lean) do
+    clamped = lean |> max(-@lean_max) |> min(@lean_max)
+    @lean_w / 2 + clamped / @lean_max * (@lean_w / 2 - @lean_pad)
+  end
+
+  # Dots within a marker's width of each other stack upward instead of
+  # overprinting — same-lean districts read as a tally, not one dot.
+  defp stack_dots(positioned) do
+    positioned
+    |> Enum.reduce({[], -1000.0, 0}, fn {x, d}, {acc, prev_x, level} ->
+      level = if x - prev_x < 12, do: level + 1, else: 0
+      {[{x, @lean_axis_y - level * 12, d} | acc], x, level}
+    end)
+    |> elem(0)
+  end
+
+  defp lean_dot_svg({x, y, district}) do
+    fill =
+      cond do
+        district.lean_value > 0 -> "var(--red)"
+        district.lean_value < 0 -> "var(--blue)"
+        true -> "var(--paper-bright)"
+      end
+
+    tx = x |> max(@lean_pad + 60.0) |> min(@lean_w - @lean_pad - 60.0)
+
+    "<g class=\"chart-pt\">" <>
+      "<rect class=\"chart-hit\" x=\"#{fmt(x - 9)}\" y=\"#{fmt(y - 9)}\" width=\"18\" height=\"18\" fill=\"transparent\" />" <>
+      "<circle cx=\"#{fmt(x)}\" cy=\"#{fmt(y)}\" r=\"5\" fill=\"#{fill}\" stroke=\"var(--ink)\" stroke-width=\"1.5\" />" <>
+      "<text class=\"chart-tip\" x=\"#{fmt(tx)}\" y=\"12\" text-anchor=\"middle\">#{district.label} · #{district.partisan_lean || "EVEN"}</text>" <>
+      "</g>"
+  end
 
   def r_seat_pct(nil), do: nil
 

@@ -545,7 +545,15 @@ a:focus-visible, button:focus-visible {
 
 .district-card:hover .district-arrow { transform: translateX(6px); }
 
-.state-history-chart .chart-axis {
+.seats-votes-strip {
+  display: inline-block;
+  width: 150px;
+  height: 17px;
+  vertical-align: middle;
+}
+
+.state-history-chart .chart-axis,
+.lean-strip .chart-axis {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 12px;
   font-weight: 700;
@@ -553,9 +561,11 @@ a:focus-visible, button:focus-visible {
   opacity: 0.55;
 }
 
-.state-history-chart .chart-hit { cursor: crosshair; }
+.state-history-chart .chart-hit,
+.lean-strip .chart-hit { cursor: crosshair; }
 
-.state-history-chart .chart-tip {
+.state-history-chart .chart-tip,
+.lean-strip .chart-tip {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 14px;
   font-weight: 800;
@@ -568,7 +578,8 @@ a:focus-visible, button:focus-visible {
   transition: opacity 80ms ease;
 }
 
-.state-history-chart .chart-pt:hover .chart-tip { opacity: 1; }
+.state-history-chart .chart-pt:hover .chart-tip,
+.lean-strip .chart-pt:hover .chart-tip { opacity: 1; }
 
 .sort-rail {
   display: flex;
