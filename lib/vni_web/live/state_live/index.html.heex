@@ -13,7 +13,7 @@
     </div>
 
     <p id="state-index-caveat" class="section-pad !py-6 max-w-3xl text-sm leading-6">
-      The vote–seat gap shows the outcome: circle = Republican share of the presidential vote, square = its share of seats, the yellow bar between them is the gap. The mean–median gap says whether the lines helped. Neither is a verdict without the third column — who drew the map.
+      The vote–seat gap shows the outcome: circle = Republican share of the presidential vote, square = its share of seats, the yellow bar between them is the gap. A gap is an outcome, not a verdict — read it beside who drew the map. Each state's page carries the mean–median gap and the full history.
       <.link
         navigate={~p"/methodology#methodology-bias"}
         class="font-bold underline underline-offset-4"
@@ -31,32 +31,25 @@
         01 · Vote–seat gap
       </.link>
       <.link
-        patch={~p"/states?sort=skew"}
-        id="sort-skew"
-        class={["sort-link", @sort == "skew" && "is-active"]}
-      >
-        02 · Mean–median gap
-      </.link>
-      <.link
         patch={~p"/states?sort=seats"}
         id="sort-seats"
         class={["sort-link", @sort == "seats" && "is-active"]}
       >
-        03 · Seats
+        02 · Seats
       </.link>
       <.link
         patch={~p"/states?sort=authority"}
         id="sort-authority"
         class={["sort-link", @sort == "authority" && "is-active"]}
       >
-        04 · Drawn by
+        03 · Drawn by
       </.link>
       <.link
         patch={~p"/states?sort=state"}
         id="sort-state"
         class={["sort-link", @sort == "state" && "is-active"]}
       >
-        05 · State
+        04 · State
       </.link>
     </nav>
 
@@ -73,7 +66,7 @@
             </th>
             <th class="px-5 py-4 whitespace-nowrap md:px-6">
               <.metric_header label="Vote–seat gap">
-                The gap between a party's House seat share and its two-party presidential vote share, converted to seats — D+3.3 seats means Democrats hold 3.3 seats more than their vote share. In the strip: circle = Republican vote share, square = Republican seat share, yellow bar = the gap. Arithmetic, not attribution — the mean–median gap and Drawn-by columns say whether the lines helped.
+                The gap between a party's House seat share and its two-party presidential vote share, converted to seats — D+3.3 seats means Democrats hold 3.3 seats more than their vote share. In the strip: circle = Republican vote share, square = Republican seat share, yellow bar = the gap. Arithmetic, not attribution — "Drawn by" and each state's page say whether the lines helped.
               </.metric_header>
             </th>
             <th class="px-5 py-4 whitespace-nowrap md:px-6">
@@ -84,11 +77,6 @@
             <th class="px-5 py-4 whitespace-nowrap md:px-6">
               <.metric_header label="Seats R / D">
                 House seats won under this map in 2024.
-              </.metric_header>
-            </th>
-            <th class="px-5 py-4 whitespace-nowrap md:px-6">
-              <.metric_header label="Mean–median gap">
-                The gap between the state's average district and its middle district. Positive R means the middle district sits to the Republican side of the state's own lean. It attributes a vote–seat gap to the lines — it is not the gap itself, and it reads only beside "Drawn by." Under 5 districts it's too noisy to publish.
               </.metric_header>
             </th>
             <th class="px-5 py-4 whitespace-nowrap md:px-6">
@@ -129,10 +117,6 @@
               {row.pres_vote_display}
             </td>
             <td class="px-5 py-4 whitespace-nowrap md:px-6 font-mono">{row.seats_display}</td>
-            <td class="px-5 py-4 whitespace-nowrap md:px-6 font-mono font-bold">
-              <span :if={!row.skew_missing}>{row.skew_display}</span>
-              <span :if={row.skew_missing} title="too few districts">—</span>
-            </td>
             <td class="px-5 py-4 whitespace-nowrap md:px-6">
               <.link
                 :if={row.worst_district_slug}

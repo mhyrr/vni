@@ -6,14 +6,13 @@ defmodule VNIWeb.StateLive.Index do
   alias VNI.Scores.StateBias
   alias VNIWeb.StatePresenter
 
-  @sorts ~w(skew gap seats authority state)
+  @sorts ~w(gap seats authority state)
 
   def mount(_params, _session, socket) do
     {:ok,
      assign(socket,
        page_title: "States",
-       methodology_version: Scores.methodology_version(),
-       mean_median_seat_floor: StateBias.mean_median_seat_floor()
+       methodology_version: Scores.methodology_version()
      )}
   end
 
@@ -34,13 +33,12 @@ defmodule VNIWeb.StateLive.Index do
   defp resolve_sort(sort) when sort in @sorts, do: sort
   defp resolve_sort(_other), do: "gap"
 
-  defp sort_rows(rows, "skew"), do: Enum.sort_by(rows, &(&1.skew_abs || -1), :desc)
   defp sort_rows(rows, "gap"), do: Enum.sort_by(rows, &gap/1, :desc)
   defp sort_rows(rows, "seats"), do: Enum.sort_by(rows, & &1.seats, :desc)
   defp sort_rows(rows, "state"), do: Enum.sort_by(rows, & &1.state)
 
   defp sort_rows(rows, "authority") do
-    Enum.sort_by(rows, &{authority_rank(&1.authority), -(&1.skew_abs || -1)})
+    Enum.sort_by(rows, &{authority_rank(&1.authority), -gap(&1)})
   end
 
   # Gap in seats, not points — a two-seat state's arithmetic noise must
@@ -48,7 +46,7 @@ defmodule VNIWeb.StateLive.Index do
   defp gap(row), do: if(row.gap_seats, do: abs(row.gap_seats), else: -1)
 
   # Commissions, courts, and special masters group first; the legislature
-  # group sorts last, |skew| descending within each.
+  # group sorts last, |gap| descending within each.
   defp authority_rank(:legislature), do: 1
   defp authority_rank(_authority), do: 0
 end
