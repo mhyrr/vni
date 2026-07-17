@@ -22,7 +22,7 @@
         <span class="data-label">02 · Map bias</span>
         <h2 class="display-md mt-6">A statewide claim.</h2>
         <p class="mt-8 max-w-xl text-base leading-7">
-          Partisan distortion is a property of a map and election results—not one outline. We publish two statewide measures: the seats–votes pair and the tipping-point skew. Their formulas, their floors, and their blind spots are <a
+          Partisan distortion is a property of a map and election results—not one outline. We publish two statewide measures: the seats–votes pair and the mean–median gap. Their formulas, their floors, and their blind spots are <a
             href="#methodology-bias"
             class="underline underline-offset-4"
           >stated in full below</a>.
@@ -70,10 +70,10 @@
         </p>
       </section>
       <section class="section-pad border-b-2 border-[var(--ink)]">
-        <span class="data-label">10 · Tipping-point skew</span>
+        <span class="data-label">10 · Mean–median gap</span>
         <h2 class="display-md mt-6">Median district minus state average.</h2>
         <p class="mt-8 max-w-xl text-base leading-7">
-          The mean–median gap: the Republican two-party presidential share of the state's median district, minus the average across its districts. Positive reads R+ — the tipping-point seat runs redder than the state; negative reads D+. It is arithmetic on the same published district shares that feed partisan lean, on the lines actually in force, and it is published for states with {VNI.Scores.StateBias.mean_median_seat_floor()} or more districts. If any district's share is missing, the state publishes nothing — a partial statistic is a guess wearing a number.
+          The mean–median gap: the Republican two-party presidential share of the state's median district, minus the average across its districts. Positive reads R+ — the middle district runs redder than the state; negative reads D+. It is arithmetic on the same published district shares that feed partisan lean, on the lines actually in force, and it is published for states with {VNI.Scores.StateBias.mean_median_seat_floor()} or more districts. If any district's share is missing, the state publishes nothing — a partial statistic is a guess wearing a number.
         </p>
       </section>
       <section class="section-pad border-b-2 border-[var(--ink)] lg:border-r-2">
@@ -87,15 +87,15 @@
           · 39.8 · 40.2 · 42.9 · 44.4
         </p>
         <p class="mt-6 max-w-xl text-base leading-7">
-          Boston's MA-7 buries a mountain of Democratic surplus in one seat. It drags the state's average district down to 36.2 while the middle district sits at 39.8 — median minus mean, R+3.6. The tipping point runs redder than the state, the opposite of what a Democratic pen would draw. Zero seats for nine on a 37% vote is winner-take-all arithmetic — the most Republican district in the state is 44.4% — and the skew leans against the map's own authors. A huge vote–seat gap the lines did not cause: that is what geography looks like.
+          Boston's MA-7 buries a mountain of Democratic surplus in one seat. It drags the state's average district down to 36.2 while the middle district sits at 39.8 — median minus mean, R+3.6. The middle district runs redder than the state, the opposite of what a Democratic pen would draw. Zero seats for nine on a 37% vote is winner-take-all arithmetic — the most Republican district in the state is 44.4% — and the mean–median gap leans against the map's own authors. A huge vote–seat gap the lines did not cause: that is what geography looks like.
         </p>
       </section>
       <section class="section-pad border-b-2 border-[var(--ink)]">
-        <span class="data-label">12 · What the skew cannot see</span>
+        <span class="data-label">12 · What the gap cannot see</span>
         <h2 class="display-md mt-6">A measure's blind spots, stated in public.</h2>
         <p class="mt-8 max-w-xl text-base leading-7">
           Two of them. With two districts the median <em>is</em>
-          the mean and the statistic reads exactly zero — blind by construction. That is why the floor exists. And because Democratic voters concentrate in cities, the median district runs redder than the state average almost everywhere: geography moves this number before any map-maker does, and it mutes the statistic for maps that lean on that packing. Illinois is the live example — a 14–3 delegation on 44% Republican presidential vote, and a skew near zero. The pair catches what the skew misses. That is why neither number appears on this site without the other.
+          the mean and the statistic reads exactly zero — blind by construction. That is why the floor exists. And because Democratic voters concentrate in cities, the median district runs redder than the state average almost everywhere: geography moves this number before any map-maker does, and it mutes the statistic for maps that lean on that packing. Illinois is the live example — a 14–3 delegation on 44% Republican presidential vote, and a mean–median gap near zero. The seats–votes pair catches what it misses. That is why neither number appears on this site without the other.
         </p>
       </section>
       <section class="section-pad bg-[var(--yellow)] lg:col-span-2">

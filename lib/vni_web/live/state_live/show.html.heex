@@ -59,10 +59,10 @@
 
       <p id="state-skew-line" class="mt-6 text-base font-bold">
         <span :if={@state.seats >= @mean_median_seat_floor} id="state-skew-value">
-          Tipping-point skew: {@state.skew_display || "—"}
+          Mean–median gap: {@state.skew_display || "—"}
         </span>
         <span :if={@state.seats < @mean_median_seat_floor} id="state-skew-too-few">
-          Tipping-point skew: — too few districts to measure ({@state.seats})
+          Mean–median gap: — too few districts to measure ({@state.seats})
         </span>
         <.link
           navigate={~p"/methodology#methodology-bias"}

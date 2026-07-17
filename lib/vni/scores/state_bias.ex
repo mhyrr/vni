@@ -11,7 +11,7 @@ defmodule VNI.Scores.StateBias do
   over each state's district two-party presidential shares (2024, the
   raw inputs behind partisan lean). Sign matches lean: positive means
   the median district is more Republican than the state average — the
-  lines favor R at the tipping point; negative favors D.
+  the middle district runs redder than the state average; negative favors D.
 
   The gap is only published for states with at least 5 districts
   (`mean_median_seat_floor/0`). The floor has a mathematical

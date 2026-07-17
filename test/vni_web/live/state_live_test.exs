@@ -62,7 +62,7 @@ defmodule VNIWeb.StateLiveTest do
     assert has_element?(view, "#state-fact-d", "50.0% of the two-party presidential vote")
     assert has_element?(view, "#state-fact-d", "2 of 5 seats")
 
-    assert has_element?(view, "#state-skew-value", "Tipping-point skew: R+2.0")
+    assert has_element?(view, "#state-skew-value", "Mean–median gap: R+2.0")
 
     assert has_element?(
              view,
@@ -78,7 +78,7 @@ defmodule VNIWeb.StateLiveTest do
     assert has_element?(
              view,
              "#state-skew-too-few",
-             "Tipping-point skew: — too few districts to measure (2)"
+             "Mean–median gap: — too few districts to measure (2)"
            )
 
     refute has_element?(view, "#state-skew-value")

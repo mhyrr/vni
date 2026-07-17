@@ -79,12 +79,12 @@
         id="sort-map-bias"
         class={["sort-link", @sort == :map_bias && "is-active"]}
       >
-        09 · Map skew
+        09 · Mean–median gap
       </.link>
     </nav>
 
     <p :if={@sort == :map_bias} id="districts-map-bias-caveat" class="px-5 py-4 text-sm md:px-10">
-      Map skew orders districts by their state's mean–median gap, largest magnitude first — a property of the statewide map, identical for every district in the state and silent about any one shape. States with too few districts to measure sort last — <.link
+      This sort orders districts by their state's mean–median gap, largest magnitude first — a property of the statewide map, identical for every district in the state and silent about any one shape. States with too few districts to measure sort last — <.link
         navigate={~p"/methodology#methodology-bias"}
         class="font-bold underline underline-offset-4"
       >
@@ -158,7 +158,7 @@
         </div>
         <div :if={@sort_kind == :map_bias} class="district-metrics">
           <div class="district-metric">
-            <span class="data-label">State map skew</span>
+            <span class="data-label">State mean–median gap</span>
             <strong>{district.state_skew || "—"}</strong>
             <span :if={district.state_skew} class="text-xs">
               Median district vs state average · statewide
