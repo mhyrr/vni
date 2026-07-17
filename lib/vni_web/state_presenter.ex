@@ -38,6 +38,8 @@ defmodule VNIWeb.StatePresenter do
       gap_seats: gap_seats,
       gap_display: gap_seats_label(gap_seats),
       strip_svg: seats_votes_strip(cycle),
+      pres_vote_display: vote_pair_display(cycle),
+      seats_display: seats_pair_display(cycle),
       skew_display: skew_label(row.mean_median),
       skew_missing: is_nil(row.mean_median),
       skew_abs: row.mean_median && abs(row.mean_median),
@@ -139,6 +141,18 @@ defmodule VNIWeb.StatePresenter do
       true -> "D+#{decimal1(-rounded)}"
     end
   end
+
+  # -- Fact pair (StateCycle) ------------------------------------------------
+
+  def vote_pair_display(nil), do: "—"
+  def vote_pair_display(%StateCycle{pres_r_share: nil}), do: "—"
+
+  def vote_pair_display(%StateCycle{pres_r_share: r}),
+    do: "#{decimal1(r)} / #{decimal1(100 - r)}"
+
+  def seats_pair_display(nil), do: "—"
+
+  def seats_pair_display(%StateCycle{seats_rep: r, seats_dem: d}), do: "#{r} / #{d}"
 
   # -- Vote–seat gap (StateCycle) -------------------------------------------
 

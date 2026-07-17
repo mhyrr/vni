@@ -17,6 +17,8 @@ defmodule VNIWeb.StateLiveTest do
     assert has_element?(view, "#state-tx", "Texas")
     assert has_element?(view, "#state-tx .seats-votes-strip")
     assert has_element?(view, "#state-tx", "R+0.5 seats")
+    assert has_element?(view, "#state-tx", "50.0 / 50.0")
+    assert has_element?(view, "#state-tx", "3 / 2")
     assert has_element?(view, "#state-tx", "R+2.0")
     assert has_element?(view, "#state-index #state-tx a[href='/states/tx']")
 

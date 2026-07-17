@@ -64,24 +64,34 @@
       <table id="state-table" class="w-full border-collapse text-left text-sm">
         <thead>
           <tr class="border-b-2 border-[var(--ink)]">
-            <th class="px-5 py-4 whitespace-nowrap md:px-10 data-label">State</th>
-            <th class="px-5 py-4 whitespace-nowrap md:px-10 data-label">Seats</th>
-            <th class="px-5 py-4 whitespace-nowrap md:px-10">
+            <th class="px-5 py-4 whitespace-nowrap md:px-6 data-label">State</th>
+            <th class="px-5 py-4 whitespace-nowrap md:px-6 data-label">Seats</th>
+            <th class="px-5 py-4 whitespace-nowrap md:px-6">
               <.metric_header label="Drawn by">
                 The institution that drew the current map — and, where a party held the pen, the party in control at adoption. Source: Loyola, All About Redistricting.
               </.metric_header>
             </th>
-            <th class="px-5 py-4 whitespace-nowrap md:px-10">
+            <th class="px-5 py-4 whitespace-nowrap md:px-6">
               <.metric_header label="Vote–seat gap">
                 The gap between a party's House seat share and its two-party presidential vote share, converted to seats — D+3.3 seats means Democrats hold 3.3 seats more than their vote share. In the strip: circle = Republican vote share, square = Republican seat share, yellow bar = the gap. Arithmetic, not attribution — the skew and Drawn-by columns say whether the lines helped.
               </.metric_header>
             </th>
-            <th class="px-5 py-4 whitespace-nowrap md:px-10">
+            <th class="px-5 py-4 whitespace-nowrap md:px-6">
+              <.metric_header label="Pres vote R / D">
+                Each party's share of the state's two-party presidential vote in 2024, from official returns.
+              </.metric_header>
+            </th>
+            <th class="px-5 py-4 whitespace-nowrap md:px-6">
+              <.metric_header label="Seats R / D">
+                House seats won under this map in 2024.
+              </.metric_header>
+            </th>
+            <th class="px-5 py-4 whitespace-nowrap md:px-6">
               <.metric_header label="Tipping-point skew">
                 The gap between the state's average district and its middle district. Positive R means the tipping-point seat sits to the Republican side of the state's own lean. It attributes a vote–seat gap to the lines — it is not the gap itself, and it reads only beside "Drawn by." Under 5 districts it's too noisy to publish.
               </.metric_header>
             </th>
-            <th class="px-5 py-4 whitespace-nowrap md:px-10">
+            <th class="px-5 py-4 whitespace-nowrap md:px-6">
               <.metric_header label="Least compact" align={:right}>
                 The state's lowest-ranked district by composite shape compactness.
               </.metric_header>
@@ -94,13 +104,13 @@
             id={"state-#{row.state_code}"}
             class="border-b border-[var(--ink)]"
           >
-            <td class="px-5 py-4 whitespace-nowrap md:px-10 font-bold">
+            <td class="px-5 py-4 whitespace-nowrap md:px-6 font-bold">
               <.link navigate={~p"/states/#{row.state_code}"} class="underline underline-offset-4">
                 {row.state_name}
               </.link>
             </td>
-            <td class="px-5 py-4 whitespace-nowrap md:px-10">{row.seats}</td>
-            <td class="px-5 py-4 whitespace-nowrap md:px-10">
+            <td class="px-5 py-4 whitespace-nowrap md:px-6">{row.seats}</td>
+            <td class="px-5 py-4 whitespace-nowrap md:px-6">
               <span>{row.authority_label}</span>
               <.party_mark
                 :if={row.party_badge_key}
@@ -109,17 +119,21 @@
                 class="ml-2 !px-2 !py-0.5"
               />
             </td>
-            <td class="px-5 py-4 whitespace-nowrap md:px-10">
+            <td class="px-5 py-4 whitespace-nowrap md:px-6">
               <span class="flex items-center gap-3">
                 {row.strip_svg}
                 <span class="font-mono font-bold">{row.gap_display || "—"}</span>
               </span>
             </td>
-            <td class="px-5 py-4 whitespace-nowrap md:px-10 font-mono font-bold">
+            <td class="px-5 py-4 whitespace-nowrap md:px-6 font-mono">
+              {row.pres_vote_display}
+            </td>
+            <td class="px-5 py-4 whitespace-nowrap md:px-6 font-mono">{row.seats_display}</td>
+            <td class="px-5 py-4 whitespace-nowrap md:px-6 font-mono font-bold">
               <span :if={!row.skew_missing}>{row.skew_display}</span>
               <span :if={row.skew_missing} title="too few districts">—</span>
             </td>
-            <td class="px-5 py-4 whitespace-nowrap md:px-10">
+            <td class="px-5 py-4 whitespace-nowrap md:px-6">
               <.link
                 :if={row.worst_district_slug}
                 navigate={~p"/districts/#{row.worst_district_slug}"}
