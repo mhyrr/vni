@@ -12,8 +12,8 @@ conventions: `AGENTS.md`.
 - `mix precommit` — compile with warnings-as-errors, unused-deps check, format, test. Run before claiming done.
 - `mix test` — full suite (sandboxed against the local Docker PostGIS)
 - `mix ecto.reset` — drop, create, migrate, seed. Seeds ingest all 435 districts from Census TIGER/Line (archives cached under `priv/repo/data/tiger/`; first run downloads ~50 zips). `VNI_SKIP_DISTRICT_SEEDS=1` skips.
-- `mix vni.ingest.shapefiles` — (re)ingest TIGER CD119 geometry, idempotent
-- `mix vni.score` — full scoring pass: metrics, normalize, national rank
+- `mix vni.ingest.shapefiles --congress N` — (re)ingest TIGER CD geometry (119 current; 118/117 historical, ingested closed), idempotent
+- `mix vni.score` — full scoring pass: metrics, normalize, national rank (`--congress N` scores a historical cohort within itself)
 - `mix phx.server` — **NEVER RUN** (user manages the dev server separately)
 - Use Tidewave's tools for runtime evaluation and database queries when the dev server is up; `get_docs` for documentation, `get_source_location` for definitions.
 

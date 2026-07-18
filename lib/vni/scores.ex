@@ -9,8 +9,13 @@ defmodule VNI.Scores do
       convex hull) run in EPSG:5070 (CONUS Albers) via ST_Transform.
 
   All four metrics land in [0, 1], 1 = circle. Composite = mean of the four
-  after min-max normalization across the current map set at a level;
-  national_rank orders by composite descending (1 = most compact).
+  after min-max normalization within one congress's map set — the cohort;
+  national_rank orders by composite descending (1 = most compact) within
+  that same cohort. Scores never compare across congresses: a 118th-Congress
+  composite is normalized against the 118th's field only (2026.4). The live
+  site's cohort is the current map set, which coincides with the newest
+  congress's cohort because the model records one map version per state per
+  congress.
 
   At-large districts (number 0) keep their raw metrics but are excluded
   from normalization and ranking: their "shape" is the state border, drawn
@@ -26,7 +31,7 @@ defmodule VNI.Scores do
   alias VNI.Atlas.District
   alias VNI.Scores.DistrictScore
 
-  @methodology_version "2026.3"
+  @methodology_version "2026.4"
 
   def methodology_version, do: @methodology_version
 
@@ -40,6 +45,20 @@ defmodule VNI.Scores do
     end
 
     normalize_and_rank!(level)
+    :ok
+  end
+
+  @doc """
+  Full scoring pass for one congress's map set: raw metrics for every map
+  version seated for that congress (current or closed), then normalize +
+  rank within that cohort only.
+  """
+  def score_congress!(congress, level \\ :congressional) when is_integer(congress) do
+    for mv <- VNI.Atlas.list_map_versions(congress, level) do
+      compute_metrics!(mv.id)
+    end
+
+    normalize_and_rank!(level, {:congress, congress})
     :ok
   end
 
@@ -95,25 +114,38 @@ defmodule VNI.Scores do
   end
 
   @doc """
-  Composite + national rank across every district under a current map
-  version at the given level. Min-max normalization is computed over that
-  same set, so scores are only comparable within a methodology version and
-  scoring pass.
+  Composite + national rank across every district in a scoring cohort at
+  the given level. The cohort is `:current` (districts under current map
+  versions — the live site's set) or `{:congress, n}` (every district
+  seated for that congress, current or closed). Min-max normalization is
+  computed over that same cohort, so scores are only comparable within a
+  cohort, methodology version, and scoring pass.
 
   At-large districts are excluded from the set entirely — they neither
   receive a composite/rank nor influence the min-max bounds — and any
   composite/rank they carry from an earlier methodology is cleared.
   """
-  def normalize_and_rank!(level \\ :congressional) do
+  def normalize_and_rank!(level \\ :congressional, cohort \\ :current)
+
+  def normalize_and_rank!(level, :current) do
+    normalize_cohort!("mv.effective_until IS NULL", [Atom.to_string(level)])
+  end
+
+  def normalize_and_rank!(level, {:congress, congress}) when is_integer(congress) do
+    normalize_cohort!("mv.congress = $2", [Atom.to_string(level), congress])
+  end
+
+  # `cohort_predicate` is one of the two literals above — never user input.
+  defp normalize_cohort!(cohort_predicate, params) do
     Repo.query!(
       """
-      WITH current_scores AS (
+      WITH cohort_scores AS (
         SELECT ds.id, ds.polsby_popper, ds.reock, ds.convex_hull, ds.schwartzberg
         FROM district_scores ds
         JOIN districts d ON d.id = ds.district_id
         JOIN map_versions mv ON mv.id = d.map_version_id
         WHERE mv.level = $1
-          AND mv.effective_until IS NULL
+          AND #{cohort_predicate}
           AND d.number <> 0
           AND ds.polsby_popper IS NOT NULL
       ),
@@ -123,7 +155,7 @@ defmodule VNI.Scores do
           min(reock) AS min_re, max(reock) AS max_re,
           min(convex_hull) AS min_ch, max(convex_hull) AS max_ch,
           min(schwartzberg) AS min_sc, max(schwartzberg) AS max_sc
-        FROM current_scores
+        FROM cohort_scores
       ),
       normalized AS (
         SELECT cs.id,
@@ -133,7 +165,7 @@ defmodule VNI.Scores do
             coalesce((cs.convex_hull - b.min_ch) / NULLIF(b.max_ch - b.min_ch, 0), 0.5) +
             coalesce((cs.schwartzberg - b.min_sc) / NULLIF(b.max_sc - b.min_sc, 0), 0.5)
           ) / 4.0 AS composite
-        FROM current_scores cs
+        FROM cohort_scores cs
         CROSS JOIN bounds b
       ),
       ranked AS (
@@ -145,7 +177,7 @@ defmodule VNI.Scores do
       FROM ranked r
       WHERE ds.id = r.id
       """,
-      [Atom.to_string(level)],
+      params,
       timeout: :infinity
     )
 
@@ -157,11 +189,11 @@ defmodule VNI.Scores do
       JOIN map_versions mv ON mv.id = d.map_version_id
       WHERE ds.district_id = d.id
         AND mv.level = $1
-        AND mv.effective_until IS NULL
+        AND #{cohort_predicate}
         AND d.number = 0
         AND (ds.composite IS NOT NULL OR ds.national_rank IS NOT NULL)
       """,
-      [Atom.to_string(level)],
+      params,
       timeout: :infinity
     )
 
