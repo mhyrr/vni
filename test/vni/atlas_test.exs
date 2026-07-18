@@ -55,6 +55,101 @@ defmodule VNI.AtlasTest do
     assert second.source_url == "https://example.test/corrected.zip"
   end
 
+  test "map version upsert re-asserts the effectivity window on rerun" do
+    attrs = %{
+      state: "NC",
+      level: :congressional,
+      congress: 118,
+      effective_from: ~D[2023-01-03],
+      effective_until: ~D[2025-01-01],
+      source_url: "https://example.test/cd118.zip"
+    }
+
+    assert {:ok, first} = Atlas.upsert_map_version(attrs)
+    assert first.effective_until == ~D[2025-01-01]
+
+    # A rerun with the corrected close date heals the window in place.
+    assert {:ok, healed} = Atlas.upsert_map_version(%{attrs | effective_until: ~D[2025-01-02]})
+    assert healed.id == first.id
+    assert healed.effective_until == ~D[2025-01-02]
+  end
+
+  defp ingest_attrs(overrides) do
+    Map.merge(
+      %{state: "NC", level: :congressional, congress: 118, effective_from: ~D[2023-01-03]},
+      overrides
+    )
+  end
+
+  describe "assert_ingestable_map_version!/1" do
+    test "anything is ingestable when the state has no current map" do
+      assert :ok = Atlas.assert_ingestable_map_version!(ingest_attrs(%{}))
+
+      assert :ok =
+               Atlas.assert_ingestable_map_version!(
+                 ingest_attrs(%{effective_until: ~D[2025-01-02]})
+               )
+    end
+
+    test "a current ingest matching the existing current map's identity passes" do
+      create_map_version!(%{state: "NC", congress: 119, effective_from: ~D[2025-01-03]})
+
+      assert :ok =
+               Atlas.assert_ingestable_map_version!(
+                 ingest_attrs(%{congress: 119, effective_from: ~D[2025-01-03]})
+               )
+    end
+
+    test "a current ingest conflicting with the existing current map raises" do
+      create_map_version!(%{state: "NC", congress: 119, effective_from: ~D[2025-01-03]})
+
+      assert_raise RuntimeError, ~r/ambiguous current map/, fn ->
+        Atlas.assert_ingestable_map_version!(ingest_attrs(%{congress: 120}))
+      end
+    end
+
+    test "a historical ingest under a later current congress passes" do
+      create_map_version!(%{state: "NC", congress: 119, effective_from: ~D[2025-01-03]})
+
+      assert :ok =
+               Atlas.assert_ingestable_map_version!(
+                 ingest_attrs(%{effective_until: ~D[2025-01-02]})
+               )
+    end
+
+    test "a historical ingest at or after the current congress raises" do
+      create_map_version!(%{state: "NC", congress: 118, effective_from: ~D[2023-01-03]})
+
+      assert_raise RuntimeError, ~r/supersede the current map/, fn ->
+        Atlas.assert_ingestable_map_version!(ingest_attrs(%{effective_until: ~D[2025-01-02]}))
+      end
+
+      assert_raise RuntimeError, ~r/supersede the current map/, fn ->
+        Atlas.assert_ingestable_map_version!(
+          ingest_attrs(%{congress: 119, effective_until: ~D[2027-01-02]})
+        )
+      end
+    end
+  end
+
+  test "list_map_versions returns a congress's maps, current or closed" do
+    closed =
+      create_map_version!(%{
+        state: "LA",
+        congress: 118,
+        effective_from: ~D[2023-01-03],
+        effective_until: ~D[2025-01-02]
+      })
+
+    current = create_map_version!(%{state: "LA", congress: 119, effective_from: ~D[2025-01-03]})
+    _other_level = create_map_version!(%{state: "LA", congress: 118, level: :state_leg})
+
+    assert [%{id: closed_id}] = Atlas.list_map_versions(118)
+    assert closed_id == closed.id
+    assert [%{id: current_id}] = Atlas.list_map_versions(119)
+    assert current_id == current.id
+  end
+
   test "current Census manifest covers exactly the 435 voting districts" do
     manifest = Census.current_manifest()
 

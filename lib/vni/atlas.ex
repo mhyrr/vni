@@ -21,15 +21,64 @@ defmodule VNI.Atlas do
     |> Repo.insert()
   end
 
-  @doc "Idempotent upsert keyed on the map-version source identity."
+  @doc """
+  Idempotent upsert keyed on the map-version source identity. Reruns also
+  re-assert the version's effectivity window: a rerun of a historical
+  ingest heals a wrong `effective_until`, and a rerun of a current ingest
+  re-declares the version open-ended.
+  """
   def upsert_map_version(attrs) do
     %MapVersion{}
     |> MapVersion.changeset(attrs)
     |> Repo.insert(
-      on_conflict: {:replace, [:source_url, :updated_at]},
+      on_conflict: {:replace, [:source_url, :effective_until, :updated_at]},
       conflict_target: [:state, :level, :congress, :effective_from],
       returning: true
     )
+  end
+
+  @doc """
+  Raise unless a map version with these attrs can be ingested without
+  corrupting the state's timeline.
+
+  Ingesting as current (`effective_until` nil) requires the state's
+  existing current map, if any, to carry the same congress and
+  `effective_from` — otherwise two versions would compete for current.
+  Ingesting as historical (`effective_until` set) requires the existing
+  current map, if any, to belong to a strictly later congress: a closed
+  version must never land at or after the congress the state currently
+  points at.
+  """
+  def assert_ingestable_map_version!(%{state: state, level: level, congress: congress} = attrs)
+      when is_integer(congress) do
+    current = current_map_version(state, level)
+    effective_until = Map.get(attrs, :effective_until)
+
+    cond do
+      current == nil ->
+        :ok
+
+      effective_until == nil ->
+        if current.congress == congress and
+             current.effective_from == Map.fetch!(attrs, :effective_from) do
+          :ok
+        else
+          raise """
+          #{state} already has current map version #{current.id} for Congress \
+          #{current.congress}; refusing to create an ambiguous current map
+          """
+        end
+
+      is_integer(current.congress) and current.congress > congress ->
+        :ok
+
+      true ->
+        raise """
+        #{state} historical ingest for Congress #{congress} conflicts with \
+        current map version #{current.id} (Congress #{inspect(current.congress)}); \
+        supersede the current map before ingesting this congress as history
+        """
+    end
   end
 
   def get_map_version!(id), do: Repo.get!(MapVersion, id)
@@ -44,6 +93,15 @@ defmodule VNI.Atlas do
 
   def list_current_map_versions(level) do
     from(mv in MapVersion, where: mv.level == ^level and is_nil(mv.effective_until))
+    |> Repo.all()
+  end
+
+  @doc "Every map version seated for a congress at a level, current or closed."
+  def list_map_versions(congress, level \\ :congressional) when is_integer(congress) do
+    from(mv in MapVersion,
+      where: mv.congress == ^congress and mv.level == ^level,
+      order_by: mv.state
+    )
     |> Repo.all()
   end
 
