@@ -163,6 +163,44 @@ defmodule VNI.AtlasTest do
            end)
   end
 
+  test "the 118th Congress manifest uses TIGER2023 per-state archives" do
+    manifest = Census.manifest(118)
+
+    assert Enum.sum(Enum.map(manifest, & &1.seats)) == 435
+
+    assert Enum.all?(manifest, fn state ->
+             String.ends_with?(state.source_url, "TIGER2023/CD/tl_2023_#{state.fips}_cd118.zip")
+           end)
+
+    seats = Map.new(manifest, &{&1.code, &1.seats})
+    assert seats["NC"] == 14
+    assert seats["TX"] == 38
+    assert seats["MT"] == 2
+  end
+
+  test "the 117th Congress manifest maps to the national cd116 archive" do
+    manifest = Census.manifest(117)
+
+    # The 117th was seated on the 116th's lines; TIGER never published a
+    # cd117 layer, and the cd116 era predates per-state files.
+    assert Enum.sum(Enum.map(manifest, & &1.seats)) == 435
+
+    assert Enum.all?(manifest, fn state ->
+             String.ends_with?(state.source_url, "TIGER2021/CD/tl_2021_us_cd116.zip")
+           end)
+
+    # 2010-census apportionment, not 2020.
+    seats = Map.new(manifest, &{&1.code, &1.seats})
+    assert seats["TX"] == 36
+    assert seats["NC"] == 13
+    assert seats["MT"] == 1
+    assert seats["CA"] == 53
+  end
+
+  test "unsupported congresses are refused by name" do
+    assert_raise ArgumentError, ~r/unsupported congress 116/, fn -> Census.manifest(116) end
+  end
+
   test "district upsert is idempotent on (map_version, slug)" do
     mv = create_map_version!()
 
