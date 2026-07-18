@@ -11,7 +11,7 @@ conventions: `AGENTS.md`.
 - `mix setup` — install deps, create/migrate database, build assets
 - `mix precommit` — compile with warnings-as-errors, unused-deps check, format, test. Run before claiming done.
 - `mix test` — full suite (sandboxed against the local Docker PostGIS)
-- `mix ecto.reset` — drop, create, migrate, seed. Seeds ingest all 435 districts from Census TIGER/Line (archives cached under `priv/repo/data/tiger/`; first run downloads ~50 zips). `VNI_SKIP_DISTRICT_SEEDS=1` skips.
+- `mix ecto.reset` — drop, create, migrate, seed. Seeds ingest all 435 districts for every supported Congress (119/118/117) from Census TIGER/Line, stamp current-map authorship, and score each congress within its own cohort (archives cached under `priv/repo/data/tiger/`; first run downloads ~100 zips). `VNI_SKIP_DISTRICT_SEEDS=1` skips.
 - `mix vni.ingest.shapefiles --congress N` — (re)ingest TIGER CD geometry (119 current; 118/117 historical, ingested closed), idempotent
 - `mix vni.score` — full scoring pass: metrics, normalize, national rank (`--congress N` scores a historical cohort within itself)
 - `mix phx.server` — **NEVER RUN** (user manages the dev server separately)
