@@ -1,18 +1,18 @@
 <Layouts.app flash={@flash} active={:home}>
   <section id="home-hero" class="hero-field editorial-shell">
     <div class="hero-copy">
-      <p class="eyebrow">The incumbency machine · American edition</p>
+      <p class="eyebrow">A nonpartisan argument against permanent power</p>
       <h1 class="display-xl mt-8 max-w-[1050px]">
         You hate Congress.<br />You'll re-elect <span class="text-[var(--blue)]">your</span>
         part of it.
       </h1>
       <div class="mt-9 grid max-w-4xl gap-10 border-t-2 border-[var(--ink)] pt-6 md:grid-cols-2">
         <p class="font-serif text-2xl leading-[1.08] md:text-3xl">
-          The machine survives because every district believes its incumbent is the last good one.
+          Congress polls in the twenties. House incumbents win in the nineties. The gap between those numbers is your exception.
         </p>
         <div>
           <p class="max-w-md text-sm font-medium leading-6">
-            See the borders, tenure, partisan history, and electoral insulation that keep power where it already is.
+            Every House district, mapped and measured — who drew the lines, who holds the seat, how long they've held it, how safe the map keeps them. Public data, open methodology, no favorites.
           </p>
           <.link navigate={~p"/districts"} id="home-find-district" class="ink-button mt-6">
             Find your district <span aria-hidden="true">→</span>
@@ -23,14 +23,14 @@
     <div class="hero-collision" aria-label="Red and blue party fields crossed by a new green line">
       <div class="collision-label">435<br />exceptions</div>
       <div class="collision-arrow">
-        Policy should win. Not power. <span class="float-right">↗</span>
+        Policy should win, not power. <span class="float-right">↗</span>
       </div>
     </div>
   </section>
 
   <div class="ticker" aria-label="VNI doctrine">
     <div class="ticker-track">
-      <span>No incumbents</span><span>No gerrymanders</span><span>Term limits</span><span>Leave the Supreme Court alone</span><span>Policy should win. Not power.</span><span>No incumbents</span><span>No gerrymanders</span><span>Term limits</span><span>Leave the Supreme Court alone</span><span>Policy should win. Not power.</span>
+      <span>No incumbents</span><span>No gerrymanders</span><span>Term limits</span><span>Leave the Supreme Court alone</span><span>Policy should win, not power.</span><span>No incumbents</span><span>No gerrymanders</span><span>Term limits</span><span>Leave the Supreme Court alone</span><span>Policy should win, not power.</span>
     </div>
   </div>
 
@@ -43,10 +43,31 @@
       </div>
       <div class="slash-card mt-8 lg:mt-24">
         <p class="font-serif text-2xl leading-tight">
-          Congress is unpopular in the aggregate and remarkably durable one district at a time.
+          Congress is unpopular in the aggregate and nearly unbeatable one district at a time.
         </p>
         <p class="mt-8 text-sm leading-6">
-          Your representative answers your calls. Knows the county fair. Brings home the grant. The other 434 are the problem. Multiply that belief by every district and permanent power looks democratic.
+          Your representative answers your calls. Knows the county fair. Brings home the grant. The other 434 are the problem — and in 434 other districts, yours is one of them. You keep yours, they keep theirs, and a Congress with an approval rating in the twenties comes back at better than ninety percent, every two years, with your blessing.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="red-cities" class="section-pad editorial-shell bg-[var(--paper-bright)]">
+    <div class="argument-grid">
+      <div class="argument-number">02</div>
+      <div>
+        <p class="eyebrow">How we got here</p>
+        <h2 class="display-lg mt-6">Red cities and blue country.</h2>
+      </div>
+      <div class="slash-card mt-8 lg:mt-24">
+        <p class="font-serif text-2xl leading-tight">
+          You've never seen that map. Both parties would like to keep it that way.
+        </p>
+        <p class="mt-8 text-sm leading-6">
+          Cities vote blue. Open country votes red. Every strategist in Washington can read that map, so most of America gets treated as decided — one party writes your district off, the other writes it in as theirs, and nobody spends a dollar asking for a vote they've already counted. The mapmakers finish the job: pack the other side into a few hopeless seats, spread your own across the rest, and the general election ends before the first yard sign goes up. What's left is a primary, decided by the narrowest slice of the electorate, and an incumbent who answers to that slice alone.
+        </p>
+        <p class="mt-5 text-sm leading-6">
+          A red city or a blue county means the assumption failed — voters fired their own side's incumbent, and both parties had to start showing up again. That is the goal, drawn as a map: 435 districts nobody owns.
         </p>
       </div>
     </div>
@@ -63,7 +84,7 @@
           District lines do not prove a gerrymander. They do tell us where to look—and who should answer for the map.
         </p>
         <p class="mt-7 max-w-2xl text-sm leading-6">
-          The Atlas puts geometric compactness beside map bias, party turnover, incumbent tenure, authorship, and litigation. Different measurements. One public record.
+          The Atlas puts geometric compactness beside map bias, party turnover, incumbent tenure, authorship, and litigation. Different measurements, one public record, every row cited to a government or nonpartisan source. If you think we're wrong somewhere, the methodology page shows you exactly where to aim.
         </p>
         <.link navigate={~p"/atlas"} id="home-open-atlas" class="ink-button mt-9">
           Open the Atlas <span aria-hidden="true">↗</span>
@@ -87,6 +108,54 @@
       <div class="min-h-48 bg-[var(--green)] p-5">
         <span class="data-label">Action</span>
         <strong class="mt-16 block text-5xl font-black tracking-[-0.08em]">CROSS</strong>
+      </div>
+    </div>
+  </section>
+
+  <section id="the-platform" class="section-pad editorial-shell bg-[var(--paper-bright)]">
+    <div class="grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+      <div>
+        <p class="eyebrow">The platform</p>
+        <h2 class="display-lg mt-6">It fits on an index card.</h2>
+      </div>
+      <div class="border-l-2 border-[var(--ink)] pl-8 lg:pl-14">
+        <p class="font-serif text-2xl leading-tight md:text-4xl">
+          No incumbents. No gerrymanders. Term limits. Leave the Supreme Court alone.
+        </p>
+        <p class="mt-7 max-w-2xl text-sm leading-6">
+          Four planks, one sentence each. Any candidate, in either party, in any district, can put their name to all four. Watch who won't.
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-20 grid border-2 border-[var(--ink)] md:grid-cols-2">
+      <div class="border-b-2 border-[var(--ink)] p-7 md:border-r-2 md:p-10">
+        <span class="data-label">Plank 01</span>
+        <h3 class="mt-5 text-3xl font-black tracking-[-0.04em]">No incumbents</h3>
+        <p class="mt-5 max-w-xl text-sm leading-6">
+          Vote against yours. Yes, yours — even the one who answers your calls. The advantages that make incumbents nearly unbeatable come with the office, not the officeholder: name recognition, donor networks, mail you pay to send. A member who can't lose answers to nobody; one who can lose answers to you. Any challenger will do. We mean that literally: this site never names challengers, and never will.
+        </p>
+      </div>
+      <div class="border-b-2 border-[var(--ink)] p-7 md:p-10">
+        <span class="data-label">Plank 02</span>
+        <h3 class="mt-5 text-3xl font-black tracking-[-0.04em]">No gerrymanders</h3>
+        <p class="mt-5 max-w-xl text-sm leading-6">
+          Most House elections end in the map room, years before Election Day. Whoever holds the pen packs the other side into a few hopeless seats and spreads their own voters across the rest — both parties do it, wherever they get the chance. A gerrymander is an incumbency-protection plan you can see from the air, so we measure every district's shape with published methodology and print the mapmaker's name beside the score.
+        </p>
+      </div>
+      <div class="border-b-2 border-[var(--ink)] p-7 md:border-r-2 md:border-b-0 md:p-10">
+        <span class="data-label">Plank 03</span>
+        <h3 class="mt-5 text-3xl font-black tracking-[-0.04em]">Term limits</h3>
+        <p class="mt-5 max-w-xl text-sm leading-6">
+          The presidency has had them since 1951. Most governors have them. Congress would have to propose the amendment that limits Congress — the Supreme Court ruled in 1995 that an amendment is the only route — and sitting members will not schedule their own retirement while re-election runs above ninety percent. Make losing possible again, and members will discover the case for term limits on their own. The first plank is how you get the third.
+        </p>
+      </div>
+      <div class="p-7 md:p-10">
+        <span class="data-label">Plank 04</span>
+        <h3 class="mt-5 text-3xl font-black tracking-[-0.04em]">Leave the Supreme Court alone</h3>
+        <p class="mt-5 max-w-xl text-sm leading-6">
+          We stop at the courtroom door. Life tenure is what lets a justice disappoint the president who made the appointment, and that independence is worth more than the satisfaction of putting the Court on a clock. A partisan project dressed up as reform would never include this plank. That's how you can tell what this is.
+        </p>
       </div>
     </div>
   </section>
@@ -120,6 +189,9 @@
       <div>
         <p class="font-serif text-2xl leading-tight">
           Would you vote against your incumbent if enough voters elsewhere promised the same?
+        </p>
+        <p class="mt-7 max-w-xl text-sm font-medium leading-6">
+          One vote against your incumbent, cast alone, feels like unilateral disarmament. The same vote, promised across enough districts and released together, is a housecleaning. The pledge exists to get you from the first to the second.
         </p>
         <.link navigate={~p"/act"} id="home-answer-question" class="paper-button mt-9">
           Answer the question <span aria-hidden="true">→</span>
