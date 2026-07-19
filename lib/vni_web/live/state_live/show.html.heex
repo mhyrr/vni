@@ -1,5 +1,7 @@
 <Layouts.app flash={@flash} active={:states}>
-  <.dataset_notice />
+  <.dataset_notice congress={@congress} vintage={@time_context.vintage} />
+  <.congress_time_rail context={@time_context} />
+  <.historical_context_notice context={@time_context} />
 
   <article
     id={"state-profile-#{@state.state}"}
@@ -7,17 +9,26 @@
   >
     <header class="section-pad !py-10 grid gap-6 border-b-2 border-[var(--ink)] lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
       <div>
-        <p class="eyebrow">The map · 119th Congress</p>
+        <p class="eyebrow">The map · {@congress}th Congress</p>
         <h1 class="display-lg mt-4">{@state.state_name}</h1>
       </div>
       <span id="state-seat-count" class="data-label lg:justify-self-end">
         {@state.seats_label}
       </span>
+      <p
+        id="state-map-continuity"
+        class="data-label border-2 border-[var(--ink)] px-3 py-2 lg:col-span-2 lg:justify-self-start"
+      >
+        {@map_continuity.label}
+      </p>
     </header>
 
     <section id="state-authorship" class="section-pad !py-10 border-b-2 border-[var(--ink)]">
       <p class="eyebrow">Who drew this map</p>
       <h2 :if={!@state.at_large} class="display-md mt-4">{@state.authority_full}</h2>
+      <h2 :if={!@state.at_large && !@state.authority_full} class="display-md mt-4">
+        Historical map authorship research pending.
+      </h2>
       <h2 :if={@state.at_large} class="display-md mt-4">
         No map drawn. One representative, statewide — the border is the district.
       </h2>
@@ -35,7 +46,9 @@
       id="state-bias"
       class="section-pad !py-10 border-b-2 border-[var(--ink)]"
     >
-      <p class="eyebrow">2024 · seats and votes</p>
+      <p class="eyebrow">
+        2024 · seats and votes<span :if={!@current?}> · current-day context</span>
+      </p>
       <div :if={@state.fact_pair} class="mt-6 grid gap-6 md:grid-cols-2">
         <div id="state-fact-r" class="border-2 border-[var(--ink)] bg-[var(--red)] p-6">
           <span class="data-label">Republican</span>
@@ -58,11 +71,20 @@
       </p>
 
       <p id="state-skew-line" class="mt-6 text-base font-bold">
-        <span :if={@state.seats >= @mean_median_seat_floor} id="state-skew-value">
+        <span
+          :if={@state.mean_median && @state.seats >= @mean_median_seat_floor}
+          id="state-skew-value"
+        >
           Mean–median gap: {@state.skew_display || "—"}
         </span>
         <span :if={@state.seats < @mean_median_seat_floor} id="state-skew-too-few">
           Mean–median gap: — too few districts to measure ({@state.seats})
+        </span>
+        <span
+          :if={!@state.mean_median && @state.seats >= @mean_median_seat_floor}
+          id="state-skew-unavailable"
+        >
+          Mean–median gap: — historical district vote shares not yet available
         </span>
         <.link
           navigate={~p"/methodology#methodology-bias"}
@@ -85,7 +107,7 @@
     </section>
 
     <section id="state-districts" class="section-pad !py-10 border-b-2 border-[var(--ink)]">
-      <p class="eyebrow">The districts</p>
+      <p class="eyebrow">The districts · {@congress}th Congress</p>
       <div :if={@lean_strip} id="state-lean-strip" class="mx-auto mt-6 max-w-4xl">
         {@lean_strip}
         <p class="mt-2 text-sm leading-6">
@@ -115,7 +137,7 @@
           <.link
             :for={district <- @districts}
             id={"state-district-#{district.slug}"}
-            navigate={~p"/districts/#{district.slug}"}
+            navigate={"#{@district_base_path}/#{district.slug}"}
             class="grid grid-cols-[2.75rem_5rem_1fr_6rem_6rem_9.5rem_2.5rem] items-center gap-4 py-2.5"
           >
             <.district_shape path={district.shape_path} tone={district.tone} class="h-8 w-8" />

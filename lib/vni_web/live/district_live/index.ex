@@ -3,7 +3,7 @@ defmodule VNIWeb.DistrictLive.Index do
 
   alias VNI.Politics
   alias VNI.Scores
-  alias VNIWeb.DistrictPresenter
+  alias VNIWeb.{CongressTime, DistrictPresenter}
 
   @metric_sorts %{
     "composite" => :composite,
@@ -24,44 +24,77 @@ defmodule VNIWeb.DistrictLive.Index do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign(page_title: "Districts", sort: :composite, sort_kind: :compactness)
+     |> assign(
+       page_title: "Districts",
+       sort: :composite,
+       sort_kind: :compactness,
+       congress: CongressTime.current_congress(),
+       qualified?: false
+     )
      |> stream_configure(:districts, dom_id: &"district-#{&1.slug}")}
   end
 
   def handle_params(params, _uri, socket) do
-    {sort, sort_kind} = resolve_sort(params["sort"])
+    case CongressTime.resolve(params["congress"]) do
+      :error ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "That Congress is not available in the Atlas.")
+         |> redirect(to: ~p"/districts")}
 
-    {:noreply,
-     socket
-     |> assign(sort: sort, sort_kind: sort_kind)
-     |> stream_async(
-       :districts,
-       fn ->
-         districts =
-           case sort_kind do
-             :compactness ->
-               Scores.list_least_compact(sort) |> DistrictPresenter.present_field()
+      {:ok, congress, qualified?} ->
+        current? = congress == CongressTime.current_congress()
+        {sort, sort_kind} = resolve_sort(params["sort"], current?)
+        base_path = CongressTime.page_path(:districts, congress, nil, qualified?)
 
-             :political ->
-               Politics.list_most_entrenched(sort) |> DistrictPresenter.present_field()
-
-             :map_bias ->
-               list_by_map_bias()
-           end
-
-         {:ok, districts, reset: true}
-       end,
-       reset: true
-     )}
+        {:noreply,
+         socket
+         |> assign(
+           congress: congress,
+           qualified?: qualified?,
+           current?: current?,
+           sort: sort,
+           sort_kind: sort_kind,
+           district_base_path: base_path,
+           time_context: CongressTime.context(congress, :districts),
+           sort_paths: sort_paths(base_path)
+         )
+         |> stream_async(
+           :districts,
+           fn ->
+             districts = list_districts(congress, current?, sort, sort_kind)
+             {:ok, districts, reset: true}
+           end,
+           reset: true
+         )}
+    end
   end
 
-  defp resolve_sort(param) do
+  defp resolve_sort(param, current?) do
     cond do
       sort = @metric_sorts[param] -> {sort, :compactness}
-      sort = @political_sorts[param] -> {sort, :political}
-      sort = @bias_sorts[param] -> {sort, :map_bias}
+      current? && Map.has_key?(@political_sorts, param) -> {@political_sorts[param], :political}
+      current? && Map.has_key?(@bias_sorts, param) -> {@bias_sorts[param], :map_bias}
       true -> {:composite, :compactness}
     end
+  end
+
+  defp list_districts(congress, _current?, sort, :compactness) do
+    congress
+    |> Scores.list_least_compact_for_congress(sort)
+    |> DistrictPresenter.present_field()
+  end
+
+  defp list_districts(_congress, true, sort, :political) do
+    Politics.list_most_entrenched(sort) |> DistrictPresenter.present_field()
+  end
+
+  defp list_districts(_congress, true, _sort, :map_bias), do: list_by_map_bias()
+
+  defp sort_paths(base_path) do
+    ((@metric_sorts |> Map.keys()) ++
+       (@political_sorts |> Map.keys()) ++ (@bias_sorts |> Map.keys()))
+    |> Map.new(fn sort -> {sort, CongressTime.with_query(base_path, sort: sort)} end)
   end
 
   # The map-skew sort carries each district's statewide gap onto the

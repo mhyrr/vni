@@ -254,6 +254,142 @@ a:focus-visible, button:focus-visible {
   text-transform: uppercase;
 }
 
+.congress-time-rail {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  min-height: 74px;
+  border-bottom: 2px solid var(--ink);
+  background: var(--paper-bright);
+}
+
+.congress-time-direction {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.9rem clamp(1rem, 3vw, 2.5rem);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  text-transform: uppercase;
+  transition: background 140ms ease;
+}
+
+.congress-time-direction:hover { background: var(--yellow); }
+.congress-time-next { justify-content: flex-end; text-align: right; }
+
+.congress-time-direction small,
+.congress-time-direction strong { display: block; }
+
+.congress-time-direction small {
+  margin-bottom: 0.2rem;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.congress-time-direction strong {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+.congress-time-selected {
+  position: relative;
+  z-index: 20;
+  min-width: min(330px, 42vw);
+  border-inline: 2px solid var(--ink);
+}
+
+.congress-time-selected summary {
+  display: grid;
+  height: 100%;
+  min-height: 72px;
+  place-content: center;
+  padding: 0.75rem 2.5rem;
+  cursor: pointer;
+  list-style: none;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.congress-time-selected summary::-webkit-details-marker { display: none; }
+
+.congress-time-selected summary strong {
+  font-family: "Arial Black", Arial, sans-serif;
+  font-size: clamp(1rem, 1.6vw, 1.35rem);
+  letter-spacing: -0.04em;
+}
+
+.congress-time-selected summary span {
+  margin-top: 0.15rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.61rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.congress-time-selected[open] summary { background: var(--yellow); }
+
+.congress-time-menu {
+  position: absolute;
+  top: 100%;
+  right: -2px;
+  left: -2px;
+  border: 2px solid var(--ink);
+  background: var(--paper-bright);
+  box-shadow: 8px 8px 0 var(--ink);
+}
+
+.congress-time-menu > span {
+  display: block;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--ink);
+}
+
+.congress-time-menu a {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+}
+
+.congress-time-menu a:last-child { border-bottom: 0; }
+.congress-time-menu a:hover,
+.congress-time-menu a[aria-current="page"] { background: var(--yellow); }
+
+.historical-context-notice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  align-items: baseline;
+  padding: 0.8rem clamp(1.25rem, 5vw, 5.5rem);
+  border-bottom: 2px solid var(--ink);
+  background: var(--green-light);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.historical-context-notice strong {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 700px) {
+  .congress-time-rail { min-height: 64px; }
+  .congress-time-direction { padding-inline: 0.75rem; }
+  .congress-time-direction small { display: none; }
+  .congress-time-direction strong { font-size: 0.62rem; }
+  .congress-time-selected { min-width: 46vw; }
+  .congress-time-selected summary { min-height: 62px; padding-inline: 0.5rem; }
+  .congress-time-selected summary strong { font-size: 0.88rem; }
+  .congress-time-selected summary span { font-size: 0.54rem; }
+}
+
 .ink-button,
 .paper-button {
   display: inline-flex;
@@ -294,7 +430,6 @@ a:focus-visible, button:focus-visible {
   grid-template-columns: minmax(0, 1.38fr) minmax(300px, 0.62fr);
   min-height: calc(100vh - 72px);
   overflow: hidden;
-  border-bottom: 2px solid var(--ink);
 }
 
 .hero-copy {

@@ -8,6 +8,9 @@ defmodule VNI.Atlas.Census do
     * 119 (current) — TIGER2025, per-state `tl_2025_{fips}_cd119.zip`
     * 118 — TIGER2023, per-state `tl_2023_{fips}_cd118.zip`
     * 117 — TIGER2021, one national `tl_2021_us_cd116.zip`
+    * 116 — TIGER2019, one national `tl_2019_us_cd116.zip`
+    * 115 — TIGER2017, one national `tl_2017_us_cd115.zip`
+    * 114 — TIGER2015, one national `tl_2015_us_cd114.zip`
 
   The 117th Congress has no `cd117` TIGER layer: it was seated on the same
   lines as the 116th, so the Census Bureau kept publishing the `cd116`
@@ -53,6 +56,30 @@ defmodule VNI.Atlas.Census do
       scope: :national,
       effective_from: ~D[2021-01-03],
       effective_until: ~D[2023-01-02],
+      apportionment: 2010
+    },
+    116 => %{
+      vintage: 2019,
+      session: 116,
+      scope: :national,
+      effective_from: ~D[2019-01-03],
+      effective_until: ~D[2021-01-02],
+      apportionment: 2010
+    },
+    115 => %{
+      vintage: 2017,
+      session: 115,
+      scope: :national,
+      effective_from: ~D[2017-01-03],
+      effective_until: ~D[2019-01-02],
+      apportionment: 2010
+    },
+    114 => %{
+      vintage: 2015,
+      session: 114,
+      scope: :national,
+      effective_from: ~D[2015-01-03],
+      effective_until: ~D[2017-01-02],
       apportionment: 2010
     }
   }
@@ -207,7 +234,7 @@ defmodule VNI.Atlas.Census do
     end)
   end
 
-  ## One national archive (cd116, the congress-117 lines)
+  ## One national archive (cd114–cd116)
 
   defp seed_from_national_archive!(congress, spec, cache_dir, force_download?) do
     url = source_url(spec, nil)
@@ -345,7 +372,8 @@ defmodule VNI.Atlas.Census do
         Req.get!(url,
           into: File.stream!(temporary_path),
           decode_body: false,
-          receive_timeout: 120_000
+          receive_timeout: 120_000,
+          connect_options: tls_connect_options()
         )
 
       if response.status != 200 || !valid_zip?(temporary_path) do
@@ -369,6 +397,21 @@ defmodule VNI.Atlas.Census do
       {:error, _reason} ->
         false
     end
+  end
+
+  # Mint's CAStore dependency is optional. Use the operating system's bundle
+  # explicitly so a fresh seed works in both the macOS development environment
+  # and a Debian release image without adding a dependency solely for certs.
+  defp tls_connect_options do
+    cert_path =
+      Enum.find(
+        ["/etc/ssl/cert.pem", "/etc/ssl/certs/ca-certificates.crt"],
+        &File.regular?/1
+      )
+
+    if cert_path,
+      do: [transport_opts: [cacertfile: String.to_charlist(cert_path)]],
+      else: []
   end
 
   defp convert_to_geojson_sequence!(archive, congress, label) do

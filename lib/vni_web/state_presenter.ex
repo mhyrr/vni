@@ -21,7 +21,8 @@ defmodule VNIWeb.StatePresenter do
   """
   def present_index_row(row, cycle) do
     gap = gap_pts(cycle)
-    gap_seats = gap && gap * row.seats / 100
+    cycle_seats = cycle && StateCycle.total_seats(cycle)
+    gap_seats = gap && cycle_seats && gap * cycle_seats / 100
 
     %{
       state: row.state,

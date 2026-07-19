@@ -136,6 +136,32 @@ defmodule VNIWeb.StateLiveTest do
     assert {:error, {:redirect, %{to: "/states"}}} = live(conn, ~p"/states/zz")
   end
 
+  test "historical state routes rewind the map and label current-day facts", %{conn: conn} do
+    seed_districted_state!()
+    seed_historical_state!()
+
+    {:ok, view, _html} = live(conn, ~p"/congresses/118/states")
+
+    assert has_element?(view, "#congress-time-rail", "118th Congress")
+    assert has_element?(view, "#state-current-day-context", "Presidential vote")
+    assert has_element?(view, "#state-tx a[href='/congresses/118/states/tx']")
+    assert has_element?(view, "#state-tx", "Historical source pending")
+    assert has_element?(view, "#state-tx a[href^='/congresses/118/districts/tx-']")
+
+    {:ok, profile, _html} = live(conn, ~p"/congresses/118/states/tx")
+
+    assert has_element?(
+             profile,
+             "#state-authorship",
+             "Historical map authorship research pending"
+           )
+
+    assert has_element?(profile, "#state-bias", "current-day context")
+    assert has_element?(profile, "#state-map-continuity", "Redrawn after the 2020 Census")
+    assert has_element?(profile, "#state-skew-unavailable", "historical district vote shares")
+    assert has_element?(profile, "#state-district-rows a[href='/congresses/118/districts/tx-1']")
+  end
+
   defp seed_districted_state! do
     {:ok, mv} =
       Atlas.create_map_version(%{
@@ -239,6 +265,26 @@ defmodule VNIWeb.StateLiveTest do
     })
 
     :ok
+  end
+
+  defp seed_historical_state! do
+    {:ok, mv} =
+      Atlas.create_map_version(%{
+        state: "TX",
+        level: :congressional,
+        congress: 118,
+        effective_from: ~D[2023-01-03],
+        effective_until: ~D[2025-01-02],
+        source_url: "https://example.test/tx-118.zip"
+      })
+
+    for number <- 1..5 do
+      {:ok, _district} =
+        Atlas.upsert_district(mv, %{state: "TX", number: number, geom: geom(50 + number)})
+    end
+
+    :ok = Atlas.refresh_district_geometries!(mv)
+    :ok = Scores.score_congress!(118)
   end
 
   defp geom(number) do

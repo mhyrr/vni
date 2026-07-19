@@ -49,6 +49,22 @@ defmodule VNI.Scores.StateBias do
   Ordered by state code; every state with a current map appears.
   """
   def state_rows(level \\ :congressional) do
+    query_state_rows("mv.effective_until IS NULL", [
+      Atom.to_string(level),
+      @mean_median_seat_floor
+    ])
+  end
+
+  @doc "One state summary per map version seated for a Congress."
+  def state_rows_for_congress(congress, level \\ :congressional) when is_integer(congress) do
+    query_state_rows("mv.congress = $3", [
+      Atom.to_string(level),
+      @mean_median_seat_floor,
+      congress
+    ])
+  end
+
+  defp query_state_rows(cohort_predicate, params) do
     %{rows: rows, columns: columns} =
       Repo.query!(
         """
@@ -61,7 +77,7 @@ defmodule VNI.Scores.StateBias do
           JOIN map_versions mv ON mv.id = d.map_version_id
           LEFT JOIN district_profiles p ON p.district_id = d.id
           LEFT JOIN district_scores s ON s.district_id = d.id
-          WHERE mv.level = $1 AND mv.effective_until IS NULL
+          WHERE mv.level = $1 AND #{cohort_predicate}
         ),
         stats AS (
           SELECT state,
@@ -98,7 +114,7 @@ defmodule VNI.Scores.StateBias do
         LEFT JOIN worst w ON w.state = s.state
         ORDER BY s.state
         """,
-        [Atom.to_string(level), @mean_median_seat_floor],
+        params,
         timeout: :infinity
       )
 
@@ -116,6 +132,11 @@ defmodule VNI.Scores.StateBias do
   @doc "The `state_rows/1` row for one state, or nil."
   def state_row(state, level \\ :congressional) do
     Enum.find(state_rows(level), &(&1.state == state))
+  end
+
+  @doc "The state summary for one Congress, or nil."
+  def state_row_for_congress(state, congress, level \\ :congressional) do
+    Enum.find(state_rows_for_congress(congress, level), &(&1.state == state))
   end
 
   @doc """

@@ -1,5 +1,7 @@
 <Layouts.app flash={@flash} active={:districts}>
-  <.dataset_notice />
+  <.dataset_notice congress={@congress} vintage={@time_context.vintage} />
+  <.congress_time_rail context={@time_context} />
+  <.historical_context_notice context={@time_context} />
 
   <.async_result :let={district} assign={@district}>
     <:loading>
@@ -10,8 +12,8 @@
     <:failed :let={_reason}>
       <section id="district-not-found" class="section-pad editorial-shell bg-[var(--paper)]">
         <p class="eyebrow">District not found</p>
-        <h1 class="display-md mt-6">That district is not in the current map.</h1>
-        <.link navigate={~p"/districts"} class="ink-button mt-10">
+        <h1 class="display-md mt-6">That district is not in the {@congress}th Congress map.</h1>
+        <.link navigate={@index_path} class="ink-button mt-10">
           Open the directory <span>→</span>
         </.link>
       </section>
@@ -32,17 +34,24 @@
               At-large · no district lines drawn
             </span>
           </div>
-          <.district_shape
-            path={district.shape_path}
+          <.district_context_map
+            id={"district-context-#{district.congress}-#{district.slug}"}
+            context={district.state_context}
             tone={:neutral}
             class="absolute inset-x-8 top-20 bottom-8 h-[calc(100%-7rem)] w-[calc(100%-4rem)] text-[var(--ink)]"
           />
         </div>
         <div class="section-pad !py-10 lg:!py-14">
           <p class="eyebrow">District file · {district.congress}th Congress</p>
+          <p
+            id="district-map-continuity"
+            class="mt-4 inline-block border-2 border-[var(--ink)] px-3 py-2 data-label"
+          >
+            {district.map_continuity.label}
+          </p>
           <h1 class="display-xl mt-7">{district.label}</h1>
           <p class="mt-8 max-w-2xl font-serif text-3xl leading-tight">
-            The enacted boundary, measured four ways against the current national field.
+            {DistrictPresenter.summary_line(district)}
           </p>
           <p
             :if={district.county_line}
@@ -53,14 +62,14 @@
             <a
               href={district.geography_source_url}
               class="underline"
-              title="Census CD119 relationship files"
+              title="Census congressional-district relationship files"
             >
               Census ↗
             </a>
           </p>
           <div class="mt-12 flex flex-wrap gap-3">
             <span class="bg-[var(--ink)] px-3 py-2 text-white data-label">
-              Census TIGER/Line 2025
+              Census TIGER/Line {@time_context.vintage}
             </span>
             <span class="border-2 border-[var(--ink)] px-3 py-2 data-label">
               {district.land_area} km² land

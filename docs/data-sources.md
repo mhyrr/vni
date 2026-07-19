@@ -10,7 +10,7 @@ are load-bearing.
 
 | Source | Feeds | Publisher | License / terms |
 |---|---|---|---|
-| [Census TIGER/Line 2025, CD119](https://www2.census.gov/geo/tiger/TIGER2025/CD/) | District geometry, land area, perimeter | U.S. Census Bureau | Public domain |
+| [Census TIGER/Line CD114–CD119](https://www2.census.gov/geo/tiger/) | District geometry, land area, perimeter for the 114th–119th Congresses | U.S. Census Bureau | Public domain |
 | [unitedstates/congress-legislators](https://unitedstates.github.io/congress-legislators/legislators-current.yaml) | Incumbent name, party, first House year, bioguide id | community-maintained from official sources | Public domain (CC0) |
 | [Census ACS 5-year API](https://api.census.gov/data/2024/acs/acs5) | District population, voting-age population; place populations (ranking input only) | U.S. Census Bureau | Public domain; free API key required |
 | [MEDSL U.S. House 1976–2024](https://doi.org/10.7910/DVN/IG0UN2) | Last general-election margin, cycle, winner party; statewide House seat splits per cycle (seats–votes series) | MIT Election Data + Science Lab | CC0; Dataverse guestbook on download (see below) |
@@ -38,6 +38,12 @@ outlet, which sits in tension with the sourcing doctrine above. The
 ingest is source-pluggable: if a strictly non-partisan chain matters
 more than provenance convenience, swap in a Redistricting Data Hub /
 VEST precinct aggregation and update this row.
+
+**Historical TIGER cohorts.** VNI ingests the Census Bureau's full-resolution
+national CD114, CD115, and CD116 archives for the 114th–116th Congresses; the
+2021 CD116 archive for the 117th; and per-state CD118 and CD119 archives. The
+117th source keeps the CD116 layer name because Census published no CD117 layer,
+but its 2021 vintage includes North Carolina's intervening court-ordered map.
 
 **Never used.** Cook PVI (licensed; partisan lean is our own published
 formula — see `/methodology`). Any dataset that would put challenger

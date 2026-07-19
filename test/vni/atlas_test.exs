@@ -151,6 +151,8 @@ defmodule VNI.AtlasTest do
   end
 
   test "current Census manifest covers exactly the 435 voting districts" do
+    assert Census.supported_congresses() == [114, 115, 116, 117, 118, 119]
+
     manifest = Census.current_manifest()
 
     assert length(manifest) == 50
@@ -197,8 +199,24 @@ defmodule VNI.AtlasTest do
     assert seats["CA"] == 53
   end
 
+  test "the 114th through 116th manifests use their full-resolution national archives" do
+    for {congress, vintage} <- [{114, 2015}, {115, 2017}, {116, 2019}] do
+      manifest = Census.manifest(congress)
+
+      assert length(manifest) == 50
+      assert Enum.sum(Enum.map(manifest, & &1.seats)) == 435
+
+      assert Enum.all?(manifest, fn state ->
+               String.ends_with?(
+                 state.source_url,
+                 "TIGER#{vintage}/CD/tl_#{vintage}_us_cd#{congress}.zip"
+               )
+             end)
+    end
+  end
+
   test "unsupported congresses are refused by name" do
-    assert_raise ArgumentError, ~r/unsupported congress 116/, fn -> Census.manifest(116) end
+    assert_raise ArgumentError, ~r/unsupported congress 113/, fn -> Census.manifest(113) end
   end
 
   test "district upsert is idempotent on (map_version, slug)" do
@@ -237,6 +255,56 @@ defmodule VNI.AtlasTest do
 
     assert closed.effective_until == ~D[2025-12-31]
     assert Atlas.current_map_version("TX", :congressional) == nil
+  end
+
+  test "siblings come from the district's own map version, never another congress" do
+    old =
+      create_map_version!(%{
+        congress: 118,
+        effective_from: ~D[2021-01-03],
+        effective_until: ~D[2025-01-02]
+      })
+
+    current = create_map_version!(%{effective_from: ~D[2025-01-03]})
+
+    square = fn west ->
+      %Geo.MultiPolygon{
+        coordinates: [
+          [
+            [
+              {west, 30.0},
+              {west + 0.1, 30.0},
+              {west + 0.1, 30.1},
+              {west, 30.1},
+              {west, 30.0}
+            ]
+          ]
+        ],
+        srid: 4326
+      }
+    end
+
+    # Same slugs in both cohorts: a state-and-number scope would mix them.
+    {:ok, _} = Atlas.upsert_district(old, %{number: 33, geom_simplified: square.(-97.0)})
+    {:ok, _} = Atlas.upsert_district(old, %{number: 34, geom_simplified: square.(-96.0)})
+
+    {:ok, subject} =
+      Atlas.upsert_district(current, %{number: 33, geom_simplified: square.(-97.0)})
+
+    {:ok, _} = Atlas.upsert_district(current, %{number: 34, geom_simplified: square.(-96.0)})
+    {:ok, _} = Atlas.upsert_district(current, %{number: 35, geom_simplified: square.(-95.0)})
+
+    siblings = Atlas.list_sibling_geometries(subject)
+
+    assert Enum.map(siblings, & &1.slug) == ["tx-34", "tx-35"]
+    assert Enum.all?(siblings, &match?(%Geo.MultiPolygon{}, &1.geom))
+  end
+
+  test "an at-large district has no siblings to draw" do
+    map_version = create_map_version!()
+    {:ok, at_large} = Atlas.upsert_district(map_version, %{number: 0})
+
+    assert Atlas.list_sibling_geometries(at_large) == []
   end
 
   test "geometry refresh derives display geometry and geodesic measurements" do

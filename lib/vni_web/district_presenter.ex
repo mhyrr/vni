@@ -311,6 +311,180 @@ defmodule VNIWeb.DistrictPresenter do
     |> String.reverse()
   end
 
+  @doc """
+  The hero's one-line statement of what the district is: who holds the seat and
+  how many people it covers.
+
+  Falls back through what the record actually supports. The incumbent and ACS
+  ingests fill current districts only, so every historical cohort has neither —
+  and four seats in the 119th are genuinely vacant (CA-14, FL-20, GA-13, TX-23).
+  Both are permanent realities, not startup states, so neither may render a
+  half-written sentence.
+  """
+  def summary_line(%{incumbent_name: name, population: people, congress: congress})
+      when is_binary(name) and is_binary(people) do
+    "#{name} represents #{people} people in the #{congress}th Congress."
+  end
+
+  def summary_line(%{incumbent_name: name, congress: congress}) when is_binary(name) do
+    "#{name} holds this seat in the #{congress}th Congress."
+  end
+
+  def summary_line(%{population: people, congress: congress}) when is_binary(people) do
+    "This seat is vacant — #{people} people with no member in the #{congress}th Congress."
+  end
+
+  def summary_line(%{at_large: true, state: state, congress: congress}) do
+    "#{state}'s at-large district in the #{congress}th Congress."
+  end
+
+  def summary_line(%{state_seats: seats, state: state, congress: congress})
+      when is_integer(seats) do
+    "One of #{seats} #{state} districts in the #{congress}th Congress."
+  end
+
+  @doc """
+  Project a district and its siblings into one shared frame so the hero can
+  pull out from the district to the whole state.
+
+  Every other shape on the site is normalized into its own box (`svg_path/1`),
+  which strips the offset that says *where* a district sits. Here the state's
+  own extent is the frame and every path is drawn in it, so animating between
+  `focus_box` and `view_box` is a plain viewBox tween.
+
+  Longitude is scaled by cos(mean latitude) — an equirectangular projection with
+  a standard parallel at the state's centre. Raw 4326 degrees stretch a state
+  horizontally by ~18% at Texas latitudes, which is tolerable for one abstract
+  shape and obvious on a recognisable state outline. Display only; measurement
+  still happens in EPSG:5070 (see `VNI.Scores`).
+
+  A district with no siblings is at-large: its own outline *is* the state, so
+  there is nothing to pull out to and `animate?` is false.
+  """
+  def state_context(subject_geom, siblings) do
+    subject_rings = rings(subject_geom)
+    sibling_rings = Enum.map(siblings, &rings(&1.geom))
+    points = List.flatten([subject_rings | sibling_rings])
+
+    frame = frame(points)
+    view_box = view_box(0.0, 0.0, frame.width, frame.height)
+
+    subject_extent = subject_extent(subject_rings, frame)
+
+    %{
+      view_box: view_box,
+      focus_box: focus_box(subject_extent, view_box, siblings),
+      subject_path: framed_path(subject_rings, frame),
+      sibling_paths: Enum.map(sibling_rings, &framed_path(&1, frame)),
+      reticle_path: reticle_path(subject_extent, frame),
+      animate?: siblings != []
+    }
+  end
+
+  defp subject_extent(subject_rings, frame) do
+    {min_x, max_x, min_y, max_y} =
+      subject_rings |> List.flatten() |> Enum.map(&project(&1, frame)) |> bounds()
+
+    %{
+      min_x: min_x,
+      min_y: min_y,
+      width: max_x - min_x,
+      height: max_y - min_y,
+      size: max(max_x - min_x, max_y - min_y)
+    }
+  end
+
+  # Corner brackets around the district once the state is in view. An urban
+  # district is a few pixels wide at state zoom — without a locator the pull-out
+  # answers "where in the state" only for people who already know. Brackets and
+  # not a ring: this page publishes Reock two inches below the map, and a circle
+  # drawn around a district reads as its minimum bounding circle.
+  #
+  # Districts that already fill a fifth of their state need no help finding.
+  defp reticle_path(extent, frame) do
+    if extent.size < 0.18 * max(frame.width, frame.height) do
+      pad = max(extent.size * 0.6, 4.0)
+      x1 = extent.min_x - pad
+      y1 = extent.min_y - pad
+      x2 = extent.min_x + extent.width + pad
+      y2 = extent.min_y + extent.height + pad
+      arm = max((x2 - x1) * 0.28, (y2 - y1) * 0.28)
+
+      Enum.map_join(
+        [
+          {x1, y1 + arm, x1, y1, x1 + arm, y1},
+          {x2 - arm, y1, x2, y1, x2, y1 + arm},
+          {x2, y2 - arm, x2, y2, x2 - arm, y2},
+          {x1 + arm, y2, x1, y2, x1, y2 - arm}
+        ],
+        " ",
+        fn {ax, ay, bx, by, cx, cy} ->
+          "M#{coordinate(ax)} #{coordinate(ay)}L#{coordinate(bx)} #{coordinate(by)}L#{coordinate(cx)} #{coordinate(cy)}"
+        end
+      )
+    end
+  end
+
+  # The district's own extent inside the state frame, with room to breathe —
+  # this is where the pull-out starts.
+  # The district's own extent inside the state frame, with room to breathe —
+  # this is where the pull-out starts.
+  defp focus_box(_extent, view_box, []), do: view_box
+
+  defp focus_box(extent, _view_box, _siblings) do
+    pad = extent.size * 0.08
+
+    view_box(
+      extent.min_x - pad,
+      extent.min_y - pad,
+      extent.width + 2 * pad,
+      extent.height + 2 * pad
+    )
+  end
+
+  defp frame(points) do
+    {min_x, max_x, min_y, max_y} = bounds(points)
+    # Standard parallel at the frame's centre: one degree of longitude covers
+    # cos(lat) of the ground distance of one degree of latitude.
+    kx = max(:math.cos((min_y + max_y) / 2 * :math.pi() / 180), 0.1)
+    span_x = max((max_x - min_x) * kx, 0.000_001)
+    span_y = max(max_y - min_y, 0.000_001)
+    scale = 100 / max(span_x, span_y)
+
+    %{
+      min_x: min_x,
+      max_y: max_y,
+      kx: kx,
+      scale: scale,
+      width: span_x * scale,
+      height: span_y * scale
+    }
+  end
+
+  defp framed_path(rings, frame) do
+    Enum.map_join(rings, "", fn ring ->
+      ring
+      |> Enum.with_index()
+      |> Enum.map_join("", fn {point, index} ->
+        {px, py} = project(point, frame)
+        if(index == 0, do: "M", else: "L") <> coordinate(px) <> " " <> coordinate(py)
+      end)
+      |> Kernel.<>("Z")
+    end)
+  end
+
+  defp project({x, y}, frame) do
+    {(x - frame.min_x) * frame.kx * frame.scale, (frame.max_y - y) * frame.scale}
+  end
+
+  defp view_box(x, y, width, height) do
+    [x, y, width, height] |> Enum.map_join(" ", &coordinate/1)
+  end
+
+  defp rings(%Geo.MultiPolygon{coordinates: polygons}), do: Enum.flat_map(polygons, & &1)
+  defp rings(%Geo.Polygon{coordinates: rings}), do: rings
+  defp rings(_), do: []
+
   defp svg_path(nil), do: "M10 10H90V90H10Z"
 
   defp svg_path(%Geo.MultiPolygon{coordinates: polygons}) do

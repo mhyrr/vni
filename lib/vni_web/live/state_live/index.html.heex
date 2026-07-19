@@ -1,10 +1,12 @@
 <Layouts.app flash={@flash} active={:states}>
-  <.dataset_notice />
+  <.dataset_notice congress={@congress} vintage={@time_context.vintage} />
+  <.congress_time_rail context={@time_context} />
+  <.historical_context_notice context={@time_context} />
 
   <section id="state-index" class="editorial-shell bg-[var(--paper)]">
     <div class="section-pad !py-12 grid gap-12 border-b-2 border-[var(--ink)] lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
       <div>
-        <p class="eyebrow">The maps · 119th Congress</p>
+        <p class="eyebrow">The maps · {@congress}th Congress</p>
         <h1 class="display-lg mt-4">A district is a shape. A map is a choice.</h1>
       </div>
       <p class="font-serif text-3xl leading-tight">
@@ -22,30 +24,39 @@
       </.link>
     </p>
 
+    <p
+      :if={!@current?}
+      id="state-current-day-context"
+      class="px-5 py-4 text-sm leading-6 md:px-10"
+    >
+      <strong class="data-label">Current-day context · 2024</strong>
+      Presidential vote, House seats won, and the vote–seat gap remain current-day facts. Delegation size, district geometry, and compactness belong to the selected Congress.
+    </p>
+
     <nav id="state-sort" class="sort-rail" aria-label="Sort states">
       <.link
-        patch={~p"/states?sort=gap"}
+        patch={@sort_paths["gap"]}
         id="sort-gap"
         class={["sort-link", @sort == "gap" && "is-active"]}
       >
         01 · Vote–seat gap
       </.link>
       <.link
-        patch={~p"/states?sort=seats"}
+        patch={@sort_paths["seats"]}
         id="sort-seats"
         class={["sort-link", @sort == "seats" && "is-active"]}
       >
         02 · Seats
       </.link>
       <.link
-        patch={~p"/states?sort=authority"}
+        patch={@sort_paths["authority"]}
         id="sort-authority"
         class={["sort-link", @sort == "authority" && "is-active"]}
       >
         03 · Drawn by
       </.link>
       <.link
-        patch={~p"/states?sort=state"}
+        patch={@sort_paths["state"]}
         id="sort-state"
         class={["sort-link", @sort == "state" && "is-active"]}
       >
@@ -93,13 +104,16 @@
             class="border-b border-[var(--ink)]"
           >
             <td class="px-5 py-4 whitespace-nowrap md:px-6 font-bold">
-              <.link navigate={~p"/states/#{row.state_code}"} class="underline underline-offset-4">
+              <.link
+                navigate={"#{@state_base_path}/#{row.state_code}"}
+                class="underline underline-offset-4"
+              >
                 {row.state_name}
               </.link>
             </td>
             <td class="px-5 py-4 whitespace-nowrap md:px-6">{row.seats}</td>
             <td class="px-5 py-4 whitespace-nowrap md:px-6">
-              <span>{row.authority_label}</span>
+              <span>{row.authority_label || "Historical source pending"}</span>
               <.party_mark
                 :if={row.party_badge_key}
                 party={row.party_badge_key}
@@ -120,7 +134,7 @@
             <td class="px-5 py-4 whitespace-nowrap md:px-6">
               <.link
                 :if={row.worst_district_slug}
-                navigate={~p"/districts/#{row.worst_district_slug}"}
+                navigate={"#{@district_base_path}/#{row.worst_district_slug}"}
                 class="underline underline-offset-4"
               >
                 {row.worst_district_label}
@@ -143,7 +157,7 @@
       <div class="mt-8 flex flex-wrap gap-4">
         <.link
           :for={row <- @at_large_rows}
-          navigate={~p"/states/#{row.state_code}"}
+          navigate={"#{@state_base_path}/#{row.state_code}"}
           class="border-2 border-[var(--ink)] px-4 py-2 data-label"
         >
           {row.state_name}

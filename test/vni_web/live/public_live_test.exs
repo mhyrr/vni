@@ -232,6 +232,35 @@ defmodule VNIWeb.PublicLiveTest do
     assert has_element?(view, "#districts > a:first-of-type[data-slug='tx-35']")
   end
 
+  test "historical district routes rewind geometry and retain fixed Congress URLs", %{conn: conn} do
+    seed_historical_districts!()
+
+    {:ok, view, _html} = live(conn, ~p"/congresses/118/districts")
+    render_async(view)
+
+    assert has_element?(view, "#congress-time-rail", "118th Congress")
+
+    assert has_element?(
+             view,
+             "#historical-context-notice",
+             "District lines and compactness rewind"
+           )
+
+    assert has_element?(view, "#congress-time-previous[href='/congresses/117/districts']")
+    assert has_element?(view, "#congress-time-next[href='/congresses/119/districts']")
+    assert has_element?(view, "#districts > a[href='/congresses/118/districts/md-3']")
+    refute has_element?(view, "#sort-tenure")
+
+    {:ok, profile, _html} = live(conn, ~p"/congresses/118/districts/md-3")
+    render_async(profile)
+
+    assert has_element?(profile, "#district-profile-md-3", "District file · 118th Congress")
+    assert has_element?(profile, "#district-map-continuity", "Redrawn after the 2020 Census")
+    assert has_element?(profile, "#district-scorecard")
+    refute has_element?(profile, "#district-representative")
+    assert has_element?(profile, "#congress-time-next[href='/congresses/119/districts/md-3']")
+  end
+
   test "district profile compares distinct measures", %{conn: conn} do
     seed_districts!()
     {:ok, view, _html} = live(conn, ~p"/districts/md-3")
@@ -264,7 +293,7 @@ defmodule VNIWeb.PublicLiveTest do
     {:ok, view, _html} = live(conn, ~p"/sources")
 
     # Every registry row, straight from docs/data-sources.md, linked out.
-    assert has_element?(view, "#sources-list", "Census TIGER/Line 2025, CD119")
+    assert has_element?(view, "#sources-list", "Census TIGER/Line CD114–CD119")
     assert has_element?(view, "#sources-list", "MIT Election Data + Science Lab")
     assert has_element?(view, "#sources-list a[href*='census.gov']")
     assert has_element?(view, "#sources-list a[href*='doi.org']")
@@ -394,6 +423,28 @@ defmodule VNIWeb.PublicLiveTest do
     :ok = Atlas.refresh_district_geometries!(texas_map)
     :ok = Atlas.refresh_district_geometries!(alaska_map)
     :ok = Scores.score_current!()
+  end
+
+  defp seed_historical_districts! do
+    {:ok, map_version} =
+      Atlas.create_map_version(%{
+        state: "MD",
+        level: :congressional,
+        congress: 118,
+        effective_from: ~D[2023-01-03],
+        effective_until: ~D[2025-01-02],
+        source_url: "https://www2.census.gov/geo/tiger/TIGER2023/CD/"
+      })
+
+    {:ok, _district} =
+      Atlas.upsert_district(map_version, %{
+        state: "MD",
+        number: 3,
+        geom: hook_geometry(-77.0, 39.0)
+      })
+
+    :ok = Atlas.refresh_district_geometries!(map_version)
+    :ok = Scores.score_congress!(118)
   end
 
   defp square_geometry(x, y) do

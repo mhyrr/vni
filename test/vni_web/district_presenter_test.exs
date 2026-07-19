@@ -225,4 +225,99 @@ defmodule VNIWeb.DistrictPresenterTest do
     assert is_nil(presented.map_authority)
     assert presented.authorship_source_url =~ "alaska"
   end
+
+  describe "summary_line/1" do
+    test "leads with the member and the people they represent" do
+      assert DistrictPresenter.summary_line(%{
+               incumbent_name: "Marc A. Veasey",
+               population: "789,013",
+               congress: 119
+             }) == "Marc A. Veasey represents 789,013 people in the 119th Congress."
+    end
+
+    test "names a vacancy rather than dropping the sentence" do
+      assert DistrictPresenter.summary_line(%{
+               incumbent_name: nil,
+               population: "789,013",
+               congress: 119
+             }) ==
+               "This seat is vacant — 789,013 people with no member in the 119th Congress."
+    end
+
+    test "a historical cohort has no member or population ingested" do
+      assert DistrictPresenter.summary_line(%{
+               incumbent_name: nil,
+               population: nil,
+               at_large: false,
+               state: "Texas",
+               state_seats: 38,
+               congress: 118
+             }) == "One of 38 Texas districts in the 118th Congress."
+
+      assert DistrictPresenter.summary_line(%{
+               incumbent_name: nil,
+               population: nil,
+               at_large: true,
+               state: "Wyoming",
+               state_seats: 1,
+               congress: 118
+             }) == "Wyoming's at-large district in the 118th Congress."
+    end
+  end
+
+  describe "state_context/2" do
+    # A square-degree district at the west edge of a two-district state.
+    defp square(west, east, south, north) do
+      %Geo.MultiPolygon{
+        coordinates: [
+          [[{west, south}, {east, south}, {east, north}, {west, north}, {west, south}]]
+        ],
+        srid: 4326
+      }
+    end
+
+    defp box(view_box) do
+      view_box |> String.split(" ") |> Enum.map(&String.to_float/1)
+    end
+
+    test "projects subject and siblings into one shared frame" do
+      subject = square(0.0, 1.0, 0.0, 1.0)
+      siblings = [%{slug: "xx-2", geom: square(1.0, 2.0, 0.0, 1.0)}]
+
+      context = DistrictPresenter.state_context(subject, siblings)
+
+      # The frame spans both districts: twice as wide as tall, normalized to 100.
+      assert [+0.0, +0.0, width, height] = box(context.view_box)
+      assert_in_delta width, 100.0, 0.01
+      assert_in_delta height, 50.0, 0.01
+
+      # The subject occupies the western half, so the focus box sits left of centre
+      # and is meaningfully smaller than the whole state.
+      assert [x, _y, focus_width, _focus_height] = box(context.focus_box)
+      assert x < width / 2
+      assert focus_width < width / 2 + 10
+
+      assert length(context.sibling_paths) == 1
+      assert context.subject_path =~ "M"
+      assert context.animate?
+    end
+
+    test "corrects longitude for latitude so states are not stretched" do
+      # At 60°N, cos(60°) = 0.5: a 2°x1° box is as wide as it is tall on the ground.
+      subject = square(0.0, 2.0, 59.5, 60.5)
+
+      context = DistrictPresenter.state_context(subject, [])
+
+      assert [+0.0, +0.0, width, height] = box(context.view_box)
+      assert_in_delta width, height, 2.0
+    end
+
+    test "at-large districts have no siblings and nothing to zoom out to" do
+      context = DistrictPresenter.state_context(square(0.0, 1.0, 0.0, 1.0), [])
+
+      refute context.animate?
+      assert context.sibling_paths == []
+      assert context.focus_box == context.view_box
+    end
+  end
 end

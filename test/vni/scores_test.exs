@@ -181,6 +181,19 @@ defmodule VNI.ScoresTest do
       assert nc_hook.composite > ga_sliver.composite
       assert nc_square.methodology_version == Scores.methodology_version()
 
+      assert Scores.ranked_count_for_congress(118) == 3
+
+      assert Enum.map(Scores.list_least_compact_for_congress(118), & &1.id) == [
+               ctx.ga_sliver.id,
+               ctx.nc_hook.id,
+               ctx.nc_square.id
+             ]
+
+      assert %{id: id, map_version: %{congress: 118}} =
+               Scores.get_district_for_congress("nc-1", 118)
+
+      assert id == ctx.nc_square.id
+
       # The same hook shape sits in both congresses, but its normalized
       # standing differs because the min-max bounds are cohort-local: in
       # the 119th it is the field's worst shape; in the 118th the GA

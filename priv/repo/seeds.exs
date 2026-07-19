@@ -6,6 +6,8 @@
 # `VNI_SKIP_DISTRICT_SEEDS=1` skips the whole block (used by CI/tests).
 
 unless System.get_env("VNI_SKIP_DISTRICT_SEEDS") in ["1", "true"] do
+  # The Census manifest is the deployment contract: currently Congresses
+  # 114–119. Every supported cohort is downloaded, ingested, and then scored.
   for congress <- VNI.Atlas.Census.supported_congresses() do
     summary = VNI.Atlas.Census.seed_congress!(congress)
 

@@ -4,7 +4,7 @@ defmodule VNIWeb.StateLive.Index do
   alias VNI.Politics
   alias VNI.Scores
   alias VNI.Scores.StateBias
-  alias VNIWeb.StatePresenter
+  alias VNIWeb.{CongressTime, StatePresenter}
 
   @sorts ~w(gap seats authority state)
 
@@ -12,22 +12,51 @@ defmodule VNIWeb.StateLive.Index do
     {:ok,
      assign(socket,
        page_title: "States",
-       methodology_version: Scores.methodology_version()
+       methodology_version: Scores.methodology_version(),
+       congress: CongressTime.current_congress(),
+       qualified?: false
      )}
   end
 
   def handle_params(params, _uri, socket) do
-    sort = resolve_sort(params["sort"])
-    cycles = Politics.latest_state_cycles()
+    case CongressTime.resolve(params["congress"]) do
+      :error ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "That Congress is not available in the Atlas.")
+         |> redirect(to: ~p"/states")}
 
-    rows =
-      StateBias.state_rows()
-      |> Enum.map(&StatePresenter.present_index_row(&1, cycles[&1.state]))
-      |> sort_rows(sort)
+      {:ok, congress, qualified?} ->
+        sort = resolve_sort(params["sort"])
+        cycles = Politics.latest_state_cycles()
 
-    {districted, at_large} = Enum.split_with(rows, &(!&1.at_large))
+        rows =
+          congress
+          |> StateBias.state_rows_for_congress()
+          |> Enum.map(&StatePresenter.present_index_row(&1, cycles[&1.state]))
+          |> sort_rows(sort)
 
-    {:noreply, assign(socket, sort: sort, districted_rows: districted, at_large_rows: at_large)}
+        {districted, at_large} = Enum.split_with(rows, &(!&1.at_large))
+        base_path = CongressTime.page_path(:states, congress, nil, qualified?)
+
+        {:noreply,
+         assign(socket,
+           congress: congress,
+           qualified?: qualified?,
+           current?: congress == CongressTime.current_congress(),
+           time_context: CongressTime.context(congress, :states),
+           state_base_path: base_path,
+           district_base_path: CongressTime.page_path(:districts, congress, nil, qualified?),
+           sort_paths: sort_paths(base_path),
+           sort: sort,
+           districted_rows: districted,
+           at_large_rows: at_large
+         )}
+    end
+  end
+
+  defp sort_paths(base_path) do
+    Map.new(@sorts, fn sort -> {sort, CongressTime.with_query(base_path, sort: sort)} end)
   end
 
   defp resolve_sort(sort) when sort in @sorts, do: sort

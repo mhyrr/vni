@@ -2,31 +2,35 @@ defmodule VNIWeb.Router do
   use VNIWeb, :router
 
   pipeline :browser do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_live_flash
-    plug :put_root_layout, html: {VNIWeb.Layouts, :root}
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
+    plug(:accepts, ["html"])
+    plug(:fetch_session)
+    plug(:fetch_live_flash)
+    plug(:put_root_layout, html: {VNIWeb.Layouts, :root})
+    plug(:protect_from_forgery)
+    plug(:put_secure_browser_headers)
   end
 
   pipeline :api do
-    plug :accepts, ["json"]
+    plug(:accepts, ["json"])
   end
 
   scope "/", VNIWeb do
-    pipe_through :browser
+    pipe_through(:browser)
 
     live_session :public do
-      live "/", HomeLive, :index
-      live "/atlas", AtlasLive, :index
-      live "/districts", DistrictLive.Index, :index
-      live "/districts/:slug", DistrictLive.Show, :show
-      live "/states", StateLive.Index, :index
-      live "/states/:state", StateLive.Show, :show
-      live "/methodology", MethodologyLive, :index
-      live "/sources", SourcesLive, :index
-      live "/act", ActionLive, :index
+      live("/", HomeLive, :index)
+      live("/atlas", AtlasLive, :index)
+      live("/districts", DistrictLive.Index, :index)
+      live("/districts/:slug", DistrictLive.Show, :show)
+      live("/states", StateLive.Index, :index)
+      live("/states/:state", StateLive.Show, :show)
+      live("/congresses/:congress/districts", DistrictLive.Index, :index)
+      live("/congresses/:congress/districts/:slug", DistrictLive.Show, :show)
+      live("/congresses/:congress/states", StateLive.Index, :index)
+      live("/congresses/:congress/states/:state", StateLive.Show, :show)
+      live("/methodology", MethodologyLive, :index)
+      live("/sources", SourcesLive, :index)
+      live("/act", ActionLive, :index)
     end
   end
 
@@ -45,10 +49,10 @@ defmodule VNIWeb.Router do
     import Phoenix.LiveDashboard.Router
 
     scope "/dev" do
-      pipe_through :browser
+      pipe_through(:browser)
 
-      live_dashboard "/dashboard", metrics: VNIWeb.Telemetry
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
+      live_dashboard("/dashboard", metrics: VNIWeb.Telemetry)
+      forward("/mailbox", Plug.Swoosh.MailboxPreview)
     end
   end
 end

@@ -136,6 +136,34 @@ defmodule VNI.Atlas do
     |> Repo.all()
   end
 
+  @doc """
+  The other districts sharing a district's map version, for the state context view.
+
+  Scoped on `map_version_id` rather than state plus congress: map versions are
+  already keyed on (state, level, congress), so this is correct for historical
+  cohorts and for mid-decade redistricting without a second constraint to keep
+  in sync. An at-large district returns `[]` — it has no siblings by definition.
+
+  Geometry is coarsened to a ~1km tolerance because these paths are only ever
+  drawn at state zoom, where finer detail is smaller than a pixel. The subject
+  district keeps its full `geom_simplified` detail; it is shown magnified.
+  """
+  def list_sibling_geometries(%District{id: id, map_version_id: map_version_id}) do
+    from(d in District,
+      where: d.map_version_id == ^map_version_id and d.id != ^id,
+      order_by: d.number,
+      select: %{
+        slug: d.slug,
+        geom:
+          type(
+            fragment("ST_Multi(ST_SimplifyPreserveTopology(?, 0.01))", d.geom_simplified),
+            Geo.PostGIS.Geometry
+          )
+      }
+    )
+    |> Repo.all()
+  end
+
   @doc "Derive display geometry and geodesic measurements after geometry ingest."
   def refresh_district_geometries!(%MapVersion{} = map_version) do
     Repo.query!(

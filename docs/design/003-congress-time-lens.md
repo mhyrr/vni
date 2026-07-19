@@ -72,8 +72,8 @@ blindly with the preceding Congress.
 - A seat may appear or disappear after reapportionment. A Congress-qualified
   district URL may therefore have no counterpart in its neighbor; navigation must
   fall back to the selected state's district index rather than invent continuity.
-- At-large districts remain unranked in every cohort. The 117th has 428 ranked
-  districts; the 118th and 119th each have 429.
+- At-large districts remain unranked in every cohort. The 114th–117th each have
+  428 ranked districts; the 118th and 119th each have 429.
 - Composite scores and ranks are cohort-local. A rank change across Congresses is
   context, not a direct measurement of how much the shape changed.
 - Historical authorship is not yet curated. Historical pages do not present a
@@ -81,7 +81,7 @@ blindly with the preceding Congress.
 
 ## First release surface
 
-Ship the time rail and Congress-qualified routes across district and state list and
-detail pages. Preserve each page's current visual hierarchy. The `/atlas` map may
+Ship the 114th–119th time rail and Congress-qualified routes across district and
+state list and detail pages. Preserve each page's current visual hierarchy. The `/atlas` map may
 adopt the same route context when its geographic interface is implemented; the
 placeholder is not a reason to fabricate historical behavior now.

@@ -210,6 +210,17 @@ defmodule VNI.Scores do
     |> Repo.aggregate(:count)
   end
 
+  @doc "How many districts hold a national rank within one Congress's cohort."
+  def ranked_count_for_congress(congress, level \\ :congressional)
+      when is_integer(congress) do
+    from(d in District,
+      join: s in assoc(d, :score),
+      join: mv in assoc(d, :map_version),
+      where: mv.level == ^level and mv.congress == ^congress and not is_nil(s.national_rank)
+    )
+    |> Repo.aggregate(:count)
+  end
+
   @doc "Ranked current districts (1 = most compact), scores and profiles preloaded."
   def list_ranked(level \\ :congressional) do
     from(d in District,
@@ -259,6 +270,28 @@ defmodule VNI.Scores do
     raise ArgumentError, "unsupported compactness metric: #{inspect(metric)}"
   end
 
+  @doc "One Congress's scored districts, least to most compact by one metric."
+  def list_least_compact_for_congress(congress, metric \\ :composite, level \\ :congressional)
+
+  def list_least_compact_for_congress(congress, metric, level)
+      when is_integer(congress) and metric in @sortable_metrics do
+    from(d in District,
+      join: s in assoc(d, :score),
+      join: mv in assoc(d, :map_version),
+      where:
+        mv.level == ^level and mv.congress == ^congress and
+          not is_nil(s.polsby_popper),
+      order_by: [asc_nulls_last: field(s, ^metric), asc: d.state, asc: d.number],
+      select: struct(d, ^@display_district_fields),
+      preload: [:profile, score: s, map_version: mv]
+    )
+    |> Repo.all()
+  end
+
+  def list_least_compact_for_congress(_congress, metric, _level) do
+    raise ArgumentError, "unsupported compactness metric: #{inspect(metric)}"
+  end
+
   @doc """
   A state's current scored districts, ordered by district number (at-large
   first). Feeds the `/states/:state` districts section — same display
@@ -278,6 +311,22 @@ defmodule VNI.Scores do
     |> Repo.all()
   end
 
+  @doc "A state's scored districts for one Congress, ordered by district number."
+  def list_state_districts_for_congress(state, congress, level \\ :congressional)
+      when is_integer(congress) do
+    from(d in District,
+      join: s in assoc(d, :score),
+      join: mv in assoc(d, :map_version),
+      where:
+        d.state == ^state and mv.level == ^level and mv.congress == ^congress and
+          not is_nil(s.polsby_popper),
+      order_by: [asc: d.number],
+      select: struct(d, ^@display_district_fields),
+      preload: [:profile, score: s, map_version: mv]
+    )
+    |> Repo.all()
+  end
+
   @doc "A current scored district trimmed to the fields needed by the public UI."
   def get_current_district(slug, level \\ :congressional) do
     from(d in District,
@@ -285,6 +334,21 @@ defmodule VNI.Scores do
       join: mv in assoc(d, :map_version),
       where:
         d.slug == ^slug and mv.level == ^level and is_nil(mv.effective_until) and
+          not is_nil(s.polsby_popper),
+      select: struct(d, ^@display_district_fields),
+      preload: [:profile, score: s, map_version: mv]
+    )
+    |> Repo.one()
+  end
+
+  @doc "A scored district resolved inside one Congress's map cohort."
+  def get_district_for_congress(slug, congress, level \\ :congressional)
+      when is_integer(congress) do
+    from(d in District,
+      join: s in assoc(d, :score),
+      join: mv in assoc(d, :map_version),
+      where:
+        d.slug == ^slug and mv.level == ^level and mv.congress == ^congress and
           not is_nil(s.polsby_popper),
       select: struct(d, ^@display_district_fields),
       preload: [:profile, score: s, map_version: mv]

@@ -1,13 +1,14 @@
 # Congressional district shape data
 
-**Status:** accepted implementation contract for the current-map bootstrap (2026-07-13). Historical ingestion remains the next data pass.
+**Status:** implemented for the 114th–119th Congresses (2026-07-19).
 
 ## Decision
 
 Use the U.S. Census Bureau's full-resolution TIGER/Line congressional district
-shapefiles as the canonical geometry source. Seed the current 119th Congress as
-50 state map snapshots containing exactly 435 voting districts. Do not ingest
-the District of Columbia or territories into the 435-district Atlas.
+shapefiles as the canonical geometry source. Seed complete snapshots for the
+114th–119th Congresses, each containing 50 state map versions and exactly 435
+voting districts. Do not ingest the District of Columbia or territories into
+the 435-district Atlas.
 
 The cartographic boundary files are not valid scoring inputs. Census describes
 them as simplified files intended for small-scale thematic mapping; that
@@ -18,6 +19,7 @@ Source landing page:
 
 - <https://www.census.gov/programs-surveys/decennial-census/about/rdo/congressional-districts.119th_Congress.html>
 - State files: `https://www2.census.gov/geo/tiger/TIGER2025/CD/tl_2025_<FIPS>_cd119.zip`
+- Historical national files: `https://www2.census.gov/geo/tiger/TIGER<YEAR>/CD/tl_<YEAR>_us_cd<SESSION>.zip`
 - TIGER/Line technical documentation: <https://www2.census.gov/geo/pdfs/maps-data/data/tiger/tgrshp2025/TGRSHP2025_TechDoc.pdf>
 
 The 2025 vintage represents legal boundaries as of January 1, 2025. Census
@@ -29,24 +31,24 @@ the 118th Congress.
 
 `priv/repo/seeds.exs` invokes the idempotent Census importer. The importer:
 
-1. downloads the 50 source ZIPs into an ignored local cache;
+1. downloads each Congress's national or per-state source ZIPs into an ignored local cache;
 2. uses GDAL's `ogr2ogr` to convert each shapefile to newline-delimited GeoJSON;
 3. decodes geometry through `Geo.JSON` and upserts one map version per state;
 4. upserts districts by `(map_version_id, slug)`;
 5. derives simplified geometry, geodesic land area, and geodesic perimeter in
    PostGIS; and
-6. refuses to finish unless per-state counts match the 119th apportionment and
-   the national count is exactly 435.
+6. refuses to finish unless per-state counts match the apportionment in force
+   for that Congress and the national count is exactly 435.
 
 The ZIPs are cache, not source code. The source URLs, vintage, state manifest,
 and expected counts live in code; downloading remains repeatable without
-putting roughly 45 MB of third-party archives into Git. A failed or partial
-download is never promoted into the cache.
+putting Census archives into Git. A failed or partial download is never promoted
+into the cache.
 
 Runtime prerequisite: GDAL (`ogr2ogr`). It is already installed in the VNI
 development environment. Req is the only HTTP client.
 
-## Historical pass: 2015-present
+## Historical coverage: 2015-present
 
 The natural time slices are congressional sessions, with boundaries effective
 on January 3 of the session's first year:
