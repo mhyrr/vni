@@ -14,6 +14,13 @@ defmodule VNIWeb.Router do
     plug(:accepts, ["json"])
   end
 
+  # Readiness probe for the platform health check. No pipeline: it needs no
+  # session, no CSRF token, and no content negotiation — the load balancer
+  # sends `Accept: */*` and only reads the status code.
+  scope "/", VNIWeb do
+    get("/healthz", HealthController, :index)
+  end
+
   scope "/", VNIWeb do
     pipe_through(:browser)
 

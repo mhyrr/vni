@@ -1,0 +1,43 @@
+# Deployment runbook and the reasoning behind these values:
+# docs/deployment/fly.md
+
+app = "vni"
+primary_region = "iad"
+
+[build]
+
+[deploy]
+  release_command = "bin/migrate"
+  release_command_timeout = "5m"
+
+[env]
+  ECTO_IPV6 = "true"
+  DNS_CLUSTER_QUERY = "vni.internal"
+  PHX_HOST = "vni.fly.dev"
+  PHX_SERVER = "true"
+  PORT = "4000"
+  POOL_SIZE = "8"
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  auto_start_machines = true
+  # Oban starts with the application and the Atlas warms its caches on boot,
+  # so the web machine stays up rather than scaling to zero.
+  auto_stop_machines = "off"
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 200
+
+  [[http_service.checks]]
+    grace_period = "15s"
+    interval = "15s"
+    method = "GET"
+    path = "/healthz"
+    timeout = "2s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
