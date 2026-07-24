@@ -29,6 +29,8 @@ defmodule VNIWeb.Router do
       live("/atlas", AtlasLive, :index)
       live("/districts", DistrictLive.Index, :index)
       live("/districts/:slug", DistrictLive.Show, :show)
+      live("/districts/:slug/join", DistrictLive.Join, :new)
+      live("/commitment/:token", CommitmentLive, :show)
       live("/states", StateLive.Index, :index)
       live("/states/:state", StateLive.Show, :show)
       live("/congresses/:congress/districts", DistrictLive.Index, :index)

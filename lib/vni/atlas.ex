@@ -192,6 +192,22 @@ defmodule VNI.Atlas do
     |> Repo.one()
   end
 
+  @doc """
+  Load one district by id with everything a presenter needs.
+
+  Unlike the slug lookups this does not constrain to current maps — the
+  caller already holds a specific district row (a pledge's seat, say) and
+  is asking about that one, not resolving a name that could mean several.
+  """
+  def get_district!(id) do
+    from(d in District,
+      join: mv in assoc(d, :map_version),
+      where: d.id == ^id,
+      preload: [:score, :profile, map_version: mv]
+    )
+    |> Repo.one!()
+  end
+
   @doc "All districts under current maps at a level, with scores and profiles."
   def list_current_districts(level \\ :congressional) do
     from(d in District,
