@@ -83,9 +83,39 @@ modelling that would be a turnout claim we would then have to defend. The
 margin is a *goal* — legible, sourced, district-specific — and the copy says
 exactly that and nothing more.
 
-**A safe seat shows an enormous goal, and that is the argument.** A bar reading
-"103 of 184,000" is what "your vote doesn't matter here" looks like rendered as
-a progress bar. Handled in copy, not by capping the number.
+**Two numbers, not one — decided by the real distribution.** The margin is the
+right fact and the wrong bar. Measured against ingested 2024 data across all
+435 seats:
+
+| | |
+|---|---|
+| Contested / unopposed | 422 / 13 |
+| Median contested margin | 89,631 votes |
+| Tightest | CA-13 at **187**, CA-45 653, IA-1 799, OH-9 2,382 |
+| Widest contested | IL-16 at 310,742 |
+| Districts where 500 commitments would be **under 1%** of the margin | **319 of 435** |
+
+A bar that reads as empty in three-quarters of the country is not an indictment
+of safe seats; it is a counter that never appears to move. So the page shows a
+**target** that can be reached and states the **margin** beside it as the fact
+it is:
+
+> **103 committed · next target 500**
+> This seat was decided by 89,631 votes.
+
+The ladder is `100 → 500 → 2,500 → 10,000 → 50,000 → the margin`, and a rung
+only survives if it is under half the margin, so the ladder never stops at a
+near-miss of the real number. CA-13 admits no rung at all: its first target is
+the whole 187 votes, which is the entire point of that district.
+
+**Unopposed seats are a different case in kind and stay tagged as one**
+(`goal_basis/1` → `:unopposed`). Neither available number is a target there:
+the recorded margin is the winner's whole total (AL-4: 274,498 — not "what it
+would take to flip" but "what one person got when nobody ran"), while the
+baseline would label the most entrenched seats on the board as the easiest to
+move. The seat's missing ingredient is an opponent, and the copy says that.
+The site never names challengers; noting that none existed is a published fact
+about the seat.
 
 ### Data consequence
 
@@ -101,14 +131,20 @@ them at line 206. Two new columns keep them:
 
 Edge cases, each of which must be explicit rather than silently smoothed:
 
-| Case | `last_margin_votes` | Goal |
-|---|---|---|
-| Normal contested race | winner − runner-up | that number |
-| Unopposed (design 001; FL/OK code as 100%) | winner's total | that number, copy reads "ran unopposed" |
-| MEDSL degenerate 1-of-1 (FL-24 2016) | 1 | floor applies |
-| No prior race (new district after redraw) | `nil` | fall back to the uniform default |
+| Case | `last_margin_pct` | Goal | Basis |
+|---|---|---|---|
+| Normal contested race | < 100 | the margin in votes | `:margin` |
+| Unopposed, full tally (AL-4, KY-5, PA-3) | 100.0 | baseline | `:unopposed` |
+| Unopposed, no tally — 1-of-1 or 0-of-0 (FL-20, OK-3) | 100.0 | baseline | `:unopposed` |
+| No prior race (new district after redraw) | `nil` | baseline | `:unknown` |
 
-Floor and fallback are named constants in `VNI.Pledges`, published on
+A genuinely tiny *real* margin is kept exactly as recorded. An early version
+floored everything at 500 and quietly rewrote CA-13's 187 — the most
+persuasive number on the site — into a rounder one. `last_margin_pct == 100.0`
+is precisely the unopposed set, so it does the work a blanket floor was doing
+badly.
+
+Baseline and ladder are named constants in `VNI.Pledges`, published on
 `/methodology` alongside every other rule this site computes.
 
 ---

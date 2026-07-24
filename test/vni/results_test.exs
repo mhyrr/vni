@@ -88,22 +88,33 @@ defmodule VNI.Politics.ResultsTest do
     assert tx33.last_margin_cycle == 2024
     assert tx33.last_margin_party == :dem
     assert tx33.margin_source_url == Results.house_source_url()
+    # The same arithmetic in raw votes, off the same ranked candidates.
+    assert tx33.last_margin_votes == 30_000
+    assert tx33.last_votes_cast == 100_000
 
     # Unopposed, no tally recorded: margin is 100 by rule, not a gap.
     wy0 = Politics.get_profile(ctx.districts["wy-0"].id)
     assert wy0.last_margin_pct == 100.0
     assert wy0.last_margin_party == :rep
+    # The 1-of-1 coding is stored exactly as recorded; flooring it is the
+    # consumer's job, not the ingest's.
+    assert wy0.last_margin_votes == 1
+    assert wy0.last_votes_cast == 1
 
     # Latest general on record, cycle noted on the row.
     la3 = Politics.get_profile(ctx.districts["la-3"].id)
     assert la3.last_margin_pct == 40.0
     assert la3.last_margin_cycle == 2022
     assert la3.last_margin_party == :rep
+    assert la3.last_margin_votes == 80_000
+    assert la3.last_votes_cast == 200_000
 
     # The runoff, not the first round, decides GA-2.
     ga2 = Politics.get_profile(ctx.districts["ga-2"].id)
     assert ga2.last_margin_pct == 2.0
     assert ga2.last_margin_party == :dem
+    assert ga2.last_margin_votes == 2_000
+    assert ga2.last_votes_cast == 100_000
 
     # Rerun is idempotent.
     assert %{ingested: 4} = Results.ingest_margins!(house_csv: house_csv())

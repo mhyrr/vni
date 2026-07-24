@@ -18,6 +18,8 @@ defmodule VNI.Politics.DistrictProfile do
     field :incumbent_party, Ecto.Enum, values: [:dem, :rep, :ind]
     field :incumbent_since, :integer
     field :last_margin_pct, :float
+    field :last_margin_votes, :integer
+    field :last_votes_cast, :integer
     field :last_margin_cycle, :integer
     field :last_margin_party, Ecto.Enum, values: [:dem, :rep, :ind]
     field :margin_source_url, :string
@@ -45,6 +47,8 @@ defmodule VNI.Politics.DistrictProfile do
       :incumbent_party,
       :incumbent_since,
       :last_margin_pct,
+      :last_margin_votes,
+      :last_votes_cast,
       :last_margin_cycle,
       :last_margin_party,
       :margin_source_url,

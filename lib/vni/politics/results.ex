@@ -19,6 +19,12 @@ defmodule VNI.Politics.Results do
       votes cast for ranked candidates in that race. 2024 is preferred;
       when a district's latest general on record is older, that cycle is
       used and recorded in `last_margin_cycle` — never silence.
+    * `last_margin_votes` and `last_votes_cast` are the same arithmetic left
+      in raw votes — top candidate minus runner-up, and the denominator.
+      Stored because a percentage cannot be turned back into a vote count
+      without inventing a denominator, and the commitment goal is a count.
+      Degenerate unopposed tallies (0-of-0, 1-of-1) are kept as recorded;
+      consumers floor them rather than the ingest smoothing the record.
     * Fusion tickets (NY, CT) are aggregated by candidate before ranking;
       a candidate's party is the party of their highest-vote ballot line.
     * Pseudo-candidates (write-in scatter, blanks, under/overvotes, RCV
@@ -188,7 +194,17 @@ defmodule VNI.Politics.Results do
             Float.round(100.0 * (winner.votes - runner_up_votes) / denominator, 2)
           end
 
-        %{margin: margin, party: winner.party}
+        # The raw counts travel beside the percentage: the commitment goal
+        # (design 004 §3) is a vote count, and a percentage cannot be turned
+        # back into one without a denominator we would have to invent.
+        # Degenerate unopposed tallies land here as 0-of-0 or 1-of-1 — kept
+        # exactly as recorded, and floored where they are consumed.
+        %{
+          margin: margin,
+          margin_votes: winner.votes - runner_up_votes,
+          votes_cast: denominator,
+          party: winner.party
+        }
     end
   end
 
@@ -204,6 +220,8 @@ defmodule VNI.Politics.Results do
         {:ok, _profile} =
           Politics.upsert_profile(district, %{
             last_margin_pct: race.margin,
+            last_margin_votes: race.margin_votes,
+            last_votes_cast: race.votes_cast,
             last_margin_cycle: race.cycle,
             last_margin_party: winner_party(race.party),
             margin_source_url: @house_source_url

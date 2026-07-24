@@ -3,6 +3,7 @@ defmodule VNI.PledgesTest do
 
   alias VNI.{Atlas, Pledges, Politics}
   alias VNI.Pledges.Pledge
+  alias VNI.Politics.DistrictProfile
 
   defp district(attrs \\ %{}) do
     state = Map.get(attrs, :state, "TX")
@@ -214,6 +215,100 @@ defmodule VNI.PledgesTest do
     test "an empty district reports zero rather than nothing" do
       assert Pledges.district_counts(district()) == %{yes: 0, conditional: 0, no: 0}
       assert Pledges.national_counts() == %{yes: 0, conditional: 0, no: 0}
+    end
+  end
+
+  describe "the goal" do
+    test "is the last election's margin in votes" do
+      profile = %DistrictProfile{last_margin_votes: 2_382}
+      assert Pledges.goal(profile) == 2_382
+    end
+
+    test "a safe seat gets the enormous number rather than a comfortable one" do
+      assert Pledges.goal(%DistrictProfile{last_margin_votes: 184_000}) == 184_000
+    end
+
+    test "unopposed seats fall back rather than becoming a goal of 1" do
+      # MEDSL codes unopposed seats 1-of-1 (FL-20, OK-3) or 0-of-0; both
+      # land on a margin of 100.0, which is exactly the unopposed set.
+      unopposed = %DistrictProfile{last_margin_pct: 100.0, last_margin_votes: 1}
+      no_tally = %DistrictProfile{last_margin_pct: 100.0, last_margin_votes: 0}
+
+      assert Pledges.goal(unopposed) == Pledges.baseline_goal()
+      assert Pledges.goal(no_tally) == Pledges.baseline_goal()
+    end
+
+    test "unopposed stays distinguishable — the number cannot carry it" do
+      # A fully-tallied unopposed seat records the winner's whole total
+      # (AL-4: 274,498), which is not a target. Neither that nor the
+      # baseline is a vote goal, so the basis travels with the number.
+      al4 = %DistrictProfile{last_margin_pct: 100.0, last_margin_votes: 274_498}
+
+      assert Pledges.goal_basis(al4) == :unopposed
+
+      assert Pledges.goal_basis(%DistrictProfile{
+               last_margin_pct: 30.0,
+               last_margin_votes: 30_000
+             }) ==
+               :margin
+
+      assert Pledges.goal_basis(%DistrictProfile{last_margin_votes: nil}) == :unknown
+      assert Pledges.goal_basis(nil) == :unknown
+    end
+
+    test "a genuinely tiny margin is kept — it is the best evidence on the site" do
+      # CA-13, 2024: decided by 187 votes. Rounding that up to a tidier
+      # number would throw away the most persuasive fact we hold.
+      ca13 = %DistrictProfile{last_margin_pct: 0.07, last_margin_votes: 187}
+      assert Pledges.goal(ca13) == 187
+    end
+
+    test "a seat new to a redraw falls back rather than showing nothing" do
+      assert Pledges.goal(%DistrictProfile{last_margin_votes: nil}) == Pledges.baseline_goal()
+      assert Pledges.goal(nil) == Pledges.baseline_goal()
+    end
+  end
+
+  describe "the target ladder" do
+    # OH-9 (Kaptur) was decided by 2,382 votes in 2024.
+    defp oh9, do: %DistrictProfile{last_margin_pct: 0.9, last_margin_votes: 2_382}
+
+    test "climbs as the count climbs" do
+      assert Pledges.target(oh9(), 0) == 100
+      assert Pledges.target(oh9(), 99) == 100
+      assert Pledges.target(oh9(), 100) == 500
+      assert Pledges.target(oh9(), 501) == 2_382
+    end
+
+    test "is capped by the margin, never overshooting it" do
+      assert Pledges.target(oh9(), 2_000) == 2_382
+      assert Pledges.target(oh9(), 99_999) == 2_382
+    end
+
+    test "a close seat's first target is the whole margin" do
+      # CA-13, decided by 187 votes: no rung sits below that, so the very
+      # first ask is the real number.
+      ca13 = %DistrictProfile{last_margin_pct: 0.07, last_margin_votes: 187}
+      assert Pledges.target(ca13, 0) == 187
+    end
+
+    test "a safe seat climbs rungs instead of showing an unreachable bar" do
+      # The median contested seat: 89,631 votes. The margin stays the
+      # published fact; the target stays something that can be reached.
+      safe = %DistrictProfile{last_margin_pct: 30.0, last_margin_votes: 89_631}
+
+      assert Pledges.target(safe, 0) == 100
+      assert Pledges.target(safe, 600) == 2_500
+      assert Pledges.target(safe, 60_000) == 89_631
+      assert Pledges.goal(safe) == 89_631
+    end
+
+    test "unopposed and unknown seats climb without a cap" do
+      unopposed = %DistrictProfile{last_margin_pct: 100.0, last_margin_votes: 274_498}
+
+      assert Pledges.target(unopposed, 0) == 100
+      assert Pledges.target(unopposed, 3_000) == 10_000
+      assert Pledges.target(nil, 0) == 100
     end
   end
 

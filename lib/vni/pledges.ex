@@ -27,9 +27,20 @@ defmodule VNI.Pledges do
 
   alias VNI.Atlas.District
   alias VNI.Pledges.Pledge
+  alias VNI.Politics.DistrictProfile
   alias VNI.Repo
 
   @token_bytes 32
+
+  # The goal a district's count is measured against, where the margin is
+  # missing or too small to mean anything. Published on /methodology with
+  # every other rule this site computes.
+  @baseline_goal 500
+
+  # Rungs a district climbs while the margin stays out of reach. Capped by
+  # the margin itself, so a close seat converges on it rather than stopping
+  # at an arbitrary number beneath it.
+  @targets [100, 500, 2_500, 10_000, 50_000]
 
   # design 001 §5: double opt-in, one pledge per email per district, and a
   # disposable-domain blocklist. Deliberately not more — at crawl scale the
@@ -183,6 +194,105 @@ defmodule VNI.Pledges do
   def committed_count(district_or_id) do
     counts = district_counts(district_or_id)
     counts.yes + counts.conditional
+  end
+
+  ## The goal
+
+  @doc "The fallback goal, and the floor under every computed one."
+  def baseline_goal, do: @baseline_goal
+
+  @doc """
+  The number a district's count is measured against: the margin, in votes,
+  of the seat's last election.
+
+  > Kaptur won this seat by 2,382 votes. That's the goal.
+
+  District-specific, sourced from what we already publish, and it is the
+  number that would have decided the last race.
+
+  **What this does not claim.** It is not a model of what flips a seat.
+  Flipping means switching votes, and a switched vote moves a margin by
+  two; asserting "N commitments take this seat" would be a turnout claim
+  we would then have to defend. The margin is a *goal* — legible, sourced,
+  district-specific — and the copy says that and nothing more.
+
+  A safe seat therefore shows an enormous goal. That is the argument, not
+  a bug: "103 of 184,000" is what "your vote doesn't matter here" looks
+  like as a progress bar.
+
+  Falls back to `baseline_goal/0` in exactly two cases: no margin on record
+  (a seat new to a redraw), and an unopposed race, which MEDSL codes 0-of-0
+  or 1-of-1 and which must not become a goal of 1. `last_margin_pct` of
+  100.0 is precisely the unopposed set.
+
+  A small *real* margin is kept as it stands. CA-13 was decided by 187
+  votes in 2024, and 187 is the most persuasive number on this site — a
+  floor that rounded it up to 500 would be throwing away the best evidence
+  we have to make a progress bar look tidier.
+  """
+  def goal(%DistrictProfile{last_margin_pct: 100.0}), do: @baseline_goal
+
+  def goal(%DistrictProfile{last_margin_votes: votes}) when is_integer(votes) and votes > 0 do
+    votes
+  end
+
+  def goal(_missing_unscored_or_tied), do: @baseline_goal
+
+  @doc """
+  Where a district's goal came from — `:margin`, `:unopposed`, or
+  `:unknown`. The number alone cannot carry this, and the difference is
+  not cosmetic.
+
+  In an unopposed seat neither available number is a target. The recorded
+  margin is the winner's entire vote total (AL-4: 274,498), which is not
+  "what it would take to flip" but "what one person got when nobody ran";
+  the baseline, meanwhile, would label the most entrenched seats on the
+  board as the easiest to move. So the goal there is not really a vote
+  count at all — the seat's first missing ingredient is an opponent, and
+  the copy should say so. The site never names challengers; noting that
+  none existed is a published fact about the seat, not challenger info.
+  """
+  def goal_basis(%DistrictProfile{last_margin_pct: 100.0}), do: :unopposed
+
+  def goal_basis(%DistrictProfile{last_margin_votes: votes})
+      when is_integer(votes) and votes > 0,
+      do: :margin
+
+  def goal_basis(_missing_unscored_or_tied), do: :unknown
+
+  @doc """
+  The rung a district is currently climbing toward.
+
+  The margin is the right *fact* and the wrong *bar*. Measured against real
+  2024 data, the median contested seat was decided by 89,631 votes, and 319
+  of 435 districts would render 500 commitments as under one percent — a bar
+  that reads as empty in three-quarters of the country is not an indictment
+  of safe seats, it is a counter that never appears to move.
+
+  So the two numbers are shown as two numbers: a target that can be reached,
+  and the margin stated as what it is.
+
+      103 committed · next target 500
+      This seat was decided by 89,631 votes.
+
+  A rung only survives if it is under half the margin, so the ladder never
+  stops at a near-miss of the real number. CA-13's margin of 187 admits no
+  rung at all, making its very first target the whole 187 — which is the
+  point of that district. Unopposed seats have no meaningful cap and simply
+  climb.
+  """
+  def target(profile, count) when is_integer(count) and count >= 0 do
+    ladder =
+      case goal_basis(profile) do
+        :margin ->
+          goal = goal(profile)
+          Enum.filter(@targets, &(&1 * 2 < goal)) ++ [goal]
+
+        _other ->
+          @targets
+      end
+
+    Enum.find(ladder, List.last(ladder), &(&1 > count))
   end
 
   @doc "The same breakdown, nationally."
