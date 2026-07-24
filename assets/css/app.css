@@ -849,3 +849,7 @@ a:focus-visible, button:focus-visible {
    questions, and the submit all sit in one viewport. */
 .commit-page .display-lg { font-size: clamp(2.2rem, 4.6vw, 5rem); }
 .commit-page .display-md { font-size: clamp(1.55rem, 2.9vw, 3.2rem); }
+
+/* The three answers are short here — /act's 150px card is sized for a
+   full sentence and leaves a dead band above these labels. */
+.commit-page .action-choice { min-height: 104px; }
