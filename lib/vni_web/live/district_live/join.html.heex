@@ -18,15 +18,15 @@
 
         <div class="mt-8 border-t-2 border-[var(--ink)] pt-6">
           <p class="data-label">Committed here so far</p>
-          <p class="display-md mt-3">{@count}</p>
+          <p class="display-md mt-3">{DistrictPresenter.number(@count)}</p>
           <p class="mt-3 text-sm leading-6">
             <%= case @district.commitment_goal_basis do %>
               <% :unopposed -> %>
                 Nobody ran against this seat last time. Before it needs votes, it needs an opponent.
               <% :margin -> %>
-                Next target {@target}. This seat was decided by {@district.last_margin_votes} votes.
+                Next target {DistrictPresenter.number(@target)}. This seat was decided by {@district.last_margin_votes} votes.
               <% :unknown -> %>
-                Next target {@target}.
+                Next target {DistrictPresenter.number(@target)}.
             <% end %>
           </p>
         </div>

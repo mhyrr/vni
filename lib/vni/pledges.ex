@@ -169,7 +169,12 @@ defmodule VNI.Pledges do
 
   @doc """
   The published breakdown for one district: confirmed, un-withdrawn rows
-  only, grouped by what they committed to.
+  only, grouped by what they committed to, plus the `:committed` headline
+  derived from them.
+
+  Breakdown and headline come back together from one query because they
+  are published together — the number and its split are the same claim,
+  and computing them apart invites them to disagree.
   """
   def district_counts(%District{id: id}), do: district_counts(id)
 
@@ -191,10 +196,7 @@ defmodule VNI.Pledges do
   Excluding it would under-report the coalition the number exists to show.
   The breakdown stays available and is published beside it.
   """
-  def committed_count(district_or_id) do
-    counts = district_counts(district_or_id)
-    counts.yes + counts.conditional
-  end
+  def committed_count(district_or_id), do: district_counts(district_or_id).committed
 
   ## The goal
 
@@ -355,11 +357,14 @@ defmodule VNI.Pledges do
 
   defp tally(rows) do
     counts = Map.new(rows)
+    yes = Map.get(counts, :yes, 0)
+    conditional = Map.get(counts, :conditional, 0)
 
     %{
-      yes: Map.get(counts, :yes, 0),
-      conditional: Map.get(counts, :conditional, 0),
-      no: Map.get(counts, :no, 0)
+      yes: yes,
+      conditional: conditional,
+      no: Map.get(counts, :no, 0),
+      committed: yes + conditional
     }
   end
 

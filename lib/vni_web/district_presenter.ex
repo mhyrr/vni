@@ -310,9 +310,16 @@ defmodule VNIWeb.DistrictPresenter do
   defp label(state, number),
     do: "#{state}-#{number |> Integer.to_string() |> String.pad_leading(2, "0")}"
 
-  defp number(nil), do: "—"
+  @doc """
+  A whole number with thousands separators, or an em dash for nothing.
 
-  defp number(value) do
+  Public because counts that live outside a presented district — the
+  commitment tally, say — still have to look like every other number on
+  the site.
+  """
+  def number(nil), do: "—"
+
+  def number(value) do
     value
     |> round()
     |> Integer.to_string()

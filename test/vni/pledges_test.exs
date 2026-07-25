@@ -195,7 +195,7 @@ defmodule VNI.PledgesTest do
       commit!(d, %{"email" => "b@example.com", "commitment" => "conditional"})
       commit!(d, %{"email" => "c@example.com", "commitment" => "no"})
 
-      assert Pledges.district_counts(d) == %{yes: 1, conditional: 1, no: 1}
+      assert Pledges.district_counts(d) == %{yes: 1, conditional: 1, no: 1, committed: 2}
       assert Pledges.committed_count(d) == 2
     end
 
@@ -209,12 +209,12 @@ defmodule VNI.PledgesTest do
 
       assert Pledges.committed_count(texas) == 2
       assert Pledges.committed_count(ohio) == 1
-      assert Pledges.national_counts() == %{yes: 3, conditional: 0, no: 0}
+      assert Pledges.national_counts() == %{yes: 3, conditional: 0, no: 0, committed: 3}
     end
 
     test "an empty district reports zero rather than nothing" do
-      assert Pledges.district_counts(district()) == %{yes: 0, conditional: 0, no: 0}
-      assert Pledges.national_counts() == %{yes: 0, conditional: 0, no: 0}
+      assert Pledges.district_counts(district()) == %{yes: 0, conditional: 0, no: 0, committed: 0}
+      assert Pledges.national_counts() == %{yes: 0, conditional: 0, no: 0, committed: 0}
     end
   end
 

@@ -4,6 +4,7 @@ defmodule VNIWeb.PublicLiveTest do
   import Phoenix.LiveViewTest
 
   alias VNI.Atlas
+  alias VNI.Pledges
   alias VNI.Politics
   alias VNI.Scores
 
@@ -193,6 +194,77 @@ defmodule VNIWeb.PublicLiveTest do
     refute has_element?(view, "#district-lean")
   end
 
+  test "district profile carries the count, the next target, and the ask", %{conn: conn} do
+    seed_districts!()
+    {:ok, view, _html} = live(conn, ~p"/districts/md-3")
+    render_async(view)
+
+    assert has_element?(view, "#district-commitment-count", "0")
+    assert has_element?(view, "#district-commitment", "Nobody here has answered yet")
+    assert has_element?(view, "#district-commitment-target", "0 / 100")
+
+    # Two numbers: a target that can be reached, and the margin stated as
+    # the fact it is. The copy never claims the count flips the seat.
+    assert has_element?(view, "#district-commitment-basis", "decided by 38,412 votes in 2024")
+    assert has_element?(view, "#district-commitment-basis", "That margin is the goal")
+
+    assert has_element?(view, "#district-commit[href='/districts/md-3/join']")
+    assert has_element?(view, "#district-commitment", "never publish who they are")
+  end
+
+  test "the published count carries confirmed, un-withdrawn commitments only", %{conn: conn} do
+    seed_districts!()
+    district = Atlas.get_district_by_slug("md-3")
+
+    commit!(district, "yes@example.com", "yes")
+    commit!(district, "also@example.com", "yes")
+    commit!(district, "maybe@example.com", "conditional")
+    commit!(district, "no@example.com", "no")
+    commit!(district, "gone@example.com", "yes") |> withdraw!()
+
+    # Never confirmed: invisible to the count, absolutely.
+    {:ok, _outcome, _pledge, _token} =
+      Pledges.record(district, %{"commitment" => "yes", "email" => "pending@example.com"})
+
+    {:ok, view, _html} = live(conn, ~p"/districts/md-3")
+    render_async(view)
+
+    assert has_element?(view, "#district-commitment-count", "3")
+    assert has_element?(view, "#district-commitment-split", "2 outright · 1 if others do")
+    assert has_element?(view, "#district-commitment-target", "3 / 100")
+    refute has_element?(view, "#district-commitment", "Nobody here has answered yet")
+  end
+
+  test "an unopposed seat names what it lacks instead of a vote target", %{conn: conn} do
+    seed_districts!()
+    {:ok, view, _html} = live(conn, ~p"/districts/ak-0")
+    render_async(view)
+
+    assert has_element?(
+             view,
+             "#district-commitment-basis",
+             "Nobody ran against this seat in 2024"
+           )
+
+    assert has_element?(view, "#district-commitment-basis", "it needs an opponent")
+
+    # The recorded "margin" there is the winner's whole total. It is never
+    # offered as something to reach.
+    refute has_element?(view, "#district-commitment", "193,299")
+  end
+
+  test "the historical lens carries no commitment block", %{conn: conn} do
+    seed_districts!()
+    seed_historical_districts!()
+    {:ok, view, _html} = live(conn, ~p"/congresses/118/districts/md-3")
+    render_async(view)
+
+    refute has_element?(view, "#district-commitment")
+    refute has_element?(view, "#district-commit")
+    assert has_element?(view, "#district-profile-md-3", "This map no longer governs anyone")
+    assert has_element?(view, "#district-action[href='/act']")
+  end
+
   test "district profile omits the representative section without ingested facts", %{conn: conn} do
     seed_districts!()
     {:ok, view, _html} = live(conn, ~p"/districts/tx-35")
@@ -269,7 +341,11 @@ defmodule VNIWeb.PublicLiveTest do
     assert has_element?(view, "#district-profile-md-3")
     assert has_element?(view, "#district-scorecard")
     assert has_element?(view, "#district-scorecard .metric-bar", "Polsby–Popper")
-    assert has_element?(view, "#district-action[href='/act']")
+
+    # Under the current map the page closes on its own seat's ask, not the
+    # site-wide one.
+    assert has_element?(view, "#district-commit[href='/districts/md-3/join']")
+    refute has_element?(view, "#district-action")
   end
 
   test "methodology makes the compactness caveat visible", %{conn: conn} do
@@ -327,6 +403,16 @@ defmodule VNIWeb.PublicLiveTest do
     assert has_element?(view, "#fenno-response")
   end
 
+  defp commit!(district, email, commitment) do
+    {:ok, _outcome, _pledge, token} =
+      Pledges.record(district, %{"commitment" => commitment, "email" => email})
+
+    {:ok, pledge} = Pledges.confirm(token)
+    {pledge, token}
+  end
+
+  defp withdraw!({_pledge, token}), do: Pledges.withdraw(token)
+
   defp seed_districts! do
     {:ok, map_version} =
       Atlas.create_map_version(%{
@@ -358,6 +444,8 @@ defmodule VNIWeb.PublicLiveTest do
         acs_vintage: 2024,
         population_source_url: "https://api.census.gov/data/2024/acs/acs5",
         last_margin_pct: 9.2,
+        last_margin_votes: 38_412,
+        last_votes_cast: 417_522,
         last_margin_cycle: 2024,
         last_margin_party: :dem,
         margin_source_url: "https://doi.org/10.7910/DVN/IG0UN2",
@@ -413,7 +501,11 @@ defmodule VNIWeb.PublicLiveTest do
         incumbent_party: :rep,
         incumbent_since: 2023,
         incumbent_source_url: "https://unitedstates.github.io/congress-legislators/",
+        # Unopposed with a full tally, as MEDSL records it: the "margin" is
+        # the winner's entire total, which is why it can never be a target.
         last_margin_pct: 100.0,
+        last_margin_votes: 193_299,
+        last_votes_cast: 193_299,
         last_margin_cycle: 2024,
         last_margin_party: :rep,
         margin_source_url: "https://doi.org/10.7910/DVN/IG0UN2"

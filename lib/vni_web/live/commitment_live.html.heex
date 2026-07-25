@@ -23,7 +23,7 @@
     <p class="eyebrow">Withdrawn</p>
     <h1 class="display-md mt-6">You're out of the count.</h1>
     <p class="mt-8 max-w-2xl font-serif text-2xl leading-tight">
-      {@district.label} now stands at {@count}. No hard feelings, and no argument — a number
+      {@district.label} now stands at {DistrictPresenter.number(@count)}. No hard feelings, and no argument — a number
       people can't leave isn't worth publishing.
     </p>
     <.link navigate={~p"/districts/#{@district.slug}/join"} class="ink-button mt-10">
@@ -55,15 +55,15 @@
 
       <div class="mt-12 border-t-2 border-[var(--ink)] pt-7">
         <p class="data-label">{@district.label} · committed</p>
-        <p class="display-md mt-3">{@count}</p>
+        <p class="display-md mt-3">{DistrictPresenter.number(@count)}</p>
         <p class="mt-3 max-w-lg text-sm leading-6">
           <%= case @district.commitment_goal_basis do %>
             <% :unopposed -> %>
               Nobody ran against this seat last time. Before it needs votes, it needs an opponent.
             <% :margin -> %>
-              Next target {@target}. This seat was decided by {@district.last_margin_votes} votes.
+              Next target {DistrictPresenter.number(@target)}. This seat was decided by {@district.last_margin_votes} votes.
             <% :unknown -> %>
-              Next target {@target}.
+              Next target {DistrictPresenter.number(@target)}.
           <% end %>
         </p>
       </div>
