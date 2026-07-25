@@ -27,9 +27,9 @@ defmodule VNI.Atlas.Census do
 
   alias VNI.Atlas
   alias VNI.Atlas.MapVersion
+  alias VNI.Atlas.Tiger
 
   @current_congress 119
-  @source_root "https://www2.census.gov/geo/tiger"
 
   # `session` is the congress number in the TIGER layer/file name — 116 for
   # our congress 117 (see moduledoc). `apportionment` picks the seat table.
@@ -170,7 +170,7 @@ defmodule VNI.Atlas.Census do
   @doc "Download and ingest all 435 voting districts for a supported Congress."
   def seed_congress!(congress, opts \\ []) do
     spec = congress_spec!(congress)
-    ensure_ogr2ogr!()
+    Tiger.ensure_ogr2ogr!()
     cache_dir = Keyword.get(opts, :cache_dir, default_cache_dir(congress))
     force_download? = Keyword.get(opts, :force_download, false)
     File.mkdir_p!(cache_dir)
@@ -205,8 +205,8 @@ defmodule VNI.Atlas.Census do
   defp ingest_state!(state, congress, spec, cache_dir, force_download?) do
     :ok = Atlas.assert_ingestable_map_version!(map_version_attrs(state, congress, spec))
     archive = Path.join(cache_dir, archive_name(spec, state.fips))
-    download!(state.source_url, archive, force_download?)
-    geojson = convert_to_geojson_sequence!(archive, congress, state.fips)
+    Tiger.download!(state.source_url, archive, force_download?)
+    geojson = Tiger.to_geojson_sequence!(archive, "cd#{congress}-#{state.fips}")
 
     try do
       map_version = upsert_map_version!(state, congress, spec)
@@ -223,10 +223,8 @@ defmodule VNI.Atlas.Census do
     key = district_code_key(spec)
 
     path
-    |> File.stream!([], :line)
-    |> Enum.reduce(0, fn line, count ->
-      feature = line |> strip_record_separator() |> Jason.decode!()
-
+    |> Tiger.stream_features!()
+    |> Enum.reduce(0, fn feature, count ->
       case feature |> Map.fetch!("properties") |> Map.fetch!(key) |> district_number() do
         :not_a_district -> count
         number -> upsert_feature_district!(map_version, number, feature) && count + 1
@@ -245,8 +243,8 @@ defmodule VNI.Atlas.Census do
     end
 
     archive = Path.join(cache_dir, archive_name(spec, nil))
-    download!(url, archive, force_download?)
-    geojson = convert_to_geojson_sequence!(archive, congress, "us")
+    Tiger.download!(url, archive, force_download?)
+    geojson = Tiger.to_geojson_sequence!(archive, "cd#{congress}-us")
 
     try do
       map_versions =
@@ -280,9 +278,8 @@ defmodule VNI.Atlas.Census do
     key = district_code_key(spec)
 
     path
-    |> File.stream!([], :line)
-    |> Enum.reduce(%{}, fn line, counts ->
-      feature = line |> strip_record_separator() |> Jason.decode!()
+    |> Tiger.stream_features!()
+    |> Enum.reduce(%{}, fn feature, counts ->
       properties = Map.fetch!(feature, "properties")
       fips = Map.fetch!(properties, "STATEFP")
 
@@ -321,7 +318,8 @@ defmodule VNI.Atlas.Census do
   end
 
   defp upsert_feature_district!(map_version, number, feature) do
-    geometry = feature |> Map.fetch!("geometry") |> Geo.JSON.decode!() |> as_multi_polygon!()
+    geometry =
+      feature |> Map.fetch!("geometry") |> Geo.JSON.decode!() |> Tiger.as_multi_polygon!()
 
     case Atlas.upsert_district(map_version, %{number: number, geom: geometry}) do
       {:ok, district} ->
@@ -350,106 +348,11 @@ defmodule VNI.Atlas.Census do
   defp district_number("98"), do: :not_a_district
   defp district_number(code), do: String.to_integer(code)
 
-  defp as_multi_polygon!(%Geo.MultiPolygon{} = geometry), do: geometry
-
-  defp as_multi_polygon!(%Geo.Polygon{} = geometry) do
-    %Geo.MultiPolygon{coordinates: [geometry.coordinates], srid: geometry.srid}
-  end
-
-  defp as_multi_polygon!(geometry) do
-    raise "expected Polygon or MultiPolygon, got: #{inspect(geometry.__struct__)}"
-  end
-
-  defp strip_record_separator(<<0x1E, rest::binary>>), do: rest
-  defp strip_record_separator(line), do: line
-
-  defp download!(url, path, force_download?) do
-    if force_download? || !valid_zip?(path) do
-      temporary_path = path <> ".download"
-      File.rm(temporary_path)
-
-      response =
-        Req.get!(url,
-          into: File.stream!(temporary_path),
-          decode_body: false,
-          receive_timeout: 120_000,
-          connect_options: tls_connect_options()
-        )
-
-      if response.status != 200 || !valid_zip?(temporary_path) do
-        File.rm(temporary_path)
-        raise "failed to download Census archive #{url} (HTTP #{response.status})"
-      end
-
-      File.rename!(temporary_path, path)
-    end
-
-    path
-  end
-
-  defp valid_zip?(path) do
-    case File.open(path, [:read, :binary]) do
-      {:ok, file} ->
-        signature = IO.binread(file, 4)
-        File.close(file)
-        signature in [<<0x50, 0x4B, 0x03, 0x04>>, <<0x50, 0x4B, 0x05, 0x06>>]
-
-      {:error, _reason} ->
-        false
-    end
-  end
-
-  # Mint's CAStore dependency is optional. Use the operating system's bundle
-  # explicitly so a fresh seed works in both the macOS development environment
-  # and a Debian release image without adding a dependency solely for certs.
-  defp tls_connect_options do
-    cert_path =
-      Enum.find(
-        ["/etc/ssl/cert.pem", "/etc/ssl/certs/ca-certificates.crt"],
-        &File.regular?/1
-      )
-
-    if cert_path,
-      do: [transport_opts: [cacertfile: String.to_charlist(cert_path)]],
-      else: []
-  end
-
-  defp convert_to_geojson_sequence!(archive, congress, label) do
-    output_path =
-      Path.join(
-        System.tmp_dir!(),
-        "vni-cd#{congress}-#{label}-#{System.unique_integer([:positive])}.geojsonl"
-      )
-
-    args = [
-      "-f",
-      "GeoJSONSeq",
-      output_path,
-      "/vsizip/#{Path.expand(archive)}",
-      "-t_srs",
-      "EPSG:4326",
-      "-nlt",
-      "MULTIPOLYGON",
-      "-overwrite"
-    ]
-
-    case System.cmd("ogr2ogr", args, stderr_to_stdout: true) do
-      {_output, 0} -> output_path
-      {output, status} -> raise "ogr2ogr failed for #{label} (#{status}): #{output}"
-    end
-  end
-
-  defp ensure_ogr2ogr! do
-    if System.find_executable("ogr2ogr") == nil do
-      raise "Census shape ingestion requires GDAL's ogr2ogr executable"
-    end
-  end
-
   defp archive_name(spec, nil), do: "tl_#{spec.vintage}_us_cd#{spec.session}.zip"
   defp archive_name(spec, fips), do: "tl_#{spec.vintage}_#{fips}_cd#{spec.session}.zip"
 
   defp source_url(spec, fips) do
-    "#{@source_root}/TIGER#{spec.vintage}/CD/#{archive_name(spec, fips)}"
+    "#{Tiger.source_root()}/TIGER#{spec.vintage}/CD/#{archive_name(spec, fips)}"
   end
 
   defp congress_spec!(congress) do
