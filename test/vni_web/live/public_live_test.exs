@@ -391,16 +391,26 @@ defmodule VNIWeb.PublicLiveTest do
     assert has_element?(view, "#site-footer a[href='/sources']")
   end
 
-  test "action prototype responds without persisting data", %{conn: conn} do
+  test "the Fenno question answers without persisting anything, then routes to a seat",
+       %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/act")
 
     refute has_element?(view, "#fenno-response")
+    assert has_element?(view, "#action-page", "never sent anywhere")
 
     view
     |> element("#answer-yes")
     |> render_click()
 
     assert has_element?(view, "#fenno-response")
+
+    # The response describes the mechanism that exists — a published count
+    # — never an activation threshold the site does not implement.
+    assert has_element?(view, "#fenno-response", "publishes how many people")
+    assert has_element?(view, "#fenno-response", "counted only after you confirm it by email")
+    refute has_element?(view, "#action-page", "assurance pledge")
+
+    assert has_element?(view, "#action-find-district[href='/districts']")
   end
 
   defp commit!(district, email, commitment) do
