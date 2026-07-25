@@ -14,8 +14,30 @@
           <p class="max-w-md text-sm font-medium leading-6">
             Every House district, mapped and measured — who drew the lines, who holds the seat, how long they've held it, how safe the map keeps them. Public data, open methodology, no favorites.
           </p>
-          <.link navigate={~p"/districts"} id="home-find-district" class="ink-button mt-6">
-            Find your district <span aria-hidden="true">→</span>
+          <form action={~p"/find"} method="get" id="home-find" class="mt-7">
+            <label for="home-zip" class="data-label">Your ZIP code</label>
+            <div class="mt-3 flex flex-wrap items-stretch gap-3">
+              <input
+                type="text"
+                id="home-zip"
+                name="zip"
+                inputmode="numeric"
+                autocomplete="postal-code"
+                maxlength="10"
+                placeholder="43604"
+                class="w-40 border-2 border-[var(--ink)] bg-[var(--paper-bright)] p-3 font-mono text-xl font-bold tracking-widest"
+              />
+              <button type="submit" class="ink-button">
+                Find your district <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </form>
+          <.link
+            navigate={~p"/districts"}
+            id="home-find-district"
+            class="mt-5 inline-block text-sm font-bold underline underline-offset-4"
+          >
+            Or browse all 435
           </.link>
         </div>
       </div>

@@ -1,0 +1,134 @@
+<Layouts.app flash={@flash} active={:districts}>
+  <section id="find-page" class="editorial-shell bg-[var(--paper)]">
+    <header class="section-pad border-b-2 border-[var(--ink)]">
+      <p class="eyebrow">Find your seat</p>
+
+      <h1 :if={@state == :prompt} class="display-lg mt-7 max-w-4xl">
+        Which district are you in?
+      </h1>
+      <h1 :if={@state == :choose} class="display-lg mt-7 max-w-4xl">
+        {String.upcase(@zip)} is in {length(@matches)} districts.
+      </h1>
+      <h1 :if={@state == :malformed} class="display-lg mt-7 max-w-4xl">
+        That isn't a ZIP code.
+      </h1>
+      <h1 :if={@state == :unknown} class="display-lg mt-7 max-w-4xl">
+        The Census has no area for {@zip}.
+      </h1>
+      <h1 :if={@state == :no_district} class="display-lg mt-7 max-w-4xl">
+        {@zip} has no vote to withhold.
+      </h1>
+
+      <form action={~p"/find"} method="get" class="find-form mt-10">
+        <label for="find-zip" class="data-label">Your ZIP code</label>
+        <div class="mt-4 flex flex-wrap items-stretch gap-4">
+          <input
+            type="text"
+            id="find-zip"
+            name="zip"
+            value={@state in [:choose] && @zip}
+            inputmode="numeric"
+            autocomplete="postal-code"
+            maxlength="10"
+            placeholder="43604"
+            class="w-44 border-2 border-[var(--ink)] bg-[var(--paper-bright)] p-4 font-mono text-2xl font-bold tracking-widest"
+          />
+          <button type="submit" class="ink-button">
+            Find the seat <span>→</span>
+          </button>
+        </div>
+      </form>
+
+      <p :if={@state == :prompt} class="mt-9 max-w-2xl text-sm leading-6">
+        We work this out from published geometry rather than a bought lookup table: Census ZIP Code
+        Tabulation Areas intersected with the district lines in force, by our own method.
+        <.link navigate={~p"/methodology#methodology-zip"} class="underline">
+          How the crosswalk works
+        </.link>
+      </p>
+
+      <p :if={@state == :malformed} class="mt-9 max-w-2xl text-sm leading-6">
+        Five digits. We take ZIP+4 too and use the first five.
+      </p>
+
+      <p :if={@state == :unknown} class="mt-9 max-w-2xl text-sm leading-6">
+        Not every ZIP has a Census area. USPS ZIPs that serve only PO boxes or a single large
+        building cover no ground, so the Census draws no polygon for them and we have nothing to
+        intersect. Try the ZIP where you sleep, not where you collect mail.
+      </p>
+
+      <div :if={@state == :no_district} class="mt-9 max-w-2xl">
+        <p class="text-sm leading-6">
+          That area is real and its people are represented — by a delegate who cannot vote on
+          final passage. Washington DC and the territories elect one, and this site measures the
+          435 seats that decide legislation. There is no incumbent here for you to vote against,
+          which is its own argument and not one we are making today.
+        </p>
+        <.link navigate={~p"/districts"} class="ink-button mt-8">
+          Open the directory <span>→</span>
+        </.link>
+      </div>
+    </header>
+
+    <div :if={@state == :choose}>
+      <div class="section-pad border-b-2 border-[var(--ink)] bg-[var(--yellow)]">
+        <p class="max-w-3xl font-serif text-2xl leading-tight">
+          A ZIP code is a mail route, not a district. Yours is split, so we will not choose for
+          you — look at the shapes and pick the one you live in.
+        </p>
+        <p class="mt-6 max-w-2xl text-sm leading-6">
+          The share is how much of the ZIP's <em>area</em>
+          sits in each district. It is not how many people, and the biggest slice is not
+          necessarily yours.
+        </p>
+      </div>
+
+      <%!-- Columns follow the count so an odd row never leaves a bordered
+      hole: two and four fill a 2-up, three fills a 3-up. --%>
+      <div
+        id="find-choices"
+        class={[
+          "grid md:grid-cols-2",
+          length(@matches) == 3 && "lg:grid-cols-3"
+        ]}
+      >
+        <.link
+          :for={district <- @matches}
+          navigate={~p"/districts/#{district.slug}"}
+          id={"find-choice-#{district.slug}"}
+          class="find-choice section-pad !py-10 border-b-2 border-[var(--ink)] md:border-r-2"
+        >
+          <span class="data-label">{district.share_label} of the ZIP</span>
+
+          <.district_shape
+            path={district.shape_path}
+            tone={district.tone}
+            class="mt-8 h-44 w-full text-[var(--ink)]"
+          />
+
+          <h2 class="display-md mt-9">{district.label}</h2>
+          <p :if={district.incumbent_name} class="mt-5 font-serif text-xl leading-tight">
+            {district.incumbent_name}
+            <span :if={district.incumbent_party}>({district.incumbent_party})</span>
+          </p>
+          <p :if={district.incumbent_since} class="mt-2 text-sm leading-6">
+            Holding this seat since {district.incumbent_since}.
+          </p>
+          <p class="mt-7 text-sm font-bold uppercase tracking-wide">
+            Open this district <span aria-hidden="true">→</span>
+          </p>
+        </.link>
+      </div>
+
+      <div class="section-pad">
+        <p class="max-w-2xl text-sm leading-6">
+          Not sure which is yours? The county and place lines on each district page name what it
+          covers.
+          <.link navigate={~p"/methodology#methodology-zip"} class="underline">
+            How this crosswalk is computed
+          </.link>
+        </p>
+      </div>
+    </div>
+  </section>
+</Layouts.app>

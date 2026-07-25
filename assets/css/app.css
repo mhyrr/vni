@@ -132,6 +132,74 @@ a:focus-visible, button:focus-visible {
   background: var(--yellow);
 }
 
+/* The primary CTA: a ZIP field, not a sign-up. Sits in the header's
+   third column where the action link used to, so the grid is unchanged. */
+.header-find {
+  display: flex;
+  align-items: stretch;
+  background: var(--green);
+}
+
+.header-find input {
+  width: 96px;
+  padding: 0 0.85rem;
+  border: none;
+  border-right: 2px solid var(--ink);
+  background: var(--paper-bright);
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.header-find input::placeholder {
+  color: #77776d;
+}
+
+.header-find input:focus {
+  outline: 3px solid var(--yellow);
+  outline-offset: -3px;
+}
+
+.header-find button {
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+  padding: 0 1.35rem;
+  color: var(--ink);
+  background: var(--green);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: gap 160ms ease, background 160ms ease;
+}
+
+.header-find button:hover {
+  gap: 1.8rem;
+  background: var(--yellow);
+}
+
+/* Pick your own district by looking at its shape. */
+.find-choice {
+  display: block;
+  color: var(--ink);
+  background: var(--paper);
+  transition: background 160ms ease;
+}
+
+.find-choice:hover {
+  background: var(--paper-bright);
+}
+
+.find-choice:hover .display-md {
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
 .site-footer {
   display: grid;
   grid-template-columns: 1.5fr 0.8fr auto;
@@ -821,6 +889,11 @@ a:focus-visible, button:focus-visible {
   }
   .wordmark { width: 100%; font-size: 0.8rem; }
   .header-action { display: none; }
+
+  /* Narrow: the field keeps its row, the button loses its label so the
+     ZIP box stays big enough to type into. */
+  .header-find { grid-row: 3; grid-column: 1 / -1; border-top: 1px solid #3a3a35; }
+  .header-find input { flex: 1; width: auto; min-height: 52px; }
   .primary-nav { justify-content: flex-start; }
   .primary-nav a { min-width: 25%; padding-inline: 0.5rem; }
   .hero-copy .display-xl { font-size: clamp(2.95rem, 13vw, 3.35rem); }

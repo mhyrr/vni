@@ -33,9 +33,30 @@ defmodule VNIWeb.Layouts do
         </.link>
       </nav>
 
-      <.link navigate={~p"/act"} id="header-action" class="header-action">
-        Cross the line <span aria-hidden="true">↗</span>
-      </.link>
+      <%!-- Interface 002 §5: the primary CTA is Find your district, not
+      Sign up. It is absent entirely on /methodology and /sources — those
+      are where a hostile reader goes to check our work, and asking there
+      converts a skeptic into an ex-visitor. --%>
+      <form
+        :if={@active not in [:methodology, :sources]}
+        id="header-find"
+        action={~p"/find"}
+        method="get"
+        class="header-find"
+      >
+        <label for="header-zip" class="sr-only">Find your district by ZIP code</label>
+        <input
+          type="text"
+          id="header-zip"
+          name="zip"
+          inputmode="numeric"
+          autocomplete="postal-code"
+          maxlength="10"
+          placeholder="ZIP"
+          aria-label="ZIP code"
+        />
+        <button type="submit">Find your seat <span aria-hidden="true">→</span></button>
+      </form>
     </header>
 
     <main id="main-content">

@@ -37,6 +37,7 @@ defmodule VNIWeb.Router do
       live("/congresses/:congress/districts/:slug", DistrictLive.Show, :show)
       live("/congresses/:congress/states", StateLive.Index, :index)
       live("/congresses/:congress/states/:state", StateLive.Show, :show)
+      live("/find", FindLive, :index)
       live("/methodology", MethodologyLive, :index)
       live("/sources", SourcesLive, :index)
       live("/act", ActionLive, :index)
