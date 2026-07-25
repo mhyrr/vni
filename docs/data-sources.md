@@ -18,6 +18,7 @@ are load-bearing.
 | [The Downballot pres-by-CD, 2024 lines](https://docs.google.com/spreadsheets/d/1ng1i_Dm_RMDnEvauH44pgE6JCUsapcuu8F2pCfeLWFo) | District two-party presidential shares (lean input) | The Downballot (formerly Daily Kos Elections) | Reuse permitted with citation and link; no wholesale reproduction |
 | [Loyola, All About Redistricting](https://redistricting.lls.edu/) | Map authorship: authority + controlling party per state (hand-curated, one state page cited per row) | Loyola Law School | Reference site; cited per row |
 | [Census CD119 relationship files](https://www2.census.gov/geo/docs/maps-data/data/rel2020/cd-sld/) | Counties and places per district | U.S. Census Bureau | Public domain |
+| [Census TIGER/Line ZCTA520, 2025](https://www2.census.gov/geo/tiger/TIGER2025/ZCTA520/tl_2025_us_zcta520.zip) | ZIP Code Tabulation Area polygons — the geometry behind ZIP-to-district lookup | U.S. Census Bureau | Public domain |
 
 ## Notes
 
@@ -45,9 +46,21 @@ national CD114, CD115, and CD116 archives for the 114th–116th Congresses; the
 117th source keeps the CD116 layer name because Census published no CD117 layer,
 but its 2021 vintage includes North Carolina's intervening court-ordered map.
 
+**ZIP to district is computed, not licensed.** No government source
+publishes a ZIP-to-congressional-district crosswalk on current lines, and
+the commercial ones are a table you have to trust. We take the Census's
+own ZCTA polygons and intersect them with the district geometry already
+loaded here, so the lookup carries the same provenance as every other
+number on the site. The rule — including the overlap floor that keeps two
+districts sharing a boundary from appearing in each other's ZIPs — is
+published on `/methodology`. A ZCTA is an approximation of a ZIP, not the
+ZIP itself: USPS ZIPs are delivery routes with no area, and the Census
+builds ZCTAs by assigning each census block to the ZIP most of its
+addresses use.
+
 **Never used.** Cook PVI (licensed; partisan lean is our own published
 formula — see `/methodology`). Any dataset that would put challenger
-information into the system.
+information into the system. Commercial ZIP-to-district crosswalks.
 
 **Local caches.** `priv/repo/data/tiger/` (TIGER archives),
 `priv/repo/data/medsl/`, `priv/repo/data/downballot/`,

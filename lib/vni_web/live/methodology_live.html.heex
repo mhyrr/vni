@@ -138,6 +138,37 @@
       </section>
     </div>
 
+    <div id="methodology-zip" class="grid border-t-2 border-[var(--ink)] lg:grid-cols-2">
+      <section class="section-pad border-b-2 border-[var(--ink)] lg:border-r-2">
+        <span class="data-label">16 · ZIP to district</span>
+        <h2 class="display-md mt-6">A mail route is not a district.</h2>
+        <p class="mt-8 max-w-xl text-base leading-7">
+          No government source publishes a ZIP-to-district crosswalk on the current lines, and the commercial ones are a table you have to take on faith. So we compute it. The Census publishes ZIP Code Tabulation Areas — its own polygon approximation of each ZIP, built by assigning every census block to the ZIP that most of its addresses use — and we load them through the same TIGER pipeline as the districts and intersect the two ourselves. A ZCTA is not a ZIP: USPS ZIPs are delivery routes along streets, with no area and no legal boundary. That approximation is the only published shape a ZIP has, and saying so is part of citing it.
+        </p>
+        <p class="mt-6 max-w-xl text-base leading-7">
+          The intersection is a construction, so it runs in EPSG:5070, and its area is then measured with a geography cast — the same rule the compactness measures follow. A ZCTA that sits wholly inside one district skips the construction and takes its own area exactly.
+        </p>
+      </section>
+      <section class="section-pad border-b-2 border-[var(--ink)]">
+        <span class="data-label">17 · The overlap floor</span>
+        <h2 class="display-md mt-6">Touching a line is not being in a district.</h2>
+        <p class="mt-8 max-w-xl text-base leading-7">
+          Two polygons that share a boundary intersect on paper, and ZCTA edges follow the same census blocks the district edges do — for hundreds of miles at a stretch. Of the 48,990 ZCTA-district pairs that intersect at all, 9,009 share a boundary line and no area whatsoever. A pair is kept only where the overlap covers at least {VNI.Atlas.Postal.minimum_share() *
+            100}% of the ZCTA, which drops those and 673 more that overlap by less than that. Without the floor every ZIP along a district line would offer its neighbour as a choice on the strength of a rounding error.
+        </p>
+        <p class="mt-6 max-w-xl text-base leading-7">
+          Of 33,791 ZCTAs, 33,585 resolve to at least one voting district: 28,219 to exactly one, 5,022 across two, 331 across three, 13 across four. The remaining 206 are Washington DC and the territories, whose delegates cannot vote on final passage — real ground with no seat this site measures.
+        </p>
+      </section>
+      <section class="section-pad border-b-2 border-[var(--ink)] bg-[var(--yellow)] lg:col-span-2">
+        <span class="data-label">18 · Why we never pick for you</span>
+        <h2 class="display-md mt-6">78130 is in four districts.</h2>
+        <p class="mt-8 max-w-3xl text-base leading-7">
+          One Texas ZIP, quartered: 29.6% of it in TX-15, 26.4% in TX-28, 22.3% in TX-35, 21.7% in TX-21. Where a ZIP spans more than one seat we show the choices with their shapes and let the reader pick. The ordering is by share of the ZIP's <em>area</em>, and area is not population — the biggest slice is not necessarily where the people are. Any rule that picked one of those four would be guessing and printing the guess as an answer, which is the one thing this site does not do with numbers.
+        </p>
+      </section>
+    </div>
+
     <div class="section-pad flex flex-wrap items-baseline justify-between gap-6 border-b-2 border-[var(--ink)]">
       <p class="max-w-xl font-serif text-xl leading-snug">
         Every number on this site starts as a published dataset. The registry names each one — publisher, license, exact URL.
