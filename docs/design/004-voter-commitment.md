@@ -90,7 +90,7 @@ right fact and the wrong bar. Measured against ingested 2024 data across all
 | | |
 |---|---|
 | Contested / unopposed | 422 / 13 |
-| Median contested margin | 89,631 votes |
+| Median contested margin | 89,508 votes (midpoint of 422; corrected 2026-07-25 from 89,631, which took the upper middle value) |
 | Tightest | CA-13 at **187**, CA-45 653, IA-1 799, OH-9 2,382 |
 | Widest contested | IL-16 at 310,742 |
 | Districts where 500 commitments would be **under 1%** of the margin | **319 of 435** |
@@ -101,7 +101,7 @@ of safe seats; it is a counter that never appears to move. So the page shows a
 it is:
 
 > **103 committed · next target 500**
-> This seat was decided by 89,631 votes.
+> This seat was decided by 89,508 votes.
 
 The ladder is `100 → 500 → 2,500 → 10,000 → 50,000 → the margin`, and a rung
 only survives if it is under half the margin, so the ladder never stops at a

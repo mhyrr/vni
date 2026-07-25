@@ -107,6 +107,37 @@
       </section>
     </div>
 
+    <div id="methodology-commitment" class="grid border-t-2 border-[var(--ink)] lg:grid-cols-2">
+      <section class="section-pad border-b-2 border-[var(--ink)] lg:border-r-2">
+        <span class="data-label">14 · The commitment count</span>
+        <h2 class="display-md mt-6">Every one of them confirmed an email.</h2>
+        <p class="mt-8 max-w-xl text-base leading-7">
+          A district's count holds the people who answered "yes" and the people who answered "only if others do." The conditional answer is not a weaker yes — it is the coordination problem stated plainly, and the count itself is the "others" it asks about. Both are published, together and separately, so the split is never hidden inside the total. Nothing enters the count until the person clicks a link we mailed them, and withdrawal removes them the moment they ask: a number anybody could inflate by typing addresses would not be worth publishing, and a number people cannot leave would not be either. We publish counts and aggregates. We never publish who committed, anywhere, to anyone.
+        </p>
+      </section>
+      <section class="section-pad border-b-2 border-[var(--ink)]">
+        <span class="data-label">15 · The commitment goal</span>
+        <h2 class="display-md mt-6">The margin, in votes. Not a prediction.</h2>
+        <p class="mt-8 max-w-xl text-base leading-7">
+          A seat's goal is the margin of its last House general in votes — winner minus runner-up, the same race §08 states as a percentage. It is district-specific, sourced, and it is the number that decided the last election. It is
+          <em>not</em>
+          a claim that reaching it flips the seat: flipping requires switching votes, and a switched vote moves a margin by two. The margin is a goal. This site claims nothing beyond that.
+        </p>
+        <p class="mt-6 max-w-xl text-base leading-7">
+          The median contested seat in 2024 was decided by 89,508 votes, and in 319 of 435 districts 500 commitments would sit under one percent of the margin — a bar that reads empty in three-quarters of the country is a counter that never appears to move. So a district shows two numbers: the margin as the fact it is, and the next rung of {Enum.map_join(
+            VNI.Pledges.targets(),
+            " → ",
+            &VNIWeb.DistrictPresenter.number/1
+          )} → the margin. A rung survives only where it is under half the margin, so the ladder never stops just short of the real number. California's 13th, decided by 187 votes, admits no rung at all — its first target is the whole margin.
+        </p>
+        <p class="mt-6 max-w-xl text-base leading-7">
+          Two seats fall outside the rule and are labelled rather than smoothed. Where nobody ran, the recorded margin is the winner's entire total — Alabama's 4th records 274,498, which is not what it would take to unseat anyone but what one person got when nobody stood against them — so an unopposed seat carries no vote goal at all, and its page says what it actually lacks. Where no general is on record, a district new to a redraw, the target falls back to a published baseline of {VNIWeb.DistrictPresenter.number(
+            VNI.Pledges.baseline_goal()
+          )}.
+        </p>
+      </section>
+    </div>
+
     <div class="section-pad flex flex-wrap items-baseline justify-between gap-6 border-b-2 border-[var(--ink)]">
       <p class="max-w-xl font-serif text-xl leading-snug">
         Every number on this site starts as a published dataset. The registry names each one — publisher, license, exact URL.

@@ -203,6 +203,9 @@ defmodule VNI.Pledges do
   @doc "The fallback goal, and the floor under every computed one."
   def baseline_goal, do: @baseline_goal
 
+  @doc "The rungs a district climbs while the margin is out of reach."
+  def targets, do: @targets
+
   @doc """
   The number a district's count is measured against: the margin, in votes,
   of the seat's last election.
@@ -266,7 +269,7 @@ defmodule VNI.Pledges do
   The rung a district is currently climbing toward.
 
   The margin is the right *fact* and the wrong *bar*. Measured against real
-  2024 data, the median contested seat was decided by 89,631 votes, and 319
+  2024 data, the median contested seat was decided by 89,508 votes, and 319
   of 435 districts would render 500 commitments as under one percent — a bar
   that reads as empty in three-quarters of the country is not an indictment
   of safe seats, it is a counter that never appears to move.
@@ -275,7 +278,7 @@ defmodule VNI.Pledges do
   and the margin stated as what it is.
 
       103 committed · next target 500
-      This seat was decided by 89,631 votes.
+      This seat was decided by 89,508 votes.
 
   A rung only survives if it is under half the margin, so the ladder never
   stops at a near-miss of the real number. CA-13's margin of 187 admits no

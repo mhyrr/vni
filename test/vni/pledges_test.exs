@@ -293,7 +293,7 @@ defmodule VNI.PledgesTest do
     end
 
     test "a safe seat climbs rungs instead of showing an unreachable bar" do
-      # The median contested seat: 89,631 votes. The margin stays the
+      # The median contested seat: 89,508 votes. The margin stays the
       # published fact; the target stays something that can be reached.
       safe = %DistrictProfile{last_margin_pct: 30.0, last_margin_votes: 89_631}
 

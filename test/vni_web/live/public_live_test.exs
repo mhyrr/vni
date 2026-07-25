@@ -391,6 +391,22 @@ defmodule VNIWeb.PublicLiveTest do
     assert has_element?(view, "#site-footer a[href='/sources']")
   end
 
+  test "methodology publishes the rule behind the commitment count and its goal", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/methodology")
+
+    # What is inside the published number.
+    assert has_element?(view, "#methodology-commitment", "only if others do")
+    assert has_element?(view, "#methodology-commitment", "We never publish who committed")
+
+    # The goal, its ladder, and its baseline, read from the constants the
+    # district pages compute with rather than restated by hand.
+    assert has_element?(view, "#methodology-commitment", "100 → 500 → 2,500 → 10,000 → 50,000")
+    assert has_element?(view, "#methodology-commitment", "baseline of 500")
+
+    # The non-claim is stated where the number is defined, not only beside it.
+    assert has_element?(view, "#methodology-commitment", "a switched vote moves a margin by two")
+  end
+
   test "the Fenno question answers without persisting anything, then routes to a seat",
        %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/act")

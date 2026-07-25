@@ -38,3 +38,10 @@ config :phoenix, :plug_init_mode, :runtime
 # Enable helpful, but potentially expensive runtime checks
 config :phoenix_live_view,
   enable_expensive_runtime_checks: true
+
+# render_async/1 inherits this. ExUnit's 100ms default is a budget for
+# receiving a message, not for a PostGIS round trip: the district page's
+# assign_async loads geometry, builds SVG paths, and counts commitments —
+# measured at 8ms typical but spiking past 30ms idle, which is close
+# enough to 100ms to flake under a loaded suite.
+config :ex_unit, assert_receive_timeout: 1_000
