@@ -13,6 +13,7 @@ conventions: `AGENTS.md`.
 - `mix test` — full suite (sandboxed against the local Docker PostGIS)
 - `mix ecto.reset` — drop, create, migrate, seed. Seeds ingest all 435 districts for every supported Congress (119/118/117) from Census TIGER/Line, stamp current-map authorship, and score each congress within its own cohort (archives cached under `priv/repo/data/tiger/`; first run downloads ~100 zips). `VNI_SKIP_DISTRICT_SEEDS=1` skips.
 - `mix vni.ingest.shapefiles --congress N` — (re)ingest TIGER CD geometry (119 current; 118/117 historical, ingested closed), idempotent
+- `mix vni.ingest.zctas` — ZIP Code Tabulation Area polygons and the ZIP→district crosswalk. Not part of `mix setup`: one 530 MB archive, cached under `priv/repo/data/tiger/zcta2025/`, and the crosswalk INSERT runs several minutes. Required for `/find` to answer anything; without it every ZIP reports as unknown. Rerun `--crosswalk-only` after any district ingest — the pairs are only true of the map they were computed against.
 - `mix vni.score` — full scoring pass: metrics, normalize, national rank (`--congress N` scores a historical cohort within itself)
 - `mix phx.server` — **NEVER RUN** (user manages the dev server separately)
 - Use Tidewave's tools for runtime evaluation and database queries when the dev server is up; `get_docs` for documentation, `get_source_location` for definitions.
