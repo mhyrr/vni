@@ -8,9 +8,23 @@ defmodule VNIWeb.Layouts do
   attr :flash, :map, required: true
   attr :current_scope, :map, default: nil
   attr :active, :atom, default: nil
+
+  attr :prompt, :boolean,
+    default: true,
+    doc: "false inside the commitment flow itself — see commitment_prompt/1"
+
+  attr :seat, :map,
+    default: nil,
+    doc: "the presented district, when the page is about one seat"
+
   slot :inner_block, required: true
 
   def app(assigns) do
+    # Never where a skeptic is checking our work, and never inside the
+    # flow the prompt exists to start.
+    assigns =
+      assign(assigns, :prompt?, assigns.prompt and assigns.active not in [:methodology, :sources])
+
     ~H"""
     <header id="site-header" class="site-header">
       <.link navigate={~p"/"} class="wordmark" aria-label="Vote No Incumbents home">
@@ -82,6 +96,8 @@ defmodule VNIWeb.Layouts do
         Methodology {VNI.Scores.methodology_version()} · Prototype
       </p>
     </footer>
+
+    <.commitment_prompt :if={@prompt?} seat={@seat} />
 
     <.flash_group flash={@flash} />
     """

@@ -2,6 +2,151 @@ defmodule VNIWeb.PublicComponents do
   @moduledoc "Public-facing interface components for VNI."
 
   use Phoenix.Component
+  use VNIWeb, :verified_routes
+
+  attr(:seat, :map, default: nil)
+  attr(:delay_ms, :integer, default: 5_000)
+  attr(:quiet_ms, :integer, default: 86_400_000)
+
+  @doc """
+  The ask, as a modal, after the reader has had a moment on the page.
+
+  Design 004 §1 ruled a modal out on the grounds that one firing before
+  the reader has read a word is the newsletter-popup pattern. Greg's call
+  (2026-07-26) is that the count buried at the foot of a district page
+  was not getting asked at all, and signing people up is the point. The
+  difference from the pattern the spec rejected lives in the suppression,
+  not the delay: it never fires where a skeptic is checking our work
+  (`/methodology`, `/sources`), never inside the flow it is trying to
+  start, never again once someone has committed, and it stays quiet for a
+  day after any dismissal.
+
+  On a district page it asks about that seat, by name, with the live
+  count. Anywhere else there is no seat to name yet, so the ask is
+  general and the ZIP is the route to answering it.
+
+  Crawlers get nothing: a `<dialog>` is `display: none` until JavaScript
+  opens it, and nothing here opens it on the server.
+  """
+  def commitment_prompt(assigns) do
+    ~H"""
+    <dialog
+      id="commitment-prompt"
+      class="commitment-prompt"
+      phx-hook=".CommitmentPrompt"
+      data-delay={@delay_ms}
+      data-quiet={@quiet_ms}
+      aria-labelledby="commitment-prompt-heading"
+    >
+      <div class="commitment-prompt-body">
+        <p :if={@seat} class="data-label">
+          {if @seat.commitment_count == 0,
+            do: "Nobody in #{@seat.label} has answered yet",
+            else: "#{@seat.commitment_count_label} committed in #{@seat.label}"}
+        </p>
+        <p :if={!@seat} class="data-label">435 seats. One of them is yours.</p>
+
+        <h2 id="commitment-prompt-heading" class="display-md mt-6">
+          <span :if={@seat}>
+            Will you vote against {@seat.incumbent_name || "this incumbent"} in November,
+            whoever runs?
+          </span>
+          <span :if={!@seat}>
+            Will you vote against your incumbent in November, whoever runs?
+          </span>
+        </h2>
+
+        <p :if={@seat && @seat.incumbent_since} class="mt-6 text-sm leading-6">
+          {@seat.incumbent_name} has held this seat since {@seat.incumbent_since}.
+        </p>
+        <p :if={!@seat} class="mt-6 text-sm leading-6">
+          You answer it on your own district's page. Start with your ZIP.
+        </p>
+
+        <div :if={@seat} class="mt-9 flex flex-wrap items-center gap-5">
+          <.link navigate={~p"/districts/#{@seat.slug}/join"} class="paper-button">
+            Commit <span aria-hidden="true">→</span>
+          </.link>
+          <form method="dialog">
+            <button type="submit" class="commitment-prompt-dismiss">Not now</button>
+          </form>
+        </div>
+
+        <form :if={!@seat} action={~p"/find"} method="get" class="mt-9">
+          <label for="prompt-zip" class="sr-only">Your ZIP code</label>
+          <div class="flex flex-wrap items-stretch gap-3">
+            <input
+              type="text"
+              id="prompt-zip"
+              name="zip"
+              inputmode="numeric"
+              autocomplete="postal-code"
+              maxlength="10"
+              placeholder="43604"
+              class="w-40 border-2 border-[var(--ink)] bg-[var(--paper-bright)] p-3 font-mono text-xl font-bold tracking-widest"
+            />
+            <button type="submit" class="paper-button">
+              Find my seat <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </form>
+
+        <form :if={!@seat} method="dialog" class="mt-6">
+          <button type="submit" class="commitment-prompt-dismiss">Not now</button>
+        </form>
+
+        <p class="mt-8 text-xs leading-5">
+          We publish how many people committed in each district. We never publish who they are.
+        </p>
+      </div>
+    </dialog>
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".CommitmentPrompt">
+      const DISMISSED_AT = "vni:prompt-dismissed-at"
+      const COMMITTED = "vni:committed"
+
+      // Private-mode Safari throws on access rather than returning null.
+      const store = () => { try { return window.localStorage } catch (_) { return null } }
+
+      export default {
+        mounted() {
+          const memory = store()
+          if (!memory) { return }
+
+          // Someone who has committed is never asked again.
+          if (memory.getItem(COMMITTED)) { return }
+
+          const dismissedAt = Number(memory.getItem(DISMISSED_AT) || 0)
+          const quiet = Number(this.el.dataset.quiet)
+          if (dismissedAt && Date.now() - dismissedAt < quiet) { return }
+
+          this.timer = window.setTimeout(() => {
+            if (this.el.isConnected && !this.el.open) { this.el.showModal() }
+          }, Number(this.el.dataset.delay))
+
+          // Every route out of the dialog is a dismissal: the button, Escape,
+          // and the backdrop all fire `close`, and all of them mean not now.
+          this.onClose = () => {
+            const memory = store()
+            if (memory) { memory.setItem(DISMISSED_AT, String(Date.now())) }
+          }
+
+          this.onClick = (event) => {
+            if (event.target === this.el) { this.el.close() }
+          }
+
+          this.el.addEventListener("close", this.onClose)
+          this.el.addEventListener("click", this.onClick)
+        },
+
+        destroyed() {
+          window.clearTimeout(this.timer)
+          this.el.removeEventListener("close", this.onClose)
+          this.el.removeEventListener("click", this.onClick)
+        }
+      }
+    </script>
+    """
+  end
 
   attr(:path, :string, required: true)
   attr(:tone, :atom, default: :yellow)

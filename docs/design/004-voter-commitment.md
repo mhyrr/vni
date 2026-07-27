@@ -36,15 +36,34 @@ The commitment lives on `/districts/:slug`. It is the only screen where "your
 seat" and "the ask" are the same view, and the district page is already the
 shareable unit the whole site is built around.
 
-**Find your seat** is a ZIP field in the hero and site chrome — no modal.
-Interface pass 002 §5 is binding here: *"The primary CTA is Find your district,
-not Sign up."* A modal firing before the reader has read a word is the
-newsletter-popup pattern this site's voice exists to reject.
+**Find your seat** is a ZIP field in the hero and site chrome. Interface pass
+002 §5 is binding here: *"The primary CTA is Find your district, not Sign up."*
 
-**The prompt never fires** on `/methodology` or `/sources`. Those are where
-hostile readers go to check our work; asking there converts a skeptic into an
-ex-visitor. Nor on repeat visits, after dismissal (permanent), after
-committing, or to crawlers.
+### The modal — reversed 2026-07-26
+
+This section originally read "no modal," on the grounds that one firing before
+the reader has read a word is the newsletter-popup pattern this site's voice
+exists to reject. **Greg reversed it**: with the count and the ask at the foot
+of the district page, the ask was not being reached, and signing people up is
+the point of the layer.
+
+What ships is a modal after a 5-second dwell. The objection the original clause
+raised is answered by the suppression list rather than by not building it — a
+cold generic ask fired at a stranger is the pattern; an ask about the seat the
+reader is already looking at, which takes a no for an answer, is not.
+
+**The prompt never fires** on `/methodology` or `/sources` — those are where
+hostile readers go to check our work, and asking there converts a skeptic into
+an ex-visitor. Nor inside the flow it exists to start (`/districts/:slug/join`,
+`/commitment/:token`, `/find`), nor ever again once someone has committed, nor
+to crawlers — a `<dialog>` is `display: none` until JavaScript opens it.
+
+**Dismissal is quiet for a day** (Greg, 2026-07-26 — "daily not 7 days").
+Escape, the backdrop, and *Not now* are the same answer and all record it.
+
+On a district page it asks about that seat by name, with the live count. Off
+one there is no seat to name, so the ask is general and the ZIP is the route to
+answering it — the modal is always the commitment, never a wayfinding widget.
 
 ---
 
