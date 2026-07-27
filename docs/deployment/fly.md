@@ -130,7 +130,7 @@ The application is close, but it is not deployable as-is.
 | Oban | Uses the default Postgres notifier | No change; direct Postgres supports `LISTEN/NOTIFY` |
 | Health | No dedicated endpoint | Add a cheap `/healthz` readiness route that checks the Repo |
 | Data | Complete local data; source caches are ignored | Export, checksum, restore, and verify a first-launch dump |
-| Mail | Swoosh is present but no production mail flow exists | No provider needed until the product sends mail |
+| Mail | Swoosh on Resend; dev keeps the Local mailbox | Set `RESEND_API_KEY`, verify the sending domain, match `MAIL_FROM` to it |
 | Domain | Not chosen in this document | Validate on `*.fly.dev`, then attach the production hostname |
 | Recovery | No production target exists | Enable WAL backups, inspect snapshots, and run a restore drill |
 
@@ -374,13 +374,29 @@ Never use the raw `postgres` connection URL as the app secret.
 Set these other app secrets:
 
 - `SECRET_KEY_BASE` — newly generated for production;
-- `RELEASE_COOKIE` — one stable, production-only BEAM cookie.
+- `RELEASE_COOKIE` — one stable, production-only BEAM cookie;
+- `RESEND_API_KEY` — the boot raises without it, deliberately. Every
+  commitment is double opt-in, so an app that cannot send is an app where
+  nobody can ever be counted, and that should fail loudly at start rather
+  than quietly at the first pledge.
+
+Optional, and only if the sending address differs from the default
+`commitments@voteno.org`:
+
+- `MAIL_FROM` — must sit on a domain **verified in the Resend account**;
+  Resend rejects anything else. Changing it needs no deploy.
+- `MAIL_FROM_NAME` — display name, defaults to `Vote No Incumbents`.
 
 Verify names only:
 
 ```sh
 fly secrets list --app "$VNI_FLY_APP"
 ```
+
+Before the first real signup, send one confirmation to an address you
+control and confirm it lands out of spam. A commitment flow whose mail
+goes to junk fails silently: the pledge is stored, never confirmed, and
+never counted.
 
 Do not set `CENSUS_API_KEY` on the web app. The runtime does not need it.
 

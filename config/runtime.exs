@@ -99,21 +99,69 @@ if config_env() == :prod do
   #
   # Check `Plug.SSL` for all available options in `force_ssl`.
 
-  # ## Configuring the mailer
+  # ## The mailer
   #
-  # In production you need to configure the mailer to use a different adapter.
-  # Here is an example configuration for Mailgun:
+  # Resend, through Swoosh's adapter. The API client is set in
+  # config/prod.exs (Swoosh.ApiClient.Req — CLAUDE.md's HTTP rule).
   #
-  #     config :vni, VNI.Mailer,
-  #       adapter: Swoosh.Adapters.Mailgun,
-  #       api_key: System.get_env("MAILGUN_API_KEY"),
-  #       domain: System.get_env("MAILGUN_DOMAIN")
-  #
-  # Most non-SMTP adapters require an API client. Swoosh supports Req, Hackney,
-  # and Finch out-of-the-box. This configuration is typically done at
-  # compile-time in your config/prod.exs:
-  #
-  #     config :swoosh, :api_client, Swoosh.ApiClient.Req
-  #
-  # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
+  # A missing key raises at boot rather than degrading quietly. Every
+  # commitment is double opt-in: with no way to send, nobody can ever be
+  # counted, and the failure would show up as a number that never moves
+  # rather than as an error anyone sees.
+  # Blank, not just unset: `fly secrets set RESEND_API_KEY=` leaves an
+  # empty string, which is perfectly truthy and would sail through an
+  # `||` check straight into a failing send.
+  resend_api_key =
+    case System.get_env("RESEND_API_KEY") do
+      key when is_binary(key) and key != "" ->
+        key
+
+      _blank ->
+        raise """
+        environment variable RESEND_API_KEY is missing or empty.
+
+        Every commitment is confirmed by email, so without it no pledge
+        can ever be counted. Set it with:
+
+            fly secrets set RESEND_API_KEY=re_...
+        """
+    end
+
+  config :vni, VNI.Mailer,
+    adapter: Swoosh.Adapters.Resend,
+    api_key: resend_api_key
+
+  # Resend refuses any address outside a domain verified in the account,
+  # so MAIL_FROM has to match one. Overridable without a deploy.
+  config :vni, VNI.Pledges.Notifier,
+    from: {
+      System.get_env("MAIL_FROM_NAME") || "Vote No Incumbents",
+      System.get_env("MAIL_FROM") || "commitments@voteno.org"
+    }
+end
+
+# Real sends from the development machine, opt-in per shell. Without the
+# key set, dev keeps the Local adapter and its mailbox at /dev/mailbox —
+# so this can never surprise anyone into mailing a live address.
+if config_env() == :dev do
+  case System.get_env("RESEND_API_KEY") do
+    resend_api_key when is_binary(resend_api_key) and resend_api_key != "" ->
+      config :vni, VNI.Mailer,
+        adapter: Swoosh.Adapters.Resend,
+        api_key: resend_api_key
+
+      config :swoosh, :api_client, Swoosh.ApiClient.Req
+
+      case System.get_env("MAIL_FROM") do
+        from when is_binary(from) and from != "" ->
+          config :vni, VNI.Pledges.Notifier,
+            from: {System.get_env("MAIL_FROM_NAME") || "Vote No Incumbents", from}
+
+        _blank ->
+          :ok
+      end
+
+    _blank ->
+      :ok
+  end
 end

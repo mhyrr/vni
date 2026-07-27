@@ -45,6 +45,11 @@ config :vni, VNIWeb.Endpoint,
 # at the `config/runtime.exs`.
 config :vni, VNI.Mailer, adapter: Swoosh.Adapters.Local
 
+# The envelope every commitment email leaves under. Resend will only send
+# from a domain verified in the account, so this and the verified domain
+# have to agree — see config/runtime.exs.
+config :vni, VNI.Pledges.Notifier, from: {"Vote No Incumbents", "commitments@voteno.org"}
+
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.25.4",

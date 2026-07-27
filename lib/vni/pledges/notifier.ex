@@ -16,7 +16,15 @@ defmodule VNI.Pledges.Notifier do
 
   alias VNI.Mailer
 
-  @from {"Vote No Incumbents", "commitments@voteno.org"}
+  @doc """
+  The envelope these leave under, from config rather than baked in.
+
+  Resend will only send from a domain verified in the account, so this
+  has to track whatever domain is verified — and it changes without a
+  recompile (`MAIL_FROM`), because a bounced sending domain is not
+  something to wait on a deploy for.
+  """
+  def from, do: Application.fetch_env!(:vni, __MODULE__)[:from]
 
   @doc "Double opt-in. Nothing counts until this link is clicked."
   def deliver_confirmation(email, seat_label, incumbent, url) do
@@ -61,7 +69,7 @@ defmodule VNI.Pledges.Notifier do
     email =
       new()
       |> to(recipient)
-      |> from(@from)
+      |> from(from())
       |> subject(subject)
       |> text_body(body)
 

@@ -334,6 +334,11 @@ Layered commits, each green on its own (AGENTS.md).
   seeding from a largely-Republican list makes the ledger look partisan on day
   one. Factual precision and strategic cost point the same way: no.
 - **The assurance-contract activation machinery** — §2.
-- **Production mail adapter.** `VNI.Mailer` is on `Swoosh.Adapters.Local`
-  (`config/config.exs:46`); production is unconfigured. Blocks launch, not
-  build.
+- ~~**Production mail adapter.**~~ **Done 2026-07-26:** Resend, via
+  `Swoosh.Adapters.Resend` and the Req API client. No new dependency —
+  Swoosh 1.26 ships the adapter. Production raises at boot without
+  `RESEND_API_KEY`, because a mailer that cannot send turns double opt-in
+  into a count that never moves and reports no error. Dev keeps the Local
+  mailbox unless the key is exported into the shell. The sender is config
+  (`MAIL_FROM`), not a module attribute, because Resend only sends from a
+  verified domain and that has to be changeable without a deploy.
