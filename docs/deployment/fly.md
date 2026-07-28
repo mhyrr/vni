@@ -149,6 +149,18 @@ numbers (which recorded 95 MB and a single congress):
   (composite 0.032706);
 - four profiles have no incumbent, which is expected source data.
 
+TK-020 added the ZIP crosswalk and the commitment flow. Every line above still
+holds — the source database was checked against it on 2026-07-28 and had not
+drifted — with these additions, which travel by promotion rather than by dump:
+
+- source database: 1,174 MB, of which 884 MB is ZCTA polygons that
+  deliberately stay on the development machine;
+- 33,791 ZCTAs and 39,308 crosswalk pairs, touching exactly the 435 current
+  districts and no historical one;
+- 435 profiles carrying `last_margin_votes`;
+- promotion artifact: 1.05 MB gzipped across three files;
+- 16 migrations; `pledges` starts empty in production.
+
 Re-record the baseline on each data promotion. In-flight data work may properly
 change it.
 
@@ -567,20 +579,58 @@ CNAME for a subdomain.
 
 - <https://fly.io/docs/networking/custom-domain/>
 
+## Promoting derived data
+
+Two kinds of data reach production by two different routes, and confusing
+them is how a deploy goes wrong.
+
+**Bulk source data** — districts, scores, profiles, results — arrives by
+logical dump and restore, the procedure in Phase 3. It is large, it moves
+rarely, and it moves on its own release.
+
+**Derived data production cannot recompute** rides in the image and loads
+from the release command. That is the ZIP crosswalk and
+`last_margin_votes`: recomputing the first needs 884 MB of ZCTA polygons,
+GDAL, and a 530 MB download, and the second needs the MEDSL archive. None
+of that belongs on a web machine. `VNI.Promotion` carries the answers
+instead, as three gzipped CSVs under `priv/promotion` — about 1 MB.
+
+The crosswalk is the reason this hangs off the deploy rather than being a
+separate errand. Its pairs are only true of the map they were computed
+against, so shipping them with the code that serves them is what keeps the
+two from drifting. Rows are keyed on `zcta5` and district `slug`, never on
+row ids: a key that does not resolve fails the release command and the
+deploy rolls back, rather than quietly routing a ZIP to the wrong seat.
+
+After any ingest that moves districts, margins, or the crosswalk:
+
+```sh
+mix vni.ingest.zctas --crosswalk-only   # if districts moved
+mix vni.promote.export
+git add priv/promotion && git commit
+```
+
+The release loads what is in the image. Exporting without committing
+changes nothing about what production serves.
+
 ## Routine deploy procedure
 
 For every release:
 
 1. identify the exact Git SHA and ensure the worktree is clean;
 2. run `mix precommit`;
-3. review migrations for compatibility with the running release;
-4. run `fly deploy` and read the release-command output;
-5. check app and database status, checks, logs, and memory;
-6. smoke-test `/healthz`, one data-heavy page, and the changed flow;
-7. record the deployed SHA.
+3. if any ingest ran since the last deploy, re-export `priv/promotion` and
+   commit it — see above;
+4. review migrations for compatibility with the running release;
+5. run `fly deploy` and read the release-command output, including the
+   `promotion loaded:` counts;
+6. check app and database status, checks, logs, and memory;
+7. smoke-test `/healthz`, one data-heavy page, `/find` with a ZIP that
+   spans more than one seat, and the changed flow;
+8. record the deployed SHA.
 
-Use expand/contract migrations. Data refreshes are separate releases with
-their own source manifest, verification results, and logical dump.
+Use expand/contract migrations. Bulk data refreshes are separate releases
+with their own source manifest, verification results, and logical dump.
 
 ## Recovery procedure
 

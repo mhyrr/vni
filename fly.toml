@@ -7,7 +7,11 @@ primary_region = "iad"
 [build]
 
 [deploy]
-  release_command = "bin/migrate"
+  # Migrations, then the derived data production cannot rebuild — the ZIP
+  # crosswalk and district margins (VNI.Promotion). The crosswalk is only
+  # true of the map it was computed against, so it ships with the code
+  # that serves it rather than by a separate errand.
+  release_command = "bin/release_setup"
   release_command_timeout = "5m"
 
 [env]

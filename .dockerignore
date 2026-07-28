@@ -45,8 +45,10 @@ erl_crash.dump
 /priv/static/assets/
 /priv/static/cache_manifest.json
 
-# Local ingest caches (~130MB). The runtime never reads these — production
-# data arrives as a restored dump, not by running ingests in the release.
+# Local ingest caches (~130MB). The runtime never reads these — ingests do
+# not run in the release. Bulk data arrives as a restored dump; the derived
+# rows production cannot recompute ride in priv/promotion, which is
+# deliberately outside this directory (see VNI.Promotion).
 # Sources and fetch instructions live in docs/data-sources.md.
 /priv/repo/data/
 
