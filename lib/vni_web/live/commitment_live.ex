@@ -14,8 +14,8 @@ defmodule VNIWeb.CommitmentLive do
 
   use VNIWeb, :live_view
 
-  alias VNI.{Atlas, Pledges}
-  alias VNIWeb.DistrictPresenter
+  alias VNI.{Atlas, Pledges, Scores}
+  alias VNIWeb.{DistrictPresenter, ShareCard}
 
   def mount(%{"token" => token}, _session, socket) do
     case Pledges.confirm(token) do
@@ -34,7 +34,8 @@ defmodule VNIWeb.CommitmentLive do
 
   defp assign_pledge(socket, pledge, token) do
     district = Atlas.get_district!(pledge.district_id)
-    presented = DistrictPresenter.present(district)
+    ranked_total = Scores.ranked_count_for_congress(district.map_version.congress)
+    presented = DistrictPresenter.present(district, ranked_total)
     count = Pledges.committed_count(pledge.district_id)
 
     assign(socket,
@@ -44,8 +45,35 @@ defmodule VNIWeb.CommitmentLive do
       district: presented,
       count: count,
       target: Pledges.target(district.profile, count),
-      recognition: recognition(pledge.party, presented.incumbent_party_key)
+      recognition: recognition(pledge.party, presented.incumbent_party_key),
+      share: share(presented)
     )
+  end
+
+  @doc """
+  Everything the share block needs, and nothing it must not have.
+
+  The link is the district page, never this one. A commitment URL is a
+  token, and a token in a post is the promise "we publish counts, never
+  people" broken in the one place it would be broken in public — so it
+  is absent here by construction rather than filtered later.
+  """
+  def share(district) do
+    lines = ShareCard.lines(district)
+    text = ShareCard.post_text(district)
+    district_url = url(~p"/districts/#{district.slug}")
+
+    %{
+      lines: lines,
+      text: text,
+      url: district_url,
+      filename: "vni-#{district.slug}.png",
+      # Bare host, because the card prints where to go rather than a link
+      # anyone taps. Reading it from the endpoint means it is right the
+      # moment PHX_HOST changes and never needs the art rebuilt.
+      host: VNIWeb.Endpoint.host(),
+      intent: "https://x.com/intent/post?" <> URI.encode_query(%{text: text, url: district_url})
+    }
   end
 
   @doc """

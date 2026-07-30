@@ -206,6 +206,67 @@ defmodule VNIWeb.CommitmentLiveTest do
 
   # The magic link only ever exists in the mail, which is where a reader
   # would find it too.
+  describe "the share card" do
+    test "hands over a card built from the seat's own facts", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/districts/oh-9/join")
+      fill(view)
+
+      {:ok, view, html} = live(conn, ~p"/commitment/#{sent_token()}")
+
+      assert has_element?(view, "#commitment-share canvas[width='1080'][height='1920']")
+      assert html =~ "HELD"
+      assert html =~ "Decided by 2,382 votes in 2024."
+      assert has_element?(view, "#commitment-share [data-share]")
+      assert has_element?(view, "#commitment-share [data-download]")
+    end
+
+    test "the X link posts the district page, and names no one", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/districts/oh-9/join")
+      fill(view)
+
+      {:ok, view, _html} = live(conn, ~p"/commitment/#{sent_token()}")
+
+      href = view |> element("#commitment-share-x") |> render() |> intent_href()
+      query = href |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+
+      assert query["url"] =~ "/districts/oh-9"
+      assert query["text"] =~ "OH-09 has been held"
+      refute query["text"] =~ "Kaptur"
+    end
+
+    # The site's own copy promises counts and never people. A shared
+    # artifact is the one place that promise is tested in public, so the
+    # token has to be absent from everything the page hands out — not
+    # filtered out of it later.
+    test "nothing shareable carries the token", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/districts/oh-9/join")
+      fill(view)
+      token = sent_token()
+
+      {:ok, view, _html} = live(conn, ~p"/commitment/#{token}")
+
+      share_block = view |> element("#commitment-share") |> render()
+
+      refute share_block =~ token
+    end
+
+    test "a withdrawn commitment is not offered a card to post", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/districts/oh-9/join")
+      fill(view)
+
+      {:ok, view, _html} = live(conn, ~p"/commitment/#{sent_token()}")
+      view |> element("#withdraw-commitment") |> render_click()
+
+      refute has_element?(view, "#commitment-share")
+    end
+  end
+
+  defp intent_href(html) do
+    [href] = Regex.run(~r/href="([^"]*x\.com[^"]*)"/, html, capture: :all_but_first)
+
+    href |> String.replace("&amp;", "&")
+  end
+
   defp sent_token do
     assert_email_sent(fn email ->
       assert [[_, token]] = Regex.scan(~r{/commitment/([\w\-]+)}, email.text_body)
