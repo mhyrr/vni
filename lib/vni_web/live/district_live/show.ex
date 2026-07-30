@@ -11,7 +11,7 @@ defmodule VNIWeb.DistrictLive.Show do
   use VNIWeb, :live_view
 
   alias VNI.{Atlas, Pledges, Scores}
-  alias VNIWeb.{CongressTime, DistrictPresenter}
+  alias VNIWeb.{CongressTime, DistrictPresenter, SocialMeta}
 
   def mount(_params, _session, socket) do
     {:ok,
@@ -40,7 +40,8 @@ defmodule VNIWeb.DistrictLive.Show do
            qualified?: qualified?,
            current?: current?,
            index_path: index_path,
-           time_context: CongressTime.context(congress, :district, slug)
+           time_context: CongressTime.context(congress, :district, slug),
+           og_image: SocialMeta.district_image(slug, current?)
          )
          |> assign_async(:district, fn ->
            case Scores.get_district_for_congress(slug, congress) do

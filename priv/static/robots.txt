@@ -1,5 +1,7 @@
 # See https://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
-#
-# To ban all spiders from the entire site uncomment the next two lines:
-# User-agent: *
-# Disallow: /
+
+# Commitment links are token-addressed and arrive by email. Nothing on
+# them should ever be reachable from a search result, and the surest way
+# for one to end up there is somebody pasting their own link in public.
+User-agent: *
+Disallow: /commitment/
