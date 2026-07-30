@@ -121,11 +121,12 @@ defmodule VNIWeb.ShareCardTest do
       assert text =~ "anyone new is better than the entrenched power we have"
     end
 
-    # X counts any link as 23 characters however long it is, plus the
-    # space before it. Blowing the 280 ceiling does not truncate the post
-    # — it refuses to post at all, from a button the person already
-    # pressed.
-    test "fits X with a link attached" do
+    # Premium accounts take 25,000 characters, but a free one is still
+    # capped at 280 and that is who this has to work for. Any link costs
+    # 23 of them however long it is, plus the space before it. Going over
+    # does not truncate — it hands the person a composer they have to
+    # edit before it will post.
+    test "fits a free X account with a link attached" do
       assert String.length(ShareCard.post_text()) + 24 <= 280
     end
 

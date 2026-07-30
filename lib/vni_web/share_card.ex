@@ -50,8 +50,14 @@ defmodule VNIWeb.ShareCard do
   reaches, a picture goes with it. The X intent unfurls that district's
   own card and the native share sheet attaches the story card — both
   already state the seat, the tenure, and the margin, so text repeating
-  them spends characters on what the reader can see. X has none to spare:
-  280, of which any link costs 23 however long it is.
+  them is captioning a picture the reader is looking at.
+
+  Length is the weaker reason but still a reason. X Premium takes 25,000
+  characters; a free account is still capped at 280, with any link
+  costing 23 of them however long it is. An over-length intent does not
+  truncate — it lands the person in a composer that will not post until
+  they edit it down, which is a poor thank-you for pressing the button.
+  So the ceiling to design against is the free one.
 
   Greg's words, 2026-07-30, drawn from the homepage argument rather than
   written fresh for this surface.

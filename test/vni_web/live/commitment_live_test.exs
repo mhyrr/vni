@@ -236,8 +236,8 @@ defmodule VNIWeb.CommitmentLiveTest do
       assert query["text"] =~ "Everyone hates Congress but incumbents still win."
       refute query["text"] =~ "Kaptur"
 
-      # X refuses the post outright above 280 rather than truncating it,
-      # and the link costs 23 of them however long it is.
+      # Sized for a free X account's 280, not Premium's 25,000 — the link
+      # costs 23 of them however long it is.
       assert String.length(query["text"]) + 24 <= 280
     end
 
