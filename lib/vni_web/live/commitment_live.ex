@@ -60,7 +60,7 @@ defmodule VNIWeb.CommitmentLive do
   """
   def share(district) do
     lines = ShareCard.lines(district)
-    text = ShareCard.post_text(district)
+    text = ShareCard.post_text()
     district_url = url(~p"/districts/#{district.slug}")
 
     %{

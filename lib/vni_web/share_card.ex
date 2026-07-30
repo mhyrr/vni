@@ -44,24 +44,23 @@ defmodule VNIWeb.ShareCard do
   end
 
   @doc """
-  The sentence someone posts, built from the same facts as the card.
+  What someone posts alongside the card.
 
-  Ends on the site's own line about what was committed to — "the person
-  holding this seat, whoever runs against them" — which is the phrasing
-  that survives a vacancy and keeps the claim about the seat rather than
-  about a named person.
+  Carries no district facts, and that is the point: on every surface this
+  reaches, a picture goes with it. The X intent unfurls that district's
+  own card and the native share sheet attaches the story card — both
+  already state the seat, the tenure, and the margin, so text repeating
+  them spends characters on what the reader can see. X has none to spare:
+  280, of which any link costs 23 however long it is.
+
+  Greg's words, 2026-07-30, drawn from the homepage argument rather than
+  written fresh for this surface.
   """
-  def post_text(district) do
-    case facts_sentence(district) do
-      nil ->
-        "I've committed to vote against the person holding #{district.label}, " <>
-          "whoever runs against them."
-
-      sentence ->
-        sentence <>
-          " I've committed to vote against the person holding this seat, " <>
-          "whoever runs against them."
-    end
+  def post_text do
+    "Everyone hates Congress but incumbents still win. We can change that " <>
+      "and stop following party power! I've committed to vote against my " <>
+      "incumbent because anyone new is better than the entrenched power we " <>
+      "have. Let's see change."
   end
 
   ## Card lines
@@ -91,35 +90,6 @@ defmodule VNIWeb.ShareCard do
 
   defp rank_fact(%{national_rank: rank, ranked_total: total}),
     do: "Rank #{rank} of #{total} for compactness."
-
-  ## Post text
-
-  defp facts_sentence(district) do
-    years = tenure_years(district)
-    basis = district.commitment_goal_basis
-
-    cond do
-      years && basis == :unopposed ->
-        "#{district.label} has been held #{years_phrase(years)}, " <>
-          "and nobody ran against it#{cycle(district)}."
-
-      years && basis == :margin ->
-        "#{district.label} has been held #{years_phrase(years)} and was decided by " <>
-          "#{district.last_margin_votes} votes#{cycle(district)}."
-
-      years ->
-        "#{district.label} has been held #{years_phrase(years)}."
-
-      basis == :unopposed ->
-        "Nobody ran against #{district.label}#{cycle(district)}."
-
-      basis == :margin ->
-        "#{district.label} was decided by #{district.last_margin_votes} votes#{cycle(district)}."
-
-      true ->
-        nil
-    end
-  end
 
   ## Shared
 

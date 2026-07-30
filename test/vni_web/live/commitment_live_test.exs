@@ -233,8 +233,12 @@ defmodule VNIWeb.CommitmentLiveTest do
       query = href |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
 
       assert query["url"] =~ "/districts/oh-9"
-      assert query["text"] =~ "OH-09 has been held"
+      assert query["text"] =~ "Everyone hates Congress but incumbents still win."
       refute query["text"] =~ "Kaptur"
+
+      # X refuses the post outright above 280 rather than truncating it,
+      # and the link costs 23 of them however long it is.
+      assert String.length(query["text"]) + 24 <= 280
     end
 
     # The site's own copy promises counts and never people. A shared

@@ -112,56 +112,33 @@ defmodule VNIWeb.ShareCardTest do
     end
   end
 
-  describe "post_text/1" do
-    test "states the seat's facts, then what was committed to" do
-      assert ShareCard.post_text(district()) ==
-               "OH-09 has been held 43 years and was decided by 2,382 votes in 2024. " <>
-                 "I've committed to vote against the person holding this seat, " <>
-                 "whoever runs against them."
+  describe "post_text/0" do
+    test "makes the argument rather than restating the picture beside it" do
+      text = ShareCard.post_text()
+
+      assert text =~ "Everyone hates Congress but incumbents still win."
+      assert text =~ "I've committed to vote against my incumbent"
+      assert text =~ "anyone new is better than the entrenched power we have"
     end
 
-    test "an unopposed seat reads as a sentence, not a caption" do
-      text = ShareCard.post_text(district(%{commitment_goal_basis: :unopposed}))
-
-      assert text =~ "OH-09 has been held 43 years, and nobody ran against it in 2024."
+    # X counts any link as 23 characters however long it is, plus the
+    # space before it. Blowing the 280 ceiling does not truncate the post
+    # — it refuses to post at all, from a button the person already
+    # pressed.
+    test "fits X with a link attached" do
+      assert String.length(ShareCard.post_text()) + 24 <= 280
     end
 
-    test "a vacancy keeps the margin and drops the tenure clause" do
-      text = ShareCard.post_text(district(%{incumbent_tenure: nil}))
+    test "carries no district facts — the card that travels with it has them" do
+      text = ShareCard.post_text()
 
-      assert text =~ "OH-09 was decided by 2,382 votes in 2024."
       refute text =~ "held"
+      refute text =~ "Decided"
+      refute text =~ "Rank"
     end
 
-    test "an unopposed vacancy names the seat in the unopposed clause" do
-      text =
-        ShareCard.post_text(district(%{incumbent_tenure: nil, commitment_goal_basis: :unopposed}))
-
-      assert text =~ "Nobody ran against OH-09 in 2024."
-    end
-
-    test "with no facts at all, the seat moves into the commitment sentence" do
-      text =
-        ShareCard.post_text(district(%{incumbent_tenure: nil, commitment_goal_basis: :unknown}))
-
-      assert text ==
-               "I've committed to vote against the person holding OH-09, " <>
-                 "whoever runs against them."
-    end
-
-    test "never names the incumbent — the argument is about the seat" do
-      text = ShareCard.post_text(district())
-
-      refute text =~ "incumbent"
-    end
-
-    test "fits X's limit with room for a URL, even at the longest branch" do
-      text =
-        ShareCard.post_text(
-          district(%{label: "MA-09", incumbent_tenure: 43, last_margin_votes: "214,309"})
-        )
-
-      assert String.length(text) <= 200
+    test "names no one" do
+      refute ShareCard.post_text() =~ ~r/[A-Z][a-z]+ [A-Z][a-z]+/
     end
   end
 end
