@@ -131,8 +131,11 @@ defmodule VNIWeb.CommitmentLiveTest do
 
       {:ok, _view, html} = live(conn, ~p"/commitment/#{sent_token()}")
 
-      assert html =~ "costs you nothing"
-      assert html =~ "the other 434"
+      # Named as easy without being taken back — the harder case is put
+      # as a question rather than as a scolding.
+      assert html =~ "so this one was easy"
+      assert html =~ "it still counts"
+      assert html =~ "what you&#39;d do if your side did"
     end
 
     test "declining to state a party gets neither line", %{conn: conn} do
@@ -142,7 +145,7 @@ defmodule VNIWeb.CommitmentLiveTest do
       {:ok, _view, html} = live(conn, ~p"/commitment/#{sent_token()}")
 
       refute html =~ "your own party"
-      refute html =~ "costs you nothing"
+      refute html =~ "so this one was easy"
     end
 
     test "clicking the link twice is not an error", %{conn: conn, district: d} do

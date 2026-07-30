@@ -50,23 +50,23 @@
       <p class="eyebrow">Counted</p>
       <h1 class="display-lg mt-6">You're in.</h1>
 
-      <p class="mt-10 max-w-2xl font-serif text-3xl leading-tight">
+      <p class="mt-8 max-w-2xl font-serif text-3xl leading-tight">
         <%= case @recognition do %>
           <% :against_own_party -> %>
             You just committed to vote out an incumbent of your own party. That is the entire
             project, and almost nobody does it.
           <% :with_own_party -> %>
-            This one costs you nothing — your party doesn't hold this seat. The commitment that
-            counts is the other 434, and whether you'd make it at home.
+            Your party doesn't hold this seat, so this one was easy — it still counts. The
+            question that decides whether any of this works is what you'd do if your side did.
           <% :neutral -> %>
             You committed to vote against the person holding this seat, whoever runs against them.
         <% end %>
       </p>
 
-      <div class="mt-12 border-t-2 border-[var(--ink)] pt-7">
+      <div class="mt-10 border-t-2 border-[var(--ink)] pt-6">
         <p class="data-label">{@district.label} · committed</p>
         <p class="display-md mt-3">{DistrictPresenter.number(@count)}</p>
-        <p class="mt-3 max-w-lg text-sm leading-6">
+        <p class="mt-3 max-w-lg text-base leading-7">
           <%= case @district.commitment_goal_basis do %>
             <% :unopposed -> %>
               Nobody ran against this seat last time. Before it needs votes, it needs an opponent.
@@ -77,6 +77,74 @@
           <% end %>
         </p>
       </div>
+
+      <%!-- The card sits in the confirmation itself rather than a band
+      below it. A full-height section put it under a screen of empty
+      green, which is the same way the district page's ask went unreached
+      before TK-020 — the fix there was to stop making people scroll for
+      it, and the fix is the same here. It is drawn on the device from
+      data already in assigns: no route serves it, so the token cannot
+      reach the image, its filename, or anything shared. --%>
+      <div
+        id="commitment-share"
+        phx-hook=".ShareCard"
+        data-shape={@district.shape_path}
+        data-label={@share.lines.label}
+        data-headline={@share.lines.headline}
+        data-fact={@share.lines.fact}
+        data-tone={@district.tone}
+        data-host={@share.host}
+        data-filename={@share.filename}
+        data-text={@share.text}
+        data-url={@share.url}
+        class="mt-10 border-t-2 border-[var(--ink)] pt-6"
+      >
+        <p class="data-label">Your card</p>
+
+        <div class="mt-7 grid gap-9 sm:grid-cols-[auto_1fr]">
+          <canvas
+            data-card
+            width="1080"
+            height="1920"
+            aria-label={"A shareable card for #{@district.label}"}
+            class="w-[206px] border-2 border-[var(--ink)] bg-[var(--paper-bright)]"
+          >
+          </canvas>
+
+          <div>
+            <p class="max-w-sm text-base leading-7">
+              Most people have never seen the district they live in. Post yours.
+            </p>
+
+            <div class="mt-7 flex flex-wrap gap-3">
+              <button type="button" data-share hidden class="ink-button">
+                Share <span aria-hidden="true">↗</span>
+              </button>
+              <button type="button" data-download class="paper-button">
+                Download <span aria-hidden="true">↓</span>
+              </button>
+              <button type="button" data-copy hidden class="paper-button">
+                Copy post <span aria-hidden="true">⧉</span>
+              </button>
+            </div>
+
+            <a
+              href={@share.intent}
+              target="_blank"
+              rel="noopener"
+              id="commitment-share-x"
+              class="mt-7 inline-block text-base font-bold underline underline-offset-4"
+            >
+              Post it on X instead
+            </a>
+
+            <p class="mt-7 max-w-sm text-base leading-7">
+              It names the seat, not the person holding it, and links to {@district.label}'s
+              page — never to this one.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="section-pad bg-[var(--paper)]">
@@ -84,11 +152,11 @@
       <dl class="mt-7 border-t-2 border-[var(--ink)]">
         <div class="flex justify-between gap-6 border-b-2 border-[var(--ink)] py-4">
           <dt class="data-label">Seat</dt>
-          <dd class="text-sm font-bold">{@district.label}</dd>
+          <dd class="text-base font-bold">{@district.label}</dd>
         </div>
         <div class="flex justify-between gap-6 border-b-2 border-[var(--ink)] py-4">
           <dt class="data-label">Answer</dt>
-          <dd class="text-sm font-bold">
+          <dd class="text-base font-bold">
             {case @pledge.commitment do
               :yes -> "Yes"
               :conditional -> "Only if others do"
@@ -98,11 +166,13 @@
         </div>
         <div class="flex justify-between gap-6 border-b-2 border-[var(--ink)] py-4">
           <dt class="data-label">Confirmed</dt>
-          <dd class="text-sm font-bold">{Calendar.strftime(@pledge.confirmed_at, "%d %b %Y")}</dd>
+          <dd class="text-base font-bold">
+            {Calendar.strftime(@pledge.confirmed_at, "%d %b %Y")}
+          </dd>
         </div>
       </dl>
 
-      <p class="mt-9 max-w-md text-sm leading-6">
+      <p class="mt-9 max-w-md text-base leading-7">
         Keep this link. It is the only way back to this page — we publish counts, never people,
         so there is no account to log into.
       </p>
@@ -118,287 +188,221 @@
 
       <.link
         navigate={~p"/districts/#{@district.slug}"}
-        class="mt-10 block text-sm font-bold underline"
+        class="mt-10 block text-base font-bold underline"
       >
         Back to {@district.label}
       </.link>
     </div>
   </section>
 
-  <%!-- The card is drawn here, on the device, from data already in the
-  socket. Nothing is fetched and no route serves it — which is why the
-  token cannot reach the image, its filename, or anything shared. --%>
-  <section
-    :if={@pledge && is_nil(@pledge.withdrawn_at)}
-    id="commitment-share"
-    phx-hook=".ShareCard"
-    data-shape={@district.shape_path}
-    data-label={@share.lines.label}
-    data-headline={@share.lines.headline}
-    data-fact={@share.lines.fact}
-    data-tone={@district.tone}
-    data-host={@share.host}
-    data-filename={@share.filename}
-    data-text={@share.text}
-    data-url={@share.url}
-    class="editorial-shell section-pad border-t-2 border-[var(--ink)] bg-[var(--paper)]"
-  >
-    <p class="eyebrow">Your card</p>
-    <h2 class="display-md mt-6">Show someone the shape.</h2>
+  <script :type={Phoenix.LiveView.ColocatedHook} name=".ShareCard">
+    // The card is 1080×1920 for Stories and TikTok, drawn once on mount.
+    // Colors come from the stylesheet's custom properties so the art
+    // cannot drift from the site, and the type is the same system stack
+    // the pages use — nothing to preload, and it matches what the person
+    // is looking at.
+    const W = 1080
+    const H = 1920
+    const MARGIN = 140
 
-    <div class="mt-10 grid gap-12 lg:grid-cols-[auto_1fr]">
-      <canvas
-        data-card
-        width="1080"
-        height="1920"
-        aria-label={"A shareable card for #{@district.label}"}
-        class="w-[248px] border-2 border-[var(--ink)] bg-[var(--paper-bright)]"
-      >
-      </canvas>
+    export default {
+      async mounted() {
+        this.canvas = this.el.querySelector("[data-card]")
+        this.filename = this.el.dataset.filename
 
-      <div class="max-w-xl">
-        <p class="font-serif text-2xl leading-tight">
-          Most people have never seen the district they live in. This one is yours — the seat,
-          how long it has been held, and what it took to win it last time.
-        </p>
+        if (document.fonts && document.fonts.ready) { await document.fonts.ready }
+        this.draw()
+        this.wire()
+      },
 
-        <div class="mt-9 flex flex-wrap gap-4">
-          <button type="button" data-share hidden class="ink-button">
-            Share <span aria-hidden="true">↗</span>
-          </button>
-          <button type="button" data-download class="paper-button">
-            Download <span aria-hidden="true">↓</span>
-          </button>
-          <button type="button" data-copy hidden class="paper-button">
-            Copy post <span aria-hidden="true">⧉</span>
-          </button>
-        </div>
+      palette() {
+        const css = getComputedStyle(document.documentElement)
+        const read = (name, fallback) => css.getPropertyValue(name).trim() || fallback
 
-        <a
-          href={@share.intent}
-          target="_blank"
-          rel="noopener"
-          id="commitment-share-x"
-          class="mt-8 inline-block text-sm font-bold underline underline-offset-4"
-        >
-          Post it on X instead
-        </a>
-
-        <p class="mt-8 max-w-md text-sm leading-6 text-[var(--muted)]">
-          The card names the seat, not the person holding it, and links to {@district.label}'s page — never to this one.
-        </p>
-      </div>
-    </div>
-
-    <script :type={Phoenix.LiveView.ColocatedHook} name=".ShareCard">
-      // The card is 1080×1920 for Stories and TikTok, drawn once on mount.
-      // Colors come from the stylesheet's custom properties so the art
-      // cannot drift from the site, and the type is the same system stack
-      // the pages use — nothing to preload, and it matches what the person
-      // is looking at.
-      const W = 1080
-      const H = 1920
-      const MARGIN = 140
-
-      export default {
-        async mounted() {
-          this.canvas = this.el.querySelector("[data-card]")
-          this.filename = this.el.dataset.filename
-
-          if (document.fonts && document.fonts.ready) { await document.fonts.ready }
-          this.draw()
-          this.wire()
-        },
-
-        palette() {
-          const css = getComputedStyle(document.documentElement)
-          const read = (name, fallback) => css.getPropertyValue(name).trim() || fallback
-
-          return {
-            ink: read("--ink", "#11110f"),
-            paper: read("--paper", "#f2efe4"),
-            muted: read("--muted", "#706d64"),
-            blue: read("--blue", "#1557ff"),
-            red: read("--red", "#ff4438"),
-            yellow: read("--yellow", "#eaff2f"),
-            green: read("--green", "#26e88f"),
-            greenLight: read("--green-light", "#a5f3cf"),
-            orange: read("--orange", "#ff8a3d"),
-            paperBright: read("--paper-bright", "#fffdf4")
-          }
-        },
-
-        draw() {
-          const d = this.el.dataset
-          const p = this.palette()
-          const ctx = this.canvas.getContext("2d")
-          const display = (size) => `900 ${size}px "Arial Black", Arial, sans-serif`
-
-          ctx.fillStyle = p.paper
-          ctx.fillRect(0, 0, W, H)
-
-          this.wordmark(ctx, p, display)
-          this.shape(ctx, p, d.shape, this.tone(p, d.tone))
-
-          ctx.fillStyle = p.ink
-          ctx.textBaseline = "alphabetic"
-
-          ctx.letterSpacing = "-11px"
-          ctx.font = display(150)
-          ctx.fillText(d.label, MARGIN, 1345)
-
-          if (d.headline) {
-            ctx.letterSpacing = "-6px"
-            ctx.font = display(88)
-            ctx.fillText(d.headline, MARGIN, 1455)
-          }
-
-          if (d.fact) {
-            ctx.letterSpacing = "0px"
-            ctx.font = '600 42px Arial, Helvetica, sans-serif'
-            ctx.fillText(d.fact, MARGIN, 1522)
-          }
-
-          // The green band is the confirmation page's own color, carried
-          // onto the card so the two read as one moment.
-          ctx.fillStyle = p.green
-          ctx.fillRect(0, 1596, W, 200)
-          ctx.fillStyle = p.ink
-          ctx.letterSpacing = "-6px"
-          ctx.font = display(84)
-          ctx.fillText("I'M COMMITTED.", MARGIN, 1685)
-
-          ctx.letterSpacing = "3px"
-          ctx.font = '800 34px ui-monospace, SFMono-Regular, Menlo, monospace'
-          ctx.fillText(d.host.toUpperCase(), MARGIN, 1750)
-
-          ctx.letterSpacing = "0px"
-          ctx.strokeStyle = p.ink
-          ctx.lineWidth = 16
-          ctx.strokeRect(8, 8, W - 16, H - 16)
-        },
-
-        // VOTE / NO / INCUMBENTS sized to fill the width exactly. SVG and
-        // canvas both lack a box model, so the blocks are measured rather
-        // than flowed.
-        wordmark(ctx, p, display) {
-          const words = ["VOTE", "NO", "INCUMBENTS"]
-          const pad = 34
-          const top = 170
-          const height = 150
-
-          ctx.letterSpacing = "-2px"
-          ctx.font = display(100)
-          const unit = words.reduce((sum, w) => sum + ctx.measureText(w).width, 0)
-          const size = Math.floor(((W - words.length * 2 * pad) / unit) * 100)
-
-          ctx.font = display(size)
-          const widths = words.map((w) => ctx.measureText(w).width + 2 * pad)
-          const fills = [p.blue, p.yellow, p.red]
-          const inks = ["#ffffff", p.ink, "#ffffff"]
-
-          let x = 0
-          words.forEach((word, i) => {
-            const width = i === words.length - 1 ? W - x : widths[i]
-            ctx.fillStyle = fills[i]
-            ctx.fillRect(x, top, width, height)
-            ctx.fillStyle = inks[i]
-            ctx.fillText(word, x + pad, top + height / 2 + size * 0.36)
-            x += width
-          })
-
-          ctx.letterSpacing = "0px"
-        },
-
-        shape(ctx, p, path, fill) {
-          const box = W - 2 * MARGIN
-          const scale = box / 100
-
-          ctx.save()
-          ctx.translate(MARGIN, 400)
-          ctx.scale(scale, scale)
-
-          const drawn = new Path2D(path)
-          ctx.fillStyle = fill
-          ctx.fill(drawn, "evenodd")
-          ctx.strokeStyle = p.ink
-          ctx.lineWidth = 9 / scale
-          ctx.lineJoin = "round"
-          ctx.stroke(drawn)
-          ctx.restore()
-        },
-
-        // Mirrors PublicComponents.tone_fill/1 — the compactness ramp,
-        // which is party-free. Red and blue stay party evidence.
-        tone(p, tone) {
-          return {
-            worst: p.orange,
-            low: p.yellow,
-            mid: p.greenLight,
-            best: p.green
-          }[tone] || p.paperBright
-        },
-
-        wire() {
-          const share = this.el.querySelector("[data-share]")
-          const download = this.el.querySelector("[data-download]")
-          const copy = this.el.querySelector("[data-copy]")
-
-          download.addEventListener("click", () => this.download())
-
-          // The native sheet is what makes this one tap on a phone, and
-          // it is the only path with Instagram and TikTok as targets.
-          // Offered only where the browser will actually take the file.
-          if (navigator.canShare) {
-            const probe = new File([new Blob()], "probe.png", { type: "image/png" })
-            if (navigator.canShare({ files: [probe] })) {
-              share.hidden = false
-              share.addEventListener("click", () => this.share())
-            }
-          }
-
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            copy.hidden = false
-            copy.addEventListener("click", (event) => this.copy(event.currentTarget))
-          }
-        },
-
-        blob() {
-          return new Promise((resolve) => this.canvas.toBlob(resolve, "image/png"))
-        },
-
-        async share() {
-          const file = new File([await this.blob()], this.filename, { type: "image/png" })
-          const withText = { files: [file], text: this.el.dataset.text }
-
-          try {
-            await navigator.share(
-              navigator.canShare(withText) ? withText : { files: [file] }
-            )
-          } catch (_cancelled) {
-            // Dismissing the sheet is a normal outcome, not an error.
-          }
-        },
-
-        async download() {
-          const url = URL.createObjectURL(await this.blob())
-          const link = document.createElement("a")
-
-          link.href = url
-          link.download = this.filename
-          link.click()
-          setTimeout(() => URL.revokeObjectURL(url), 1000)
-        },
-
-        async copy(button) {
-          const { text, url } = this.el.dataset
-          await navigator.clipboard.writeText(`${text}\n${url}`)
-
-          const was = button.innerHTML
-          button.innerHTML = "Copied"
-          setTimeout(() => { button.innerHTML = was }, 2000)
+        return {
+          ink: read("--ink", "#11110f"),
+          paper: read("--paper", "#f2efe4"),
+          muted: read("--muted", "#706d64"),
+          blue: read("--blue", "#1557ff"),
+          red: read("--red", "#ff4438"),
+          yellow: read("--yellow", "#eaff2f"),
+          green: read("--green", "#26e88f"),
+          greenLight: read("--green-light", "#a5f3cf"),
+          orange: read("--orange", "#ff8a3d"),
+          paperBright: read("--paper-bright", "#fffdf4")
         }
+      },
+
+      draw() {
+        const d = this.el.dataset
+        const p = this.palette()
+        const ctx = this.canvas.getContext("2d")
+        const display = (size) => `900 ${size}px "Arial Black", Arial, sans-serif`
+
+        ctx.fillStyle = p.paper
+        ctx.fillRect(0, 0, W, H)
+
+        this.wordmark(ctx, p, display)
+        this.shape(ctx, p, d.shape, this.tone(p, d.tone))
+
+        ctx.fillStyle = p.ink
+        ctx.textBaseline = "alphabetic"
+
+        ctx.letterSpacing = "-11px"
+        ctx.font = display(150)
+        ctx.fillText(d.label, MARGIN, 1345)
+
+        if (d.headline) {
+          ctx.letterSpacing = "-6px"
+          ctx.font = display(88)
+          ctx.fillText(d.headline, MARGIN, 1455)
+        }
+
+        if (d.fact) {
+          ctx.letterSpacing = "0px"
+          ctx.font = '600 42px Arial, Helvetica, sans-serif'
+          ctx.fillText(d.fact, MARGIN, 1522)
+        }
+
+        // The green band is the confirmation page's own color, carried
+        // onto the card so the two read as one moment.
+        ctx.fillStyle = p.green
+        ctx.fillRect(0, 1596, W, 200)
+        ctx.fillStyle = p.ink
+        ctx.letterSpacing = "-6px"
+        ctx.font = display(84)
+        ctx.fillText("I'M COMMITTED.", MARGIN, 1685)
+
+        ctx.letterSpacing = "3px"
+        ctx.font = '800 34px ui-monospace, SFMono-Regular, Menlo, monospace'
+        ctx.fillText(d.host.toUpperCase(), MARGIN, 1750)
+
+        ctx.letterSpacing = "0px"
+        ctx.strokeStyle = p.ink
+        ctx.lineWidth = 16
+        ctx.strokeRect(8, 8, W - 16, H - 16)
+      },
+
+      // VOTE / NO / INCUMBENTS sized to fill the width exactly. SVG and
+      // canvas both lack a box model, so the blocks are measured rather
+      // than flowed.
+      wordmark(ctx, p, display) {
+        const words = ["VOTE", "NO", "INCUMBENTS"]
+        const pad = 34
+        const top = 170
+        const height = 150
+
+        ctx.letterSpacing = "-2px"
+        ctx.font = display(100)
+        const unit = words.reduce((sum, w) => sum + ctx.measureText(w).width, 0)
+        const size = Math.floor(((W - words.length * 2 * pad) / unit) * 100)
+
+        ctx.font = display(size)
+        const widths = words.map((w) => ctx.measureText(w).width + 2 * pad)
+        const fills = [p.blue, p.yellow, p.red]
+        const inks = ["#ffffff", p.ink, "#ffffff"]
+
+        let x = 0
+        words.forEach((word, i) => {
+          const width = i === words.length - 1 ? W - x : widths[i]
+          ctx.fillStyle = fills[i]
+          ctx.fillRect(x, top, width, height)
+          ctx.fillStyle = inks[i]
+          ctx.fillText(word, x + pad, top + height / 2 + size * 0.36)
+          x += width
+        })
+
+        ctx.letterSpacing = "0px"
+      },
+
+      shape(ctx, p, path, fill) {
+        const box = W - 2 * MARGIN
+        const scale = box / 100
+
+        ctx.save()
+        ctx.translate(MARGIN, 400)
+        ctx.scale(scale, scale)
+
+        const drawn = new Path2D(path)
+        ctx.fillStyle = fill
+        ctx.fill(drawn, "evenodd")
+        ctx.strokeStyle = p.ink
+        ctx.lineWidth = 9 / scale
+        ctx.lineJoin = "round"
+        ctx.stroke(drawn)
+        ctx.restore()
+      },
+
+      // Mirrors PublicComponents.tone_fill/1 — the compactness ramp,
+      // which is party-free. Red and blue stay party evidence.
+      tone(p, tone) {
+        return {
+          worst: p.orange,
+          low: p.yellow,
+          mid: p.greenLight,
+          best: p.green
+        }[tone] || p.paperBright
+      },
+
+      wire() {
+        const share = this.el.querySelector("[data-share]")
+        const download = this.el.querySelector("[data-download]")
+        const copy = this.el.querySelector("[data-copy]")
+
+        download.addEventListener("click", () => this.download())
+
+        // The native sheet is what makes this one tap on a phone, and
+        // it is the only path with Instagram and TikTok as targets.
+        // Offered only where the browser will actually take the file.
+        if (navigator.canShare) {
+          const probe = new File([new Blob()], "probe.png", { type: "image/png" })
+          if (navigator.canShare({ files: [probe] })) {
+            share.hidden = false
+            share.addEventListener("click", () => this.share())
+          }
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          copy.hidden = false
+          copy.addEventListener("click", (event) => this.copy(event.currentTarget))
+        }
+      },
+
+      blob() {
+        return new Promise((resolve) => this.canvas.toBlob(resolve, "image/png"))
+      },
+
+      async share() {
+        const file = new File([await this.blob()], this.filename, { type: "image/png" })
+        const withText = { files: [file], text: this.el.dataset.text }
+
+        try {
+          await navigator.share(
+            navigator.canShare(withText) ? withText : { files: [file] }
+          )
+        } catch (_cancelled) {
+          // Dismissing the sheet is a normal outcome, not an error.
+        }
+      },
+
+      async download() {
+        const url = URL.createObjectURL(await this.blob())
+        const link = document.createElement("a")
+
+        link.href = url
+        link.download = this.filename
+        link.click()
+        setTimeout(() => URL.revokeObjectURL(url), 1000)
+      },
+
+      async copy(button) {
+        const { text, url } = this.el.dataset
+        await navigator.clipboard.writeText(`${text}\n${url}`)
+
+        const was = button.innerHTML
+        button.innerHTML = "Copied"
+        setTimeout(() => { button.innerHTML = was }, 2000)
       }
-    </script>
-  </section>
+    }
+  </script>
 </Layouts.app>
