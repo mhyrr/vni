@@ -15,6 +15,7 @@ conventions: `AGENTS.md`.
 - `mix vni.ingest.shapefiles --congress N` — (re)ingest TIGER CD geometry (119 current; 118/117 historical, ingested closed), idempotent
 - `mix vni.ingest.zctas` — ZIP Code Tabulation Area polygons and the ZIP→district crosswalk. Not part of `mix setup`: one 530 MB archive, cached under `priv/repo/data/tiger/zcta2025/`, and the crosswalk INSERT runs several minutes. Required for `/find` to answer anything; without it every ZIP reports as unknown. Rerun `--crosswalk-only` after any district ingest — the pairs are only true of the map they were computed against.
 - `mix vni.score` — full scoring pass: metrics, normalize, national rank (`--congress N` scores a historical cohort within itself)
+- `mix vni.og.cards` — render the unfurl images every link needs: one site-wide default plus one per current district, into `priv/static/images/og/`. **Commit the PNGs** — generation needs the database and the Docker build cannot reach it, so they travel as committed binaries like `priv/promotion` does. Rerun after any ingest that moves geometry, incumbents, or margins; the art states facts true of the map it was drawn against.
 - `mix phx.server` — **NEVER RUN** (user manages the dev server separately)
 - Use Tidewave's tools for runtime evaluation and database queries when the dev server is up; `get_docs` for documentation, `get_source_location` for definitions.
 
@@ -23,6 +24,7 @@ conventions: `AGENTS.md`.
 - The volume `arete_postgres-data` holds every project's dev DBs — never remove it.
 - Brew postgresql@14/16/17 are installed but stopped; don't start them (port 5432 collision on the loopback).
 - GDAL's `ogr2ogr` (brew postgis formula) is required for shapefile ingest.
+- `rsvg-convert` (brew `librsvg`) is required for `mix vni.og.cards`. Same dev-side posture as GDAL — production never rasterizes anything. The task refuses to run when fontconfig cannot resolve Arial Black, because a silent substitution bakes hundreds of wrong images whose only symptom is looking wrong in someone else's timeline.
 
 ## Load-bearing subsystems (handle inline, never delegate)
 
