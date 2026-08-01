@@ -1,4 +1,9 @@
-<Layouts.app flash={@flash} active={:districts} seat={if @current?, do: @district.result}>
+<Layouts.app
+  flash={@flash}
+  active={:districts}
+  seat={if @current?, do: @district.result}
+  from_zip={@from_zip?}
+>
   <.dataset_notice congress={@congress} vintage={@time_context.vintage} />
   <.congress_time_rail context={@time_context} />
   <.historical_context_notice context={@time_context} />

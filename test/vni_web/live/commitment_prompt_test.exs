@@ -89,6 +89,34 @@ defmodule VNIWeb.CommitmentPromptTest do
     assert has_element?(view, "#commitment-confirmed[phx-hook$='MarkCommitted']")
   end
 
+  describe "arriving by ZIP" do
+    # The quiet window itself is enforced in JavaScript against
+    # localStorage, which ExUnit cannot see. What is assertable here is
+    # the marker the hook reads — and that it is set on exactly the
+    # arrivals that earned it.
+    test "marks the prompt so a dismissal elsewhere does not silence the answer", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/districts/oh-9?from=zip")
+      render_async(view)
+
+      assert has_element?(view, "#commitment-prompt[data-from-zip='true']")
+    end
+
+    test "an ordinary district visit stays inside the quiet window", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/districts/oh-9")
+      render_async(view)
+
+      assert has_element?(view, "#commitment-prompt")
+      refute has_element?(view, "#commitment-prompt[data-from-zip]")
+    end
+
+    test "an unrecognized from= is not a ZIP arrival", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/districts/oh-9?from=twitter")
+      render_async(view)
+
+      refute has_element?(view, "#commitment-prompt[data-from-zip]")
+    end
+  end
+
   describe "what it says" do
     test "on a district page it names the seat, the incumbent, and the count", %{
       district: district,

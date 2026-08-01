@@ -41,7 +41,8 @@ defmodule VNIWeb.DistrictLive.Show do
            current?: current?,
            index_path: index_path,
            time_context: CongressTime.context(congress, :district, slug),
-           og_image: SocialMeta.district_image(slug, current?)
+           og_image: SocialMeta.district_image(slug, current?),
+           from_zip?: params["from"] == "zip"
          )
          |> assign_async(:district, fn ->
            case Scores.get_district_for_congress(slug, congress) do

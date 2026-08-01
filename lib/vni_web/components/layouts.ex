@@ -17,6 +17,10 @@ defmodule VNIWeb.Layouts do
     default: nil,
     doc: "the presented district, when the page is about one seat"
 
+  attr :from_zip, :boolean,
+    default: false,
+    doc: "the reader arrived by asking which seat is theirs — see commitment_prompt/1"
+
   slot :inner_block, required: true
 
   def app(assigns) do
@@ -97,7 +101,7 @@ defmodule VNIWeb.Layouts do
       </p>
     </footer>
 
-    <.commitment_prompt :if={@prompt?} seat={@seat} />
+    <.commitment_prompt :if={@prompt?} seat={@seat} from_zip={@from_zip} />
 
     <.flash_group flash={@flash} />
     """

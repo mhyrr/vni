@@ -61,6 +61,19 @@ to crawlers — a `<dialog>` is `display: none` until JavaScript opens it.
 **Dismissal is quiet for a day** (Greg, 2026-07-26 — "daily not 7 days").
 Escape, the backdrop, and *Not now* are the same answer and all record it.
 
+**Except on arrival by ZIP** (Greg, 2026-08-01). A day of quiet is the right
+answer to an ask the reader did not invite, and the wrong answer to one they
+did. Typing a ZIP is asking which seat is yours; this dialog is the answer.
+Withholding it because of a *Not now* clicked on the atlas that morning spends
+an answer against a question nobody asked.
+
+So both exits from `/find` — the single-match redirect and the picker for a
+split ZIP — carry `?from=zip`, and that skips the quiet window. It skips
+**only** that check: someone who has committed is still never asked again,
+which is the condition the reversal was about. The marker is consumed on
+arrival, dropped from the URL by the hook, so a reload or a shared link is an
+ordinary visit with the quiet window back in force.
+
 On a district page it asks about that seat by name, with the live count. Off
 one there is no seat to name, so the ask is general and the ZIP is the route to
 answering it — the modal is always the commitment, never a wayfinding widget.

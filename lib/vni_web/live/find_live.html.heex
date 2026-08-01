@@ -94,7 +94,7 @@
       >
         <.link
           :for={district <- @matches}
-          navigate={~p"/districts/#{district.slug}"}
+          navigate={~p"/districts/#{district.slug}?from=zip"}
           id={"find-choice-#{district.slug}"}
           class="find-choice section-pad !py-10 border-b-2 border-[var(--ink)] md:border-r-2"
         >

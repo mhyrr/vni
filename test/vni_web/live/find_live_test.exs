@@ -73,11 +73,13 @@ defmodule VNIWeb.FindLiveTest do
   end
 
   test "a ZIP inside one district lands on it — one seat is not a choice", %{conn: conn} do
-    assert {:error, {:live_redirect, %{to: "/districts/md-3"}}} = live(conn, ~p"/find?zip=20001")
+    # `from=zip` rides along so the seat page knows the reader asked.
+    assert {:error, {:live_redirect, %{to: "/districts/md-3?from=zip"}}} =
+             live(conn, ~p"/find?zip=20001")
   end
 
   test "ZIP+4 resolves on the first five", %{conn: conn} do
-    assert {:error, {:live_redirect, %{to: "/districts/md-3"}}} =
+    assert {:error, {:live_redirect, %{to: "/districts/md-3?from=zip"}}} =
              live(conn, ~p"/find?zip=20001-4321")
   end
 
@@ -85,8 +87,9 @@ defmodule VNIWeb.FindLiveTest do
     {:ok, view, _html} = live(conn, ~p"/find?zip=20002")
 
     assert has_element?(view, "#find-page", "20002 is in 2 districts")
-    assert has_element?(view, "#find-choice-md-3[href='/districts/md-3']")
-    assert has_element?(view, "#find-choice-md-4[href='/districts/md-4']")
+    # Picking from a split ZIP is still arriving by ZIP.
+    assert has_element?(view, "#find-choice-md-3[href='/districts/md-3?from=zip']")
+    assert has_element?(view, "#find-choice-md-4[href='/districts/md-4?from=zip']")
 
     # The shape is the point: you pick your district by looking at it.
     assert has_element?(view, "#find-choice-md-3 svg path[d^='M']")

@@ -37,7 +37,9 @@ defmodule VNIWeb.FindLive do
     case Postal.resolve(zip) do
       {:ok, [only]} ->
         # One seat is not a choice. Nothing is being picked for anyone.
-        push_navigate(socket, to: ~p"/districts/#{only.district.slug}")
+        # `from=zip` marks the arrival as an answer to a question the
+        # reader asked — see `VNIWeb.PublicComponents.commitment_prompt/1`.
+        push_navigate(socket, to: ~p"/districts/#{only.district.slug}?from=zip")
 
       {:ok, matches} ->
         assign(socket,

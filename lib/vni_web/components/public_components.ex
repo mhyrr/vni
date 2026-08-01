@@ -5,6 +5,7 @@ defmodule VNIWeb.PublicComponents do
   use VNIWeb, :verified_routes
 
   attr(:seat, :map, default: nil)
+  attr(:from_zip, :boolean, default: false)
   attr(:delay_ms, :integer, default: 5_000)
   attr(:quiet_ms, :integer, default: 86_400_000)
 
@@ -21,6 +22,17 @@ defmodule VNIWeb.PublicComponents do
   start, never again once someone has committed, and it stays quiet for a
   day after any dismissal.
 
+  ## Except when the reader arrived by ZIP
+
+  The day of quiet is the right answer to an ask the reader did not
+  invite. It is the wrong answer to one they did: typing a ZIP is asking
+  which seat is yours, and this dialog is the answer. Suppressing it
+  because of a *Not now* clicked on the atlas this morning spends an
+  answer against a question that was never asked. So `from_zip` skips
+  the quiet window — and only that check. Someone who has committed is
+  still never asked again, which is the condition that matters (Greg,
+  2026-08-01).
+
   On a district page it asks about that seat, by name, with the live
   count. Anywhere else there is no seat to name yet, so the ask is
   general and the ZIP is the route to answering it.
@@ -36,6 +48,7 @@ defmodule VNIWeb.PublicComponents do
       phx-hook=".CommitmentPrompt"
       data-delay={@delay_ms}
       data-quiet={@quiet_ms}
+      data-from-zip={@from_zip && "true"}
       aria-labelledby="commitment-prompt-heading"
     >
       <div class="commitment-prompt-body">
@@ -109,15 +122,30 @@ defmodule VNIWeb.PublicComponents do
 
       export default {
         mounted() {
+          // Arriving by ZIP is the reader asking the question this dialog
+          // answers, so a `Not now` from somewhere else does not spend the
+          // answer. Consumed on arrival: the marker leaves the URL so a
+          // reload — or a shared link — is an ordinary visit again.
+          const fromZip = this.el.dataset.fromZip === "true"
+          if (fromZip) {
+            const url = new URL(window.location)
+            if (url.searchParams.has("from")) {
+              url.searchParams.delete("from")
+              // Keep LiveView's own history state; only the URL changes.
+              window.history.replaceState(window.history.state, "", url)
+            }
+          }
+
           const memory = store()
           if (!memory) { return }
 
-          // Someone who has committed is never asked again.
+          // Someone who has committed is never asked again. This one holds
+          // even for a ZIP arrival — they already answered.
           if (memory.getItem(COMMITTED)) { return }
 
           const dismissedAt = Number(memory.getItem(DISMISSED_AT) || 0)
           const quiet = Number(this.el.dataset.quiet)
-          if (dismissedAt && Date.now() - dismissedAt < quiet) { return }
+          if (!fromZip && dismissedAt && Date.now() - dismissedAt < quiet) { return }
 
           this.timer = window.setTimeout(() => {
             if (this.el.isConnected && !this.el.open) { this.el.showModal() }
