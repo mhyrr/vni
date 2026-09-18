@@ -28,13 +28,6 @@ Phoenix 1.8, LiveView 1.1, PostgreSQL 17 with PostGIS, deployed on Fly.
   moduledoc and are not negotiable: geography casts for area/perimeter,
   EPSG:5070 for constructions, never raw 4326 degrees. Any formula change
   bumps `@methodology_version`.
-- **Pledge data** (`VNI.Pledges`, live since 2026-07-28). Politically
-  sensitive PII. Double opt-in, encrypt at rest, minimal retention. Treat
-  like money. Every public count starts from `live/0` (confirmed, not
-  withdrawn), only the magic-link token's SHA-256 is stored, and no surface
-  shows who pledged. Today `email` is plaintext `citext` on an encrypted Fly
-  volume and nothing purges unconfirmed or withdrawn rows; TK-023 decides
-  that posture, and this line changes only with it.
 
 ## Doctrine constraints on code and copy
 
@@ -58,7 +51,7 @@ lib/vni/atlas/map_authorship.ex    hand-curated authorship rows, one cited sourc
 lib/vni/atlas/postal.ex            ZIP to district, computed from ZCTA geometry
 lib/vni/scores.ex                  compactness: Elixir orchestrating PostGIS SQL
 lib/vni/politics.ex                published facts: incumbents, margins, lean, state history
-lib/vni/pledges.ex                 voter commitments and every public count of them
+lib/vni/pledges.ex                 voter commitments; every public count starts from `live/0`
 lib/vni/promotion.ex               derived rows production cannot recompute, loaded at release
 lib/mix/tasks/                     mix vni.*: ingest, score, export, cards
 lib/vni_web/district_presenter.ex  the maps public LiveViews consume (state_presenter.ex for /states)
